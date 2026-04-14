@@ -117,6 +117,8 @@ export function PhotoUpload({ animalId, initialPhotos }: PhotoUploadProps) {
         return
       }
 
+      console.log("[photo-upload] API response:", data)
+      console.log("[photo-upload] photo URL from API:", (data as Photo).url)
       setPhotos(prev => [...prev, data as Photo])
     } catch {
       setError("Upload failed — please check your connection and try again")

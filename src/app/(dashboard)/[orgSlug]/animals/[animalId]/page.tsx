@@ -43,6 +43,8 @@ export default async function AnimalPage({
   })
   if (!animal) notFound()
 
+  console.log(`[animal page] photos for animal ${params.animalId}:`, animal.photos.map(p => ({ id: p.id, url: p.url, isPrimary: p.isPrimary })))
+
   const statusColors: Record<string, string> = {
     AVAILABLE: "bg-green-100 text-green-800",
     IN_FOSTER: "bg-blue-100 text-blue-800",
