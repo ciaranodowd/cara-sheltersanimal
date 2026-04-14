@@ -4,7 +4,9 @@ import { Camera, Loader2, X, Star } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"]
-const MAX_BYTES = 4 * 1024 * 1024 // 4 MB
+const MAX_BYTES = 10 * 1024 * 1024 // 10 MB raw; will be compressed before upload
+const MAX_DIMENSION = 1200 // px — longest edge after resize
+const JPEG_QUALITY = 0.82
 
 interface Photo {
   id: string
@@ -15,6 +17,62 @@ interface Photo {
 interface PhotoUploadProps {
   animalId: string
   initialPhotos: Photo[]
+}
+
+/** Resize + compress a File to JPEG using the Canvas API. */
+async function compressImage(file: File): Promise<File> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const objectUrl = URL.createObjectURL(file)
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+
+      let { width, height } = img
+
+      // Downscale if either dimension exceeds MAX_DIMENSION
+      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+        if (width >= height) {
+          height = Math.round((height * MAX_DIMENSION) / width)
+          width = MAX_DIMENSION
+        } else {
+          width = Math.round((width * MAX_DIMENSION) / height)
+          height = MAX_DIMENSION
+        }
+      }
+
+      const canvas = document.createElement("canvas")
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext("2d")!
+      ctx.drawImage(img, 0, 0, width, height)
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            // Always output as JPEG for consistent compression
+            const compressed = new File(
+              [blob],
+              file.name.replace(/\.[^.]+$/, ".jpg"),
+              { type: "image/jpeg" }
+            )
+            resolve(compressed)
+          } else {
+            resolve(file) // fallback: send original
+          }
+        },
+        "image/jpeg",
+        JPEG_QUALITY
+      )
+    }
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      resolve(file) // fallback: send original
+    }
+
+    img.src = objectUrl
+  })
 }
 
 export function PhotoUpload({ animalId, initialPhotos }: PhotoUploadProps) {
@@ -33,7 +91,7 @@ export function PhotoUpload({ animalId, initialPhotos }: PhotoUploadProps) {
       return
     }
     if (file.size > MAX_BYTES) {
-      setError("Image must be under 4 MB")
+      setError("Image must be under 10 MB")
       return
     }
 
@@ -41,8 +99,11 @@ export function PhotoUpload({ animalId, initialPhotos }: PhotoUploadProps) {
     setError("")
 
     try {
+      // Compress + resize before upload
+      const compressed = await compressImage(file)
+
       const body = new FormData()
-      body.append("file", file)
+      body.append("file", compressed)
 
       const r = await fetch(`/api/animals/${animalId}/photos`, {
         method: "POST",
@@ -68,19 +129,20 @@ export function PhotoUpload({ animalId, initialPhotos }: PhotoUploadProps) {
     setRemoving(photoId)
     setError("")
     try {
-      const r = await fetch(`/api/animals/${animalId}/photos/${photoId}`, { method: "DELETE" })
+      const r = await fetch(`/api/animals/${animalId}/photos/${photoId}`, {
+        method: "DELETE",
+      })
       if (r.ok) {
         setPhotos(prev => {
           const removed = prev.find(p => p.id === photoId)
           const updated = prev.filter(p => p.id !== photoId)
-          // Promote next photo to primary in local state
           if (removed?.isPrimary && updated.length > 0) {
             updated[0] = { ...updated[0], isPrimary: true }
           }
           return updated
         })
       } else {
-        const data = await r.json().catch(() => ({})) as any
+        const data = await r.json().catch(() => ({})) as { error?: string }
         setError(data.error || "Failed to remove photo")
       }
     } catch {
@@ -93,11 +155,13 @@ export function PhotoUpload({ animalId, initialPhotos }: PhotoUploadProps) {
   async function setAsPrimary(photoId: string) {
     setError("")
     try {
-      const r = await fetch(`/api/animals/${animalId}/photos/${photoId}`, { method: "PATCH" })
+      const r = await fetch(`/api/animals/${animalId}/photos/${photoId}`, {
+        method: "PATCH",
+      })
       if (r.ok) {
         setPhotos(prev => prev.map(p => ({ ...p, isPrimary: p.id === photoId })))
       } else {
-        const data = await r.json().catch(() => ({})) as any
+        const data = await r.json().catch(() => ({})) as { error?: string }
         setError(data.error || "Failed to update photo")
       }
     } catch {
@@ -108,7 +172,9 @@ export function PhotoUpload({ animalId, initialPhotos }: PhotoUploadProps) {
   return (
     <div className="space-y-3">
       {error && (
-        <p className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">{error}</p>
+        <p className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
+          {error}
+        </p>
       )}
 
       <div className="flex flex-wrap gap-3">
@@ -152,7 +218,7 @@ export function PhotoUpload({ animalId, initialPhotos }: PhotoUploadProps) {
           </div>
         ))}
 
-        {/* Upload target */}
+        {/* Upload button */}
         <label
           className={cn(
             "w-24 h-24 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1.5 transition-colors",
@@ -169,7 +235,9 @@ export function PhotoUpload({ animalId, initialPhotos }: PhotoUploadProps) {
           ) : (
             <>
               <Camera className="h-5 w-5 text-muted-foreground" />
-              <span className="text-[10px] text-muted-foreground text-center leading-tight">Add photo</span>
+              <span className="text-[10px] text-muted-foreground text-center leading-tight">
+                Add photo
+              </span>
             </>
           )}
           <input
@@ -183,7 +251,7 @@ export function PhotoUpload({ animalId, initialPhotos }: PhotoUploadProps) {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        JPEG, PNG or WebP · max 4 MB · hover a photo to set as main or remove
+        JPEG, PNG or WebP · max 10 MB · auto-compressed to 1200 px · hover a photo to set as main or remove
       </p>
     </div>
   )

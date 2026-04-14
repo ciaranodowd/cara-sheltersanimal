@@ -2,21 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-
-async function storageDelete(key: string) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!supabaseUrl || !serviceKey) return // silently skip if not configured
-
-  // Supabase Storage: DELETE /storage/v1/object/{bucket}/{path}
-  await fetch(`${supabaseUrl}/storage/v1/object/animal-photos/${key}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${serviceKey}` },
-  }).catch(err => {
-    // Log but don't fail the request — DB record deletion still succeeds
-    console.error("[photo delete] Storage removal error:", err)
-  })
-}
+import { supabaseAdmin, ANIMAL_PHOTOS_BUCKET } from "@/lib/supabase"
 
 export async function DELETE(
   req: NextRequest,
@@ -34,15 +20,28 @@ export async function DELETE(
   }
 
   const membership = await prisma.userOrganization.findUnique({
-    where: { userId_organizationId: { userId: session.user.id, organizationId: photo.animal.organizationId } },
+    where: {
+      userId_organizationId: {
+        userId: session.user.id,
+        organizationId: photo.animal.organizationId,
+      },
+    },
   })
   if (!membership) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
   // Delete DB record first, then remove from storage
   await prisma.animalPhoto.delete({ where: { id: params.photoId } })
-  await storageDelete(photo.key)
 
-  // Promote next photo to primary if this was primary
+  const { error: storageError } = await supabaseAdmin.storage
+    .from(ANIMAL_PHOTOS_BUCKET)
+    .remove([photo.key])
+
+  if (storageError) {
+    // Log but don't fail — DB record is already gone
+    console.error("[photo delete] Storage removal error:", storageError)
+  }
+
+  // Promote the next photo to primary if this was the primary
   if (photo.isPrimary) {
     const next = await prisma.animalPhoto.findFirst({
       where: { animalId: params.animalId },
@@ -72,11 +71,16 @@ export async function PATCH(
   }
 
   const membership = await prisma.userOrganization.findUnique({
-    where: { userId_organizationId: { userId: session.user.id, organizationId: photo.animal.organizationId } },
+    where: {
+      userId_organizationId: {
+        userId: session.user.id,
+        organizationId: photo.animal.organizationId,
+      },
+    },
   })
   if (!membership) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  // Set as primary: unset all others first, then set this one
+  // Unset all other primary photos, then set this one
   await prisma.animalPhoto.updateMany({
     where: { animalId: params.animalId, isPrimary: true },
     data: { isPrimary: false },
