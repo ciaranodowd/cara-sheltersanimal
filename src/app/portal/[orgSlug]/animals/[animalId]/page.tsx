@@ -3,7 +3,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { SPECIES_LABELS, SPECIES_EMOJI, SIZE_LABELS } from "@/lib/constants"
 import { formatDate } from "@/lib/utils"
-import { Heart, MapPin, Calendar, Ruler, CheckCircle, XCircle, ArrowLeft } from "lucide-react"
+import { Heart, MapPin, Mail, Phone, Calendar, Ruler, CheckCircle, XCircle, ArrowLeft } from "lucide-react"
 
 export const dynamic = 'force-dynamic'
 
@@ -299,9 +299,39 @@ export default async function PublicAnimalProfilePage({
         )}
       </main>
 
-      <footer className="border-t mt-12 py-6 text-center text-xs text-muted-foreground">
-        <Link href={`/portal/${params.orgSlug}`} className="hover:underline">{o.name}</Link>
-        {" · "}Powered by Cara
+      <footer className="bg-white border-t mt-12">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1.5">
+              <Link href={`/portal/${params.orgSlug}`} className="font-semibold text-sm hover:underline">
+                {o.name}
+              </Link>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                {(o.city || o.county) && (
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    {[o.city, o.county].filter(Boolean).join(", ")}
+                  </span>
+                )}
+                {o.email && (
+                  <a href={`mailto:${o.email}`} className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                    <Mail className="h-3.5 w-3.5 shrink-0" />
+                    {o.email}
+                  </a>
+                )}
+                {o.phone && (
+                  <a href={`tel:${o.phone}`} className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                    <Phone className="h-3.5 w-3.5 shrink-0" />
+                    {o.phone}
+                  </a>
+                )}
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Powered by <span className="text-green-600 font-semibold">Cara</span>
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
   )
