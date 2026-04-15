@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Ark cabin -->
+  <rect x="22" y="28" width="56" height="26" rx="3" fill="#7C5C3E"/>
+  <!-- Roof -->
+  <polygon points="16,28 50,10 84,28" fill="#5C3D1E"/>
+  <!-- Cabin window -->
+  <rect x="40" y="35" width="20" height="13" rx="2" fill="#B8D4E8"/>
+  <!-- Hull -->
+  <path d="M8,54 L92,54 L84,72 Q50,82 16,72 Z" fill="#9B6B45"/>
+  <!-- Hull plank line -->
+  <line x1="8" y1="62" x2="92" y2="62" stroke="#7C5C3E" stroke-width="1.5" opacity="0.5"/>
+  <!-- Water waves -->
+  <path d="M2,76 Q17,70 32,76 Q47,82 62,76 Q77,70 98,76" stroke="#4A90D9" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M2,85 Q17,79 32,85 Q47,91 62,85 Q77,79 98,85" stroke="#4A90D9" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+</svg>

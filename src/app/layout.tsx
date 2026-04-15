@@ -8,6 +8,9 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Cara — Animal Shelter Management",
   description: "European animal rescue management for Ireland & the EU",
+  icons: {
+    icon: "/logo.svg",
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
