@@ -11,6 +11,7 @@ export default withAuth(
         const { pathname } = req.nextUrl
         // Public routes
         if (
+          pathname === "/" ||
           pathname.startsWith("/portal") ||
           pathname.startsWith("/api/portal") ||
           pathname.startsWith("/login") ||
