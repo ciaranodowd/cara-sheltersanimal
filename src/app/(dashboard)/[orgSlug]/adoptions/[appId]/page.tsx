@@ -155,12 +155,25 @@ export default function ApplicationPage() {
             </CardContent>
           </Card>
 
-          {app.status === "APPROVED" && (
+          {(app.status === "APPROVED" || app.status === "CONTRACT_SENT" || app.status === "COMPLETED") && (
             <Card>
-              <CardHeader><CardTitle className="text-base">Contract & adoption</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">Contract & e-signature</CardTitle></CardHeader>
               <CardContent className="space-y-2">
+                {app.status === "COMPLETED" && app.contract?.signedAt ? (
+                  <div className="rounded-lg bg-green-50 border border-green-100 px-3 py-2.5 text-sm text-green-700 space-y-1">
+                    <p className="font-medium">Adoption complete</p>
+                    <p className="text-xs">Signed {new Date(app.contract.signedAt).toLocaleDateString("en-IE")} by {app.contract.signatureData}</p>
+                  </div>
+                ) : app.status === "CONTRACT_SENT" ? (
+                  <div className="rounded-lg bg-amber-50 border border-amber-100 px-3 py-2.5 text-sm text-amber-700 space-y-2">
+                    <p className="font-medium">Awaiting signature</p>
+                    <p className="text-xs">Contract sent to {app.applicantEmail}</p>
+                  </div>
+                ) : null}
                 <Button className="w-full" variant="outline" asChild>
-                  <Link href={`/${params.orgSlug}/adoptions/${params.appId}/contract`}>Generate contract</Link>
+                  <Link href={`/${params.orgSlug}/adoptions/${params.appId}/contract`}>
+                    {app.contract ? "View contract" : "Prepare contract"}
+                  </Link>
                 </Button>
               </CardContent>
             </Card>

@@ -11,6 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: { appId: strin
     where: { id: params.appId },
     include: {
       animal: { select: { name: true, species: true } },
+      organization: { select: { name: true, email: true, contractTemplate: true } },
       contract: true,
     },
   })

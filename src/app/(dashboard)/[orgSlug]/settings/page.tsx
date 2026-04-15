@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { OrgSettingsForm } from "./_components/org-settings-form"
 import { TeamSettings } from "./_components/team-settings"
 import { GdprSettings } from "./_components/gdpr-settings"
+import { ContractTemplateSettings } from "./_components/contract-template-settings"
 
 export const dynamic = 'force-dynamic'
 
@@ -43,6 +44,7 @@ export default async function SettingsPage({
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="team">Team</TabsTrigger>
+          <TabsTrigger value="contracts">Contracts</TabsTrigger>
           <TabsTrigger value="gdpr">GDPR</TabsTrigger>
         </TabsList>
 
@@ -52,6 +54,14 @@ export default async function SettingsPage({
 
         <TabsContent value="team" className="mt-4">
           <TeamSettings org={org} members={org.users} currentUserId={session.user.id} isAdmin={membership.role === "ADMIN"} />
+        </TabsContent>
+
+        <TabsContent value="contracts" className="mt-4">
+          <ContractTemplateSettings
+            orgSlug={params.orgSlug}
+            initialTemplate={org.contractTemplate ?? ""}
+            isAdmin={membership.role === "ADMIN"}
+          />
         </TabsContent>
 
         <TabsContent value="gdpr" className="mt-4">

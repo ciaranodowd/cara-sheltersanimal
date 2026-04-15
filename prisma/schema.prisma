@@ -76,10 +76,11 @@ model Organization {
   charityNumber   String?  // UK charity number
   registrationNum String?
   description     String?
-  stripeAccountId String?  // Stripe Connect account
-  stripeOnboarded Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  stripeAccountId  String?  // Stripe Connect account
+  stripeOnboarded  Boolean  @default(false)
+  contractTemplate String?  // Adoption contract template with {{placeholders}}
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   // Relations
   users              UserOrganization[]
@@ -482,7 +483,11 @@ model AdoptionContract {
   applicationId   String    @unique
   contractText    String
   signedAt        DateTime?
-  signatureData   String?    // base64 or docusign reference
+  signatureData   String?    // typed name used as e-signature
+  signingToken    String?    @unique  // UUID for public signing URL
+  signerIp        String?             // IP at time of signing (eIDAS audit)
+  signedPdfPath   String?             // Supabase Storage path for signed PDF
+  sentAt          DateTime?           // when signing email was sent
   adoptionFee     Decimal?
   currency        String    @default("EUR")
   stripePaymentId String?
