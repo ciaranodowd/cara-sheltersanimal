@@ -1,303 +1,347 @@
-"use client"
-import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
+import { prisma } from "@/lib/prisma"
+import { notFound } from "next/navigation"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import { ArrowLeft, Loader2, CheckCircle } from "lucide-react"
-import { COUNTIES } from "@/lib/constants"
+import { SPECIES_LABELS, SPECIES_EMOJI, SIZE_LABELS } from "@/lib/constants"
+import { formatDate } from "@/lib/utils"
+import { Heart, MapPin, Mail, Phone, Calendar, Ruler, CheckCircle, XCircle, ArrowLeft } from "lucide-react"
 
-export default function AdoptApplicationPage() {
-  const params = useParams()
-  const [animal, setAnimal] = useState<any>(null)
-  const [org, setOrg] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
-  const [error, setError] = useState("")
+export const dynamic = 'force-dynamic'
 
-  const [form, setForm] = useState({
-    applicationType: "ADOPT",
-    applicantName: "", applicantEmail: "", applicantPhone: "",
-    applicantAddress: "", applicantCounty: "",
-    householdType: "", rentOrOwn: "", landlordPermission: false,
-    hasGarden: false, gardenFenced: false,
-    hasChildren: false, childrenAges: "",
-    hasOtherPets: false, otherPetsDetails: "",
-    experienceLevel: "", previousPets: "", whyAdopt: "", workingHours: "",
-    gdprConsent: false,
+export async function generateMetadata({
+  params,
+}: {
+  params: { orgSlug: string; animalId: string }
+}) {
+  const animal = await prisma.animal.findFirst({
+    where: { id: params.animalId, status: "AVAILABLE", publicProfile: true },
+    select: { name: true, species: true, breed: true, description: true },
   })
-
-  useEffect(() => {
-    fetch(`/api/portal/${params.orgSlug}/animals/${params.animalId}`)
-      .then(r => r.json())
-      .then(data => { setAnimal(data.animal); setOrg(data.org); setLoading(false) })
-  }, [params.orgSlug, params.animalId])
-
-  function set(field: string) {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-      setForm(f => ({ ...f, [field]: e.target.value }))
+  if (!animal) return { title: "Animal not found" }
+  const label = SPECIES_LABELS[animal.species] ?? animal.species
+  return {
+    title: `${animal.name} — ${label}${animal.breed ? ` (${animal.breed})` : ""}`,
+    description: animal.description ?? `Meet ${animal.name}, looking for a loving home.`,
+    openGraph: {
+      title: `${animal.name} is looking for a home!`,
+      description: animal.description ?? `Meet ${animal.name}, a ${label.toLowerCase()}${animal.breed ? ` (${animal.breed})` : ""} looking for a loving home.`,
+    },
   }
+}
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!form.gdprConsent) { setError("Please accept the privacy policy to continue"); return }
-    setSubmitting(true)
-    setError("")
-    try {
-      const res = await fetch(`/api/portal/${params.orgSlug}/apply`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, animalId: params.animalId }),
-      })
-      const data = await res.json()
-      if (!res.ok) { setError(data.error ?? "Failed to submit application"); setSubmitting(false); return }
-      setSubmitted(true)
-    } catch {
-      setError("Something went wrong. Please try again.")
-      setSubmitting(false)
+export default async function AdoptAnimalPage({
+  params,
+}: {
+  params: { orgSlug: string; animalId: string }
+}) {
+  const org = await prisma.organization.findUnique({
+    where: { slug: params.orgSlug },
+    select: { id: true, name: true, email: true, phone: true, logo: true, city: true, county: true },
+  })
+  if (!org) notFound()
+
+  const animal = await prisma.animal.findFirst({
+    where: { id: params.animalId, organizationId: org.id, status: "AVAILABLE", publicProfile: true },
+    include: { photos: { orderBy: { position: "asc" } } },
+  })
+  if (!animal) notFound()
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const a = animal!
+
+  const mainPhoto = a.photos.find(p => p.isPrimary) ?? a.photos[0]
+  const emoji = SPECIES_EMOJI[a.species] ?? "🐾"
+
+  function ageLabel(): string | null {
+    if (a.dobApprox) {
+      const months = Math.floor(
+        (Date.now() - new Date(a.dobApprox).getTime()) / (1000 * 60 * 60 * 24 * 30)
+      )
+      if (months < 12) return `${months} month${months !== 1 ? "s" : ""} old`
+      const years = Math.floor(months / 12)
+      const rem = months % 12
+      return rem > 0 ? `${years} yr ${rem} mo` : `${years} year${years !== 1 ? "s" : ""} old`
     }
+    if (a.ageYears !== null && a.ageYears !== undefined) {
+      const m = a.ageMonths ?? 0
+      return a.ageYears === 0
+        ? `${m} month${m !== 1 ? "s" : ""} old`
+        : m > 0
+        ? `${a.ageYears} yr ${m} mo`
+        : `${a.ageYears} year${a.ageYears !== 1 ? "s" : ""} old`
+    }
+    return null
   }
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-
-  if (submitted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-        <div className="text-center max-w-sm space-y-4">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle className="h-8 w-8 text-green-600" />
-          </div>
-          <h1 className="text-2xl font-bold">Application submitted!</h1>
-          <p className="text-muted-foreground">
-            Thank you for your interest in {animal?.name}.{" "}
-            {org?.name} will review your application and be in touch within a few days.
-          </p>
-          <p className="text-sm text-muted-foreground bg-slate-50 rounded-xl p-4">
-            Keep an eye on your inbox at <strong>{form.applicantEmail}</strong> for updates.
-          </p>
-          <Link href={`/portal/${params.orgSlug}`}>
-            <Button variant="outline" className="w-full">See other animals looking for homes</Button>
-          </Link>
-        </div>
-      </div>
-    )
-  }
+  const age = ageLabel()
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-white">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-          <Link href={`/portal/${params.orgSlug}/animals/${params.animalId}`} className="text-muted-foreground hover:text-foreground">
+      {/* Header */}
+      <header className="border-b bg-white sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-4">
+          <Link
+            href={`/portal/${params.orgSlug}`}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
             <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Back to {org.name}</span>
+            <span className="sm:hidden">Back</span>
           </Link>
-          <span className="font-semibold">Apply for {animal?.name}</span>
+          <div className="flex items-center gap-2 ml-auto">
+            {org.logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={org.logo} alt={org.name} className="h-7 w-7 rounded-full object-cover" />
+            ) : (
+              <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center text-white text-xs font-bold">
+                {org.name[0]}
+              </div>
+            )}
+            <span className="font-semibold text-sm">{org.name}</span>
+          </div>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-8">
-        {animal && (
-          <div className="flex items-center gap-4 mb-6 p-4 bg-slate-50 rounded-xl">
-            <div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-100 shrink-0">
-              {animal.photos?.[0] ? (
+      <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+        {/* Hero */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          {/* Photos */}
+          <div className="space-y-3">
+            <div className="aspect-square rounded-2xl overflow-hidden bg-slate-100 shadow-sm">
+              {mainPhoto ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={animal.photos[0].url} alt={animal.name} className="w-full h-full object-cover" />
+                <img
+                  src={mainPhoto.url}
+                  alt={a.name}
+                  className="w-full h-full object-cover"
+                />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-2xl">🐾</div>
+                <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-slate-300">
+                  <span className="text-8xl">{emoji}</span>
+                  <span className="text-sm text-slate-400 font-medium">Photo coming soon</span>
+                </div>
               )}
             </div>
-            <div>
-              <p className="font-bold">{animal.name}</p>
-              <p className="text-sm text-muted-foreground">{animal.species}{animal.breed ? ` · ${animal.breed}` : ""}</p>
-            </div>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && <div className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">{error}</div>}
-
-          {/* Application type */}
-          <Card>
-            <CardHeader><CardTitle className="text-base">I would like to…</CardTitle></CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { value: "ADOPT", label: "Adopt", sub: "Give {name} a permanent home" },
-                  { value: "FOSTER", label: "Foster", sub: "Provide a temporary home" },
-                ].map(opt => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setForm(f => ({ ...f, applicationType: opt.value }))}
-                    className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                      form.applicationType === opt.value
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
+            {/* Thumbnail strip */}
+            {a.photos.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {a.photos.map(photo => (
+                  <div
+                    key={photo.id}
+                    className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 ${
+                      photo.id === mainPhoto?.id ? "border-primary" : "border-transparent"
                     }`}
                   >
-                    <p className="font-semibold text-sm">{opt.label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {opt.sub.replace("{name}", animal?.name ?? "this animal")}
-                    </p>
-                  </button>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                  </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle className="text-base">Your details</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-2 gap-4">
-              <div className="col-span-2 space-y-1.5">
-                <Label>Full name <span className="text-destructive">*</span></Label>
-                <Input placeholder="Jane Murphy" value={form.applicantName} onChange={set("applicantName")} required />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Email <span className="text-destructive">*</span></Label>
-                <Input type="email" value={form.applicantEmail} onChange={set("applicantEmail")} required />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Phone</Label>
-                <Input type="tel" value={form.applicantPhone} onChange={set("applicantPhone")} />
-              </div>
-              <div className="col-span-2 space-y-1.5">
-                <Label>Address</Label>
-                <Input value={form.applicantAddress} onChange={set("applicantAddress")} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>County</Label>
-                <Select value={form.applicantCounty} onValueChange={v => setForm(f => ({ ...f, applicantCounty: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Select county" /></SelectTrigger>
-                  <SelectContent>
-                    {COUNTIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle className="text-base">Your home</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label>Home type</Label>
-                  <Select value={form.householdType} onValueChange={v => setForm(f => ({ ...f, householdType: v }))}>
-                    <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="house">House</SelectItem>
-                      <SelectItem value="apartment">Apartment / flat</SelectItem>
-                      <SelectItem value="farm">Farm / rural</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Do you rent or own?</Label>
-                  <Select value={form.rentOrOwn} onValueChange={v => setForm(f => ({ ...f, rentOrOwn: v }))}>
-                    <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="own">Own my home</SelectItem>
-                      <SelectItem value="rent">Renting</SelectItem>
-                      <SelectItem value="other">Other arrangement</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              {form.rentOrOwn === "rent" && (
-                <label className="flex items-start gap-2.5 cursor-pointer p-3 bg-amber-50 rounded-lg border border-amber-100">
-                  <Checkbox
-                    checked={form.landlordPermission}
-                    onCheckedChange={v => setForm(f => ({ ...f, landlordPermission: v === true }))}
-                    className="mt-0.5"
-                  />
-                  <span className="text-sm">My landlord has given permission for me to have a pet</span>
-                </label>
-              )}
-              <div className="flex flex-wrap gap-4">
-                {[
-                  { key: "hasGarden", label: "Has a garden or outdoor space" },
-                  { key: "gardenFenced", label: "Garden is fully fenced" },
-                  { key: "hasChildren", label: "Children live at home" },
-                  { key: "hasOtherPets", label: "Other pets at home" },
-                ].map(({ key, label }) => (
-                  <label key={key} className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox checked={(form as any)[key]}
-                      onCheckedChange={v => setForm(f => ({ ...f, [key]: v === true }))} />
-                    <span className="text-sm">{label}</span>
-                  </label>
-                ))}
-              </div>
-              {form.hasChildren && (
-                <div className="space-y-1.5">
-                  <Label>Children&apos;s ages</Label>
-                  <Input placeholder="e.g. 3, 7, 12" value={form.childrenAges} onChange={set("childrenAges")} />
-                </div>
-              )}
-              {form.hasOtherPets && (
-                <div className="space-y-1.5">
-                  <Label>Tell us about your other pets</Label>
-                  <Textarea value={form.otherPetsDetails} onChange={set("otherPetsDetails")} rows={2} />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle className="text-base">Experience & lifestyle</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1.5">
-                <Label>Experience with pets</Label>
-                <Select value={form.experienceLevel} onValueChange={v => setForm(f => ({ ...f, experienceLevel: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No previous experience</SelectItem>
-                    <SelectItem value="some">Some experience</SelectItem>
-                    <SelectItem value="experienced">Experienced owner</SelectItem>
-                    <SelectItem value="expert">Expert / professional</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Tell us about previous pets</Label>
-                <Textarea placeholder="Any pets you've owned before…" value={form.previousPets}
-                  onChange={set("previousPets")} rows={2} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>
-                  Why do you want to {form.applicationType === "FOSTER" ? "foster" : "adopt"} {animal?.name}?{" "}
-                  <span className="text-destructive">*</span>
-                </Label>
-                <Textarea value={form.whyAdopt} onChange={set("whyAdopt")} rows={3} required />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Typical working hours</Label>
-                <Input placeholder="e.g. 9–5 Monday–Friday, work from home" value={form.workingHours} onChange={set("workingHours")} />
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-xl">
-            <Checkbox id="gdpr" checked={form.gdprConsent}
-              onCheckedChange={v => setForm(f => ({ ...f, gdprConsent: v === true }))} />
-            <label htmlFor="gdpr" className="text-sm text-muted-foreground cursor-pointer">
-              I consent to {org?.name} storing and processing my personal data to assess this adoption application.
-              My data will be handled in accordance with GDPR and will not be shared with third parties.
-            </label>
+            )}
           </div>
 
-          <Button type="submit" className="w-full" size="lg" disabled={submitting}>
-            {submitting
-              ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Submitting…</>
-              : `Submit ${form.applicationType === "FOSTER" ? "foster" : "adoption"} application`}
-          </Button>
-        </form>
+          {/* Info */}
+          <div className="space-y-5">
+            <div>
+              <div className="flex items-center gap-2 text-sm text-primary font-medium mb-1">
+                <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
+                Available for adoption
+              </div>
+              <h1 className="text-4xl font-bold tracking-tight">{a.name}</h1>
+              <p className="text-lg text-muted-foreground mt-1">
+                {SPECIES_LABELS[a.species] ?? a.species}
+                {a.breed ? ` · ${a.breed}` : ""}
+                {a.colour ? ` · ${a.colour}` : ""}
+              </p>
+            </div>
+
+            {/* Key stats */}
+            <div className="grid grid-cols-2 gap-3">
+              {age && (
+                <div className="flex items-center gap-2.5 p-3 bg-secondary/50 rounded-xl">
+                  <Calendar className="h-4 w-4 text-primary shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Age</p>
+                    <p className="text-sm font-semibold">{age}{a.ageEstimated ? " (approx)" : ""}</p>
+                  </div>
+                </div>
+              )}
+
+              {a.sex !== "UNKNOWN" && (
+                <div className="flex items-center gap-2.5 p-3 bg-secondary/50 rounded-xl">
+                  <span className="text-lg shrink-0">{a.sex === "MALE" ? "♂" : "♀"}</span>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Sex</p>
+                    <p className="text-sm font-semibold capitalize">{a.sex.toLowerCase()}</p>
+                  </div>
+                </div>
+              )}
+
+              {a.size && (
+                <div className="flex items-center gap-2.5 p-3 bg-secondary/50 rounded-xl">
+                  <Ruler className="h-4 w-4 text-primary shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Size</p>
+                    <p className="text-sm font-semibold">{SIZE_LABELS[a.size] ?? a.size}</p>
+                  </div>
+                </div>
+              )}
+
+              {a.intakeType && (
+                <div className="flex items-center gap-2.5 p-3 bg-secondary/50 rounded-xl">
+                  <MapPin className="h-4 w-4 text-primary shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Came to us</p>
+                    <p className="text-sm font-semibold capitalize">
+                      {a.intakeType.replace(/_/g, " ").toLowerCase()}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Health badges */}
+            <div className="flex flex-wrap gap-2">
+              <div className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full font-medium ${
+                a.neutered ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500"
+              }`}>
+                {a.neutered
+                  ? <CheckCircle className="h-3.5 w-3.5" />
+                  : <XCircle className="h-3.5 w-3.5" />}
+                {a.neutered ? "Neutered / spayed" : "Not yet neutered"}
+              </div>
+              <div className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full font-medium ${
+                a.vaccinated ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500"
+              }`}>
+                {a.vaccinated
+                  ? <CheckCircle className="h-3.5 w-3.5" />
+                  : <XCircle className="h-3.5 w-3.5" />}
+                {a.vaccinated ? "Vaccinated" : "Not yet vaccinated"}
+              </div>
+              {a.microchipNumber && (
+                <div className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full font-medium bg-green-50 text-green-700">
+                  <CheckCircle className="h-3.5 w-3.5" />
+                  Microchipped
+                </div>
+              )}
+            </div>
+
+            {a.intakeDate && (
+              <p className="text-xs text-muted-foreground">
+                In our care since {formatDate(a.intakeDate)}
+              </p>
+            )}
+
+            {/* CTA */}
+            <Link
+              href={`/portal/${params.orgSlug}/adopt/${a.id}/apply`}
+              className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3.5 px-6 rounded-xl transition-colors text-base shadow-sm"
+            >
+              <Heart className="h-4 w-4" />
+              Apply to adopt {a.name}
+            </Link>
+          </div>
+        </div>
+
+        {/* About / Description */}
+        {a.description && (
+          <section className="bg-white rounded-2xl border p-6">
+            <h2 className="text-lg font-bold mb-3">About {a.name}</h2>
+            <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{a.description}</p>
+          </section>
+        )}
+
+        {/* Personality / Traits */}
+        {a.publicBio && a.publicBio !== a.description && (
+          <section className="bg-white rounded-2xl border p-6">
+            <h2 className="text-lg font-bold mb-3">Personality &amp; traits</h2>
+            <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{a.publicBio}</p>
+          </section>
+        )}
+
+        {/* What happens next */}
+        <section className="bg-secondary/40 rounded-2xl p-6">
+          <h2 className="text-lg font-bold mb-4">What happens when I apply?</h2>
+          <ol className="space-y-3">
+            {[
+              "Fill in the short application form — it takes about 5 minutes.",
+              `${org.name} will review your application and be in touch within a few days.`,
+              "If you're a good match, you'll be invited for a meet-and-greet or home visit.",
+              `If all goes well, ${a.name} comes home with you!`,
+            ].map((step, i) => (
+              <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
+                <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center mt-0.5">
+                  {i + 1}
+                </span>
+                {step}
+              </li>
+            ))}
+          </ol>
+          <Link
+            href={`/portal/${params.orgSlug}/adopt/${a.id}/apply`}
+            className="mt-5 flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 px-6 rounded-xl transition-colors text-sm shadow-sm"
+          >
+            <Heart className="h-4 w-4" />
+            Apply to adopt {a.name}
+          </Link>
+        </section>
+
+        {/* Contact */}
+        {(org.email || org.phone) && (
+          <section className="border rounded-2xl p-6 text-center">
+            <p className="text-sm font-medium mb-1">Questions about {a.name}?</p>
+            <p className="text-sm text-muted-foreground mb-3">
+              Get in touch with {org.name} directly.
+            </p>
+            <div className="flex flex-wrap gap-3 justify-center">
+              {org.email && (
+                <a href={`mailto:${org.email}`} className="text-sm text-primary hover:underline font-medium">
+                  {org.email}
+                </a>
+              )}
+              {org.phone && (
+                <a href={`tel:${org.phone}`} className="text-sm text-primary hover:underline font-medium">
+                  {org.phone}
+                </a>
+              )}
+            </div>
+          </section>
+        )}
       </main>
+
+      <footer className="bg-white border-t mt-12">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1.5">
+              <Link href={`/portal/${params.orgSlug}`} className="font-semibold text-sm hover:underline">
+                {org.name}
+              </Link>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                {(org.city || org.county) && (
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    {[org.city, org.county].filter(Boolean).join(", ")}
+                  </span>
+                )}
+                {org.email && (
+                  <a href={`mailto:${org.email}`} className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                    <Mail className="h-3.5 w-3.5 shrink-0" />
+                    {org.email}
+                  </a>
+                )}
+                {org.phone && (
+                  <a href={`tel:${org.phone}`} className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                    <Phone className="h-3.5 w-3.5 shrink-0" />
+                    {org.phone}
+                  </a>
+                )}
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Powered by <span className="text-green-600 font-semibold">Cara</span>
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

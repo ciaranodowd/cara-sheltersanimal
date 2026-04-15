@@ -233,7 +233,7 @@ export default async function PublicAnimalProfilePage({
 
             {/* CTA */}
             <Link
-              href={`/portal/${params.orgSlug}/adopt/${animal.id}`}
+              href={`/portal/${params.orgSlug}/adopt/${animal.id}/apply`}
               className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3.5 px-6 rounded-xl transition-colors text-base shadow-sm"
             >
               <Heart className="h-4 w-4" />

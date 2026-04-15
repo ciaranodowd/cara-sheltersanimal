@@ -20,7 +20,8 @@
       "Bash(mkdir -p \"C:\\\\Users\\\\colin\\\\OneDrive\\\\Desktop\\\\cara\\\\src\\\\app\\\\api\\\\applications\\\\[appId]\\\\contract\\\\send\")",
       "Bash(mkdir -p \"C:\\\\Users\\\\colin\\\\OneDrive\\\\Desktop\\\\cara\\\\src\\\\app\\\\api\\\\sign\\\\[token]\")",
       "Bash(mkdir -p \"C:\\\\Users\\\\colin\\\\OneDrive\\\\Desktop\\\\cara\\\\src\\\\app\\\\api\\\\orgs\\\\[orgSlug]\\\\contract-template\")",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(xargs cat *)"
     ]
   }
 }

@@ -11,6 +11,7 @@ import { ArrowLeft, Edit, ExternalLink } from "lucide-react"
 import { SPECIES_LABELS, STATUS_LABELS, SIZE_LABELS } from "@/lib/constants"
 import { formatDate } from "@/lib/utils"
 import { PhotoUpload } from "@/components/photo-upload"
+import { ShareAnimalButton } from "@/components/share-animal-button"
 
 export const dynamic = 'force-dynamic'
 
@@ -133,6 +134,17 @@ export default async function AnimalPage({
           </dl>
         </div>
       </div>
+
+      {animal.publicProfile && animal.status === "AVAILABLE" && (
+        <div className="border rounded-xl p-4 bg-slate-50 space-y-1.5">
+          <p className="text-xs font-medium text-muted-foreground">Share public profile</p>
+          <ShareAnimalButton
+            orgSlug={params.orgSlug}
+            animalId={animal.id}
+            animalName={animal.name}
+          />
+        </div>
+      )}
 
       <Tabs defaultValue="overview">
         <TabsList>
