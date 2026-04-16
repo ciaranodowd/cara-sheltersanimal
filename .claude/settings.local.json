@@ -22,7 +22,9 @@
       "Bash(mkdir -p \"C:\\\\Users\\\\colin\\\\OneDrive\\\\Desktop\\\\cara\\\\src\\\\app\\\\api\\\\orgs\\\\[orgSlug]\\\\contract-template\")",
       "Bash(node *)",
       "Bash(xargs cat *)",
-      "Bash(cat *)"
+      "Bash(cat *)",
+      "Bash(grep *)",
+      "Bash(xargs ls *)"
     ]
   }
 }

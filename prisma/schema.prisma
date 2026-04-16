@@ -79,6 +79,9 @@ model Organization {
   stripeAccountId  String?  // Stripe Connect account
   stripeOnboarded  Boolean  @default(false)
   contractTemplate String?  // Adoption contract template with {{placeholders}}
+  vetName          String?  // Emergency vet name shown in foster portal
+  vetPhone         String?  // Emergency vet phone shown in foster portal
+  coordinatorPhone String?  // Shelter coordinator phone for foster emergency contact
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -338,19 +341,22 @@ model Foster {
 }
 
 model FosterAssignment {
-  id             String    @id @default(cuid())
-  organizationId String
-  animalId       String
-  fosterId       String
-  startDate      DateTime
-  endDate        DateTime?
-  notes          String?
-  createdAt      DateTime  @default(now())
+  id                String    @id @default(cuid())
+  organizationId    String
+  animalId          String
+  fosterId          String
+  startDate         DateTime
+  endDate           DateTime?
+  notes             String?
+  status            String    @default("ACTIVE") // ACTIVE | ENDED
+  fosterPortalToken String?   @unique
+  createdAt         DateTime  @default(now())
 
-  organization Organization @relation(fields: [organizationId], references: [id])
-  animal       Animal       @relation(fields: [animalId], references: [id])
-  foster       Foster       @relation(fields: [fosterId], references: [id])
-  diaryEntries FosterDiaryEntry[]
+  organization  Organization       @relation(fields: [organizationId], references: [id])
+  animal        Animal             @relation(fields: [animalId], references: [id])
+  foster        Foster             @relation(fields: [fosterId], references: [id])
+  diaryEntries  FosterDiaryEntry[]
+  fosterUpdates FosterUpdate[]
 
   @@index([organizationId])
   @@schema("public")
@@ -360,10 +366,23 @@ model FosterDiaryEntry {
   id                 String           @id @default(cuid())
   fosterAssignmentId String
   content            String
-  photos        String // JSON array of uploadthing URLs
+  photos             String // JSON array of uploadthing URLs
   createdAt          DateTime         @default(now())
   assignment         FosterAssignment @relation(fields: [fosterAssignmentId], references: [id], onDelete: Cascade)
 
+  @@schema("public")
+}
+
+model FosterUpdate {
+  id                 String           @id @default(cuid())
+  fosterAssignmentId String
+  content            String
+  photoUrl           String?
+  authorType         String           @default("FOSTER") // FOSTER | SHELTER
+  createdAt          DateTime         @default(now())
+  assignment         FosterAssignment @relation(fields: [fosterAssignmentId], references: [id], onDelete: Cascade)
+
+  @@index([fosterAssignmentId])
   @@schema("public")
 }
 

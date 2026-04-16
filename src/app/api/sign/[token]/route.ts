@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { generateSignedContractPdf } from "@/lib/pdf"
-import { sendSignedContractEmails } from "@/lib/email"
+import { sendSignedContractEmails, sendMicrochipTransferEmail } from "@/lib/email"
 import { supabaseAdmin } from "@/lib/supabase"
 
 const CONTRACTS_BUCKET = "signed-contracts"
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     where: { signingToken: params.token },
     include: {
       application: { select: { id: true, applicantName: true, applicantEmail: true, organizationId: true } },
-      animal: { select: { name: true } },
+      animal: { select: { name: true, microchipNumber: true } },
       organization: { select: { name: true, email: true } },
     },
   })
@@ -116,6 +116,21 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     })
   } catch (err) {
     console.error("Failed to send signed contract emails:", err)
+  }
+
+  // Send microchip transfer reminder if the animal has a chip number
+  if (contract.animal.microchipNumber) {
+    try {
+      await sendMicrochipTransferEmail({
+        to: contract.application.applicantEmail,
+        adopterName: contract.application.applicantName,
+        animalName: contract.animal.name,
+        microchipNumber: contract.animal.microchipNumber,
+        orgName: contract.organization.name,
+      })
+    } catch (err) {
+      console.error("Failed to send microchip transfer email:", err)
+    }
   }
 
   return NextResponse.json({ ok: true, signedAt })

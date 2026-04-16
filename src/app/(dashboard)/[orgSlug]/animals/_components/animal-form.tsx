@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
 import { SPECIES_LABELS, SIZE_LABELS } from "@/lib/constants"
+import { MicrochipRegistryButton } from "@/components/microchip-lookup"
 
 interface AnimalFormProps {
   orgSlug: string
@@ -154,6 +155,7 @@ export function AnimalForm({ orgSlug, orgId, animal }: AnimalFormProps) {
             <div className="space-y-1.5">
               <Label>Microchip number</Label>
               <Input placeholder="981000000000000" value={form.microchipNumber} onChange={set("microchipNumber")} />
+              <MicrochipRegistryButton chipNumber={form.microchipNumber} />
             </div>
             <div className="space-y-1.5">
               <Label>Weight (kg)</Label>

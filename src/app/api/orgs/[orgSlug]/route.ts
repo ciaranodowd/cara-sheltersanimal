@@ -15,7 +15,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { orgSlug: s
   })
   if (!membership || membership.role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const { name, email, phone, address, city, county, country, website, chyNumber, description } = await req.json()
+  const { name, email, phone, address, city, county, country, website, chyNumber, description, vetName, vetPhone, coordinatorPhone } = await req.json()
 
   const updated = await prisma.organization.update({
     where: { id: org.id },
@@ -30,6 +30,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { orgSlug: s
       website: website !== undefined ? (website || null) : org.website,
       chyNumber: chyNumber !== undefined ? (chyNumber || null) : org.chyNumber,
       description: description !== undefined ? (description || null) : org.description,
+      vetName: vetName !== undefined ? (vetName || null) : org.vetName,
+      vetPhone: vetPhone !== undefined ? (vetPhone || null) : org.vetPhone,
+      coordinatorPhone: coordinatorPhone !== undefined ? (coordinatorPhone || null) : org.coordinatorPhone,
     },
   })
 

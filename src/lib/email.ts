@@ -3,6 +3,60 @@ import { Resend } from "resend"
 const resend = new Resend(process.env.RESEND_API_KEY!)
 const FROM = process.env.RESEND_FROM_EMAIL ?? "noreply@cara.ie"
 
+export async function sendFosterInviteEmail({
+  to,
+  fosterName,
+  animalName,
+  orgName,
+  portalUrl,
+}: {
+  to: string
+  fosterName: string
+  animalName: string
+  orgName: string
+  portalUrl: string
+}) {
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `You've been matched with ${animalName}!`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:sans-serif;color:#1a1a1a;max-width:600px;margin:0 auto;padding:32px 24px">
+  <div style="margin-bottom:32px">
+    <span style="display:inline-block;background:#1a3a2a;color:#4ade80;font-weight:700;font-size:18px;padding:6px 14px;border-radius:6px;letter-spacing:0.5px">cara</span>
+  </div>
+  <h1 style="font-size:22px;font-weight:700;margin:0 0 8px">You've been matched with ${animalName}! 🐾</h1>
+  <p style="color:#555;margin:0 0 24px">Hi ${fosterName},</p>
+  <p style="color:#555;margin:0 0 24px">
+    <strong>${orgName}</strong> has assigned <strong>${animalName}</strong> to your care.
+    Thank you so much for opening your home — it makes a huge difference.
+  </p>
+  <p style="color:#555;margin:0 0 24px">
+    Access your foster portal below to see ${animalName}&apos;s details, post updates, and
+    stay in touch with the shelter team.
+  </p>
+  <div style="text-align:center;margin:32px 0">
+    <a href="${portalUrl}" style="display:inline-block;background:#1a3a2a;color:#fff;text-decoration:none;font-weight:600;padding:14px 32px;border-radius:8px;font-size:15px">
+      Open foster portal
+    </a>
+  </div>
+  <p style="color:#888;font-size:13px;margin:0 0 8px">Or copy this link into your browser:</p>
+  <p style="color:#888;font-size:13px;word-break:break-all;margin:0 0 32px">${portalUrl}</p>
+  <p style="color:#888;font-size:13px;margin:0 0 16px">
+    Save this link — it&apos;s your permanent access to ${animalName}&apos;s foster portal.
+  </p>
+  <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
+  <p style="color:#aaa;font-size:12px;margin:0">
+    This email was sent by ${orgName} via Cara. If you believe you received this in error, please ignore it.
+  </p>
+</body>
+</html>`,
+  })
+}
+
 export async function sendContractSigningEmail({
   to,
   adopterName,
@@ -127,4 +181,69 @@ export async function sendSignedContractEmails({
   }
 
   await Promise.all(promises)
+}
+
+export async function sendMicrochipTransferEmail({
+  to,
+  adopterName,
+  animalName,
+  microchipNumber,
+  orgName,
+}: {
+  to: string
+  adopterName: string
+  animalName: string
+  microchipNumber: string
+  orgName: string
+}) {
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `Action required: Transfer ${animalName}'s microchip into your name`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:sans-serif;color:#1a1a1a;max-width:600px;margin:0 auto;padding:32px 24px">
+  <div style="margin-bottom:32px">
+    <span style="display:inline-block;background:#1a3a2a;color:#4ade80;font-weight:700;font-size:18px;padding:6px 14px;border-radius:6px;letter-spacing:0.5px">cara</span>
+  </div>
+  <h1 style="font-size:22px;font-weight:700;margin:0 0 8px">Congratulations on adopting ${animalName}! 🎉</h1>
+  <p style="color:#555;margin:0 0 24px">Hi ${adopterName},</p>
+  <p style="color:#555;margin:0 0 16px">
+    We're so happy that <strong>${animalName}</strong> has found their forever home with you.
+    There's one important step to complete your adoption:
+  </p>
+  <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px 24px;margin-bottom:24px">
+    <p style="font-weight:700;color:#166534;margin:0 0 8px;font-size:15px">Transfer the microchip registration</p>
+    <p style="color:#166534;margin:0 0 16px;font-size:14px">
+      This is a legal requirement in Ireland. The chip must be registered in your name.
+    </p>
+    <p style="color:#374151;margin:0 0 6px;font-size:13px;font-weight:600">Chip number:</p>
+    <p style="font-family:monospace;font-size:18px;font-weight:700;color:#1a3a2a;background:#fff;border:1px solid #bbf7d0;border-radius:6px;padding:10px 14px;margin:0 0 16px;letter-spacing:1px">${microchipNumber}</p>
+    <p style="color:#374151;margin:0 0 10px;font-size:13px">You can transfer the registration at either of these Irish registries:</p>
+    <table style="border-collapse:collapse;width:100%">
+      <tr>
+        <td style="padding:6px 8px 6px 0">
+          <a href="https://www.fido.ie" style="display:inline-block;background:#1a3a2a;color:#fff;text-decoration:none;font-weight:600;padding:10px 20px;border-radius:6px;font-size:13px">
+            Fido — fido.ie
+          </a>
+        </td>
+        <td style="padding:6px 0">
+          <a href="https://animark.ie" style="display:inline-block;background:#1a3a2a;color:#fff;text-decoration:none;font-weight:600;padding:10px 20px;border-radius:6px;font-size:13px">
+            Animark — animark.ie
+          </a>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <p style="color:#555;margin:0 0 24px;font-size:14px">
+    If you have any questions, please don't hesitate to reach out to us at ${orgName}.
+    We wish you and ${animalName} many happy years together!
+  </p>
+  <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
+  <p style="color:#aaa;font-size:12px;margin:0">Sent by ${orgName} via Cara.</p>
+</body>
+</html>`,
+  })
 }

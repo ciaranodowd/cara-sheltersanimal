@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { sendFosterInviteEmail } from "@/lib/email"
 
 export async function POST(req: NextRequest, { params }: { params: { animalId: string } }) {
   const session = await getServerSession(authOptions)
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest, { params }: { params: { animalId: s
 
   const animal = await prisma.animal.findUnique({
     where: { id: params.animalId },
-    select: { organizationId: true },
+    select: { organizationId: true, name: true },
   })
   if (!animal) return NextResponse.json({ error: "Animal not found" }, { status: 404 })
 
@@ -24,6 +25,21 @@ export async function POST(req: NextRequest, { params }: { params: { animalId: s
     where: { userId_organizationId: { userId: session.user.id, organizationId: animal.organizationId } },
   })
   if (!membership) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+
+  const [foster, org] = await Promise.all([
+    prisma.foster.findUnique({
+      where: { id: fosterId },
+      select: { firstName: true, lastName: true, email: true },
+    }),
+    prisma.organization.findUnique({
+      where: { id: animal.organizationId },
+      select: { name: true },
+    }),
+  ])
+
+  if (!foster) return NextResponse.json({ error: "Foster not found" }, { status: 404 })
+
+  const fosterPortalToken = crypto.randomUUID()
 
   const assignment = await prisma.fosterAssignment.create({
     data: {
@@ -33,6 +49,8 @@ export async function POST(req: NextRequest, { params }: { params: { animalId: s
       startDate: new Date(startDate),
       endDate: endDate ? new Date(endDate) : null,
       notes: notes || null,
+      status: "ACTIVE",
+      fosterPortalToken,
     },
   })
 
@@ -41,6 +59,20 @@ export async function POST(req: NextRequest, { params }: { params: { animalId: s
     where: { id: params.animalId },
     data: { status: "FOSTERED" },
   })
+
+  // Send foster invite email (non-fatal)
+  try {
+    const baseUrl = process.env.NEXTAUTH_URL ?? "https://cara.ie"
+    await sendFosterInviteEmail({
+      to: foster.email,
+      fosterName: `${foster.firstName} ${foster.lastName}`,
+      animalName: animal.name,
+      orgName: org?.name ?? "the shelter",
+      portalUrl: `${baseUrl}/foster/${fosterPortalToken}`,
+    })
+  } catch (err) {
+    console.error("Failed to send foster invite email:", err)
+  }
 
   return NextResponse.json(assignment, { status: 201 })
 }

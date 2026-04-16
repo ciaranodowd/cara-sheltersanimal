@@ -12,6 +12,8 @@ import { SPECIES_LABELS, STATUS_LABELS, SIZE_LABELS } from "@/lib/constants"
 import { formatDate } from "@/lib/utils"
 import { PhotoUpload } from "@/components/photo-upload"
 import { ShareAnimalButton } from "@/components/share-animal-button"
+import { MicrochipDisplay } from "@/components/microchip-lookup"
+import { AssignFosterModal } from "./_components/assign-foster-modal"
 
 export const dynamic = 'force-dynamic'
 
@@ -26,22 +28,29 @@ export default async function AnimalPage({
   const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { id: true } })
   if (!org) notFound()
 
-  const animal = await prisma.animal.findFirst({
-    where: { id: params.animalId, organizationId: org.id },
-    include: {
-      photos: { orderBy: { position: "asc" } },
-      medicalRecords: { orderBy: { date: "desc" }, take: 10 },
-      weightLogs: { orderBy: { date: "desc" }, take: 10 },
-      fosterAssignments: {
-        include: { foster: true },
-        orderBy: { startDate: "desc" },
+  const [animal, approvedFosters] = await Promise.all([
+    prisma.animal.findFirst({
+      where: { id: params.animalId, organizationId: org.id },
+      include: {
+        photos: { orderBy: { position: "asc" } },
+        medicalRecords: { orderBy: { date: "desc" }, take: 10 },
+        weightLogs: { orderBy: { date: "desc" }, take: 10 },
+        fosterAssignments: {
+          include: { foster: true },
+          orderBy: { startDate: "desc" },
+        },
+        adoptionApps: {
+          orderBy: { createdAt: "desc" },
+          select: { id: true, applicantName: true, applicantEmail: true, status: true, createdAt: true },
+        },
       },
-      adoptionApps: {
-        orderBy: { createdAt: "desc" },
-        select: { id: true, applicantName: true, applicantEmail: true, status: true, createdAt: true },
-      },
-    },
-  })
+    }),
+    prisma.foster.findMany({
+      where: { organizationId: org.id, approved: true },
+      select: { id: true, firstName: true, lastName: true, email: true },
+      orderBy: { firstName: "asc" },
+    }),
+  ])
   if (!animal) notFound()
 
   console.log(`[animal page] photos for animal ${params.animalId}:`, animal.photos.map(p => ({ id: p.id, url: p.url, isPrimary: p.isPrimary })))
@@ -123,7 +132,6 @@ export default async function AnimalPage({
               ["Vaccinated", animal.vaccinated ? "Yes" : "No"],
               ["Intake date", formatDate(animal.intakeDate)],
               ["Intake type", animal.intakeType?.replace(/_/g, " ") ?? "—"],
-              ["Microchip", animal.microchipNumber ?? "—"],
               ["Date of birth", animal.dobApprox ? formatDate(animal.dobApprox) : "—"],
             ].map(([label, value]) => (
               <div key={label}>
@@ -131,6 +139,10 @@ export default async function AnimalPage({
                 <dd className="font-medium">{value}</dd>
               </div>
             ))}
+            <div className="col-span-2 pt-1">
+              <dt className="text-muted-foreground mb-1.5">Microchip</dt>
+              <dd><MicrochipDisplay chipNumber={animal.microchipNumber} /></dd>
+            </div>
           </dl>
         </div>
       </div>
@@ -224,9 +236,12 @@ export default async function AnimalPage({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Foster assignments</CardTitle>
-              <Link href={`/${params.orgSlug}/animals/${animal.id}/foster/new`}>
-                <Button size="sm">Assign foster</Button>
-              </Link>
+              <AssignFosterModal
+                orgSlug={params.orgSlug}
+                animalId={animal.id}
+                animalName={animal.name}
+                fosters={approvedFosters}
+              />
             </CardHeader>
             <CardContent>
               {animal.fosterAssignments.length === 0 ? (
@@ -234,11 +249,21 @@ export default async function AnimalPage({
               ) : (
                 <div className="divide-y">
                   {animal.fosterAssignments.map(a => (
-                    <div key={a.id} className="py-3">
-                      <p className="font-medium text-sm">{a.foster.firstName} {a.foster.lastName}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(a.startDate)} — {a.endDate ? formatDate(a.endDate) : "Present"}
-                      </p>
+                    <div key={a.id} className="py-3 flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-medium text-sm">{a.foster.firstName} {a.foster.lastName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDate(a.startDate)} — {a.endDate ? formatDate(a.endDate) : "Present"}
+                        </p>
+                        {a.notes && <p className="text-xs text-muted-foreground mt-0.5 italic">{a.notes}</p>}
+                      </div>
+                      {(a as any).fosterPortalToken && (
+                        <Link href={`/foster/${(a as any).fosterPortalToken}`} target="_blank">
+                          <Badge variant="outline" className="text-xs cursor-pointer hover:bg-slate-50">
+                            View portal ↗
+                          </Badge>
+                        </Link>
+                      )}
                     </div>
                   ))}
                 </div>

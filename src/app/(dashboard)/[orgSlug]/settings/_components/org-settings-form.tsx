@@ -25,6 +25,9 @@ export function OrgSettingsForm({ org, isAdmin }: { org: any; isAdmin: boolean }
     website: org.website ?? "",
     chyNumber: org.chyNumber ?? "",
     description: org.description ?? "",
+    vetName: org.vetName ?? "",
+    vetPhone: org.vetPhone ?? "",
+    coordinatorPhone: org.coordinatorPhone ?? "",
   })
 
   function set(field: string) {
@@ -104,6 +107,24 @@ export function OrgSettingsForm({ org, isAdmin }: { org: any; isAdmin: boolean }
             <div className="col-span-2 space-y-1.5">
               <Label>Description (shown on public portal)</Label>
               <Textarea value={form.description} onChange={set("description")} rows={3} disabled={!isAdmin} />
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Foster portal — emergency contacts</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Coordinator phone</Label>
+                <Input placeholder="+353 1 234 5678" value={form.coordinatorPhone} onChange={set("coordinatorPhone")} disabled={!isAdmin} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Vet name</Label>
+                <Input placeholder="City Vets" value={form.vetName} onChange={set("vetName")} disabled={!isAdmin} />
+              </div>
+              <div className="col-span-2 sm:col-span-1 space-y-1.5">
+                <Label>Vet phone</Label>
+                <Input placeholder="+353 1 234 5678" value={form.vetPhone} onChange={set("vetPhone")} disabled={!isAdmin} />
+              </div>
             </div>
           </div>
 
