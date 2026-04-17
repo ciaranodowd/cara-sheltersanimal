@@ -1,3 +1,4 @@
+/*
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
@@ -60,4 +61,11 @@ export async function POST(
   })
 
   return NextResponse.json({ url: checkoutSession.url })
+}
+*/
+
+import { NextResponse } from "next/server"
+
+export async function POST() {
+  return NextResponse.json({ error: "Billing temporarily disabled" }, { status: 503 })
 }
