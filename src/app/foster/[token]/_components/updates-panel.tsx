@@ -3,7 +3,6 @@ import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Camera, Send, Loader2, User, Home, X } from "lucide-react"
-import { formatDate } from "@/lib/utils"
 
 interface FosterUpdate {
   id: string
