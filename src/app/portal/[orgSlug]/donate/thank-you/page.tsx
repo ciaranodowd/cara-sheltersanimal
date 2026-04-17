@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { stripe } from "@/lib/stripe"
+import { getStripe } from "@/lib/stripe"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { Heart } from "lucide-react"
@@ -38,7 +38,7 @@ export default async function DonateThankYouPage({
   let amount = 0
   if (searchParams.session_id) {
     try {
-      const session = await stripe.checkout.sessions.retrieve(searchParams.session_id)
+      const session = await getStripe().checkout.sessions.retrieve(searchParams.session_id)
       amount = (session.amount_total ?? 0) / 100
     } catch {
       // session not found — show generic thank you
