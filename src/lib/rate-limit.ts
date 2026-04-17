@@ -13,7 +13,7 @@ const store = new Map<string, RateWindow>()
 // Sweep expired entries every minute to prevent unbounded memory growth
 setInterval(() => {
   const now = Date.now()
-  for (const [key, window] of store.entries()) {
+  for (const [key, window] of Array.from(store.entries())) {
     if (now > window.resetAt) store.delete(key)
   }
 }, 60_000).unref?.()
