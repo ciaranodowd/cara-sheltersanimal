@@ -152,8 +152,8 @@ export default function AdoptApplicationPage() {
 
           <Card>
             <CardHeader><CardTitle className="text-base">Your details</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-2 gap-4">
-              <div className="col-span-2 space-y-1.5">
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="col-span-1 sm:col-span-2 space-y-1.5">
                 <Label>Full name <span className="text-destructive">*</span></Label>
                 <Input placeholder="Jane Murphy" value={form.applicantName} onChange={set("applicantName")} required />
               </div>
@@ -165,7 +165,7 @@ export default function AdoptApplicationPage() {
                 <Label>Phone</Label>
                 <Input type="tel" value={form.applicantPhone} onChange={set("applicantPhone")} />
               </div>
-              <div className="col-span-2 space-y-1.5">
+              <div className="col-span-1 sm:col-span-2 space-y-1.5">
                 <Label>Address</Label>
                 <Input value={form.applicantAddress} onChange={set("applicantAddress")} />
               </div>
@@ -184,7 +184,7 @@ export default function AdoptApplicationPage() {
           <Card>
             <CardHeader><CardTitle className="text-base">Your home</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label>Home type</Label>
                   <Select value={form.householdType} onValueChange={v => setForm(f => ({ ...f, householdType: v }))}>

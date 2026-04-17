@@ -113,7 +113,7 @@ export default function SignContractPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white px-6 py-4 flex items-center gap-3">
+      <header className="border-b border-slate-200 bg-white px-4 py-4 flex items-center gap-3">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0" style={{ backgroundColor: "#4ade80", color: "#1a3a2a" }}>C</div>
         <div>
           <p className="text-sm font-semibold text-slate-800">{data!.orgName}</p>
@@ -121,7 +121,7 @@ export default function SignContractPage() {
         </div>
       </header>
 
-      <div className="max-w-2xl mx-auto px-6 py-10 space-y-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-8">
         {/* Intro */}
         <div className="space-y-1">
           <div className="flex items-center gap-2.5 mb-3">

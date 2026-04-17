@@ -38,7 +38,7 @@ export default async function AdopterDetailPage({ params }: { params: { orgSlug:
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="p-8 max-w-3xl mx-auto space-y-6">
+      <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6">
         <div>
           <Link href={`/${params.orgSlug}/people?tab=adopters`} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 mb-4 transition-colors">
             <ArrowLeft className="h-4 w-4" /> Back to people

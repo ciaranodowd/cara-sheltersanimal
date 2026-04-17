@@ -129,7 +129,7 @@ export default async function HomePage() {
           </div>
 
           {/* Stats row */}
-          <div className="flex flex-wrap items-center justify-center gap-10 mb-16">
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 mb-16">
             {[
               { value: "8 hrs", label: "saved per week" },
               { value: "€35", label: "per month" },

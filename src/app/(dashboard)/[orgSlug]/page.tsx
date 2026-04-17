@@ -164,7 +164,7 @@ export default async function DashboardPage({ params }: { params: { orgSlug: str
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="p-8 max-w-7xl mx-auto space-y-8">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
 
         {/* Header */}
         <div>
@@ -176,14 +176,14 @@ export default async function DashboardPage({ params }: { params: { orgSlug: str
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
           {stats.map(stat => (
             <Link key={stat.label} href={stat.href}>
-              <div className="bg-white rounded-xl p-5 border border-slate-100 hover:border-slate-200 transition-colors cursor-pointer">
+              <div className="bg-white rounded-xl p-3 sm:p-5 border border-slate-100 hover:border-slate-200 transition-colors cursor-pointer">
                 <div className="flex items-start justify-between mb-4">
                   <p className="text-sm font-medium text-slate-500">{stat.label}</p>
                   <div className={`p-2 rounded-lg ${stat.iconBg}`}>
                     <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
                   </div>
                 </div>
-                <div className="text-3xl font-bold text-slate-900">{stat.value}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-slate-900">{stat.value}</div>
                 <p className="text-xs text-slate-400 mt-1">{stat.sub}</p>
               </div>
             </Link>
@@ -270,7 +270,7 @@ export default async function DashboardPage({ params }: { params: { orgSlug: str
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {quickActions.map(action => (
               <Link key={action.href} href={action.href}>
-                <div className="bg-white rounded-xl border border-slate-100 hover:border-slate-200 p-5 flex items-center gap-4 transition-colors cursor-pointer">
+                <div className="bg-white rounded-xl border border-slate-100 hover:border-slate-200 p-3 sm:p-5 flex items-center gap-3 sm:gap-4 transition-colors cursor-pointer">
                   <div className={`p-2.5 rounded-lg shrink-0 ${action.iconBg}`}>
                     <action.icon className={`h-5 w-5 ${action.iconColor}`} />
                   </div>

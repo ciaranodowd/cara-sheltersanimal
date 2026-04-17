@@ -29,7 +29,7 @@ export async function POST(req: NextRequest, { params }: { params: { animalId: s
   const [foster, org] = await Promise.all([
     prisma.foster.findUnique({
       where: { id: fosterId },
-      select: { firstName: true, lastName: true, email: true },
+      select: { firstName: true, lastName: true, email: true, organizationId: true },
     }),
     prisma.organization.findUnique({
       where: { id: animal.organizationId },
@@ -38,6 +38,11 @@ export async function POST(req: NextRequest, { params }: { params: { animalId: s
   ])
 
   if (!foster) return NextResponse.json({ error: "Foster not found" }, { status: 404 })
+
+  // Prevent cross-organisation IDOR: ensure the foster belongs to the same org as the animal
+  if (foster.organizationId !== animal.organizationId) {
+    return NextResponse.json({ error: "Foster not found" }, { status: 404 })
+  }
 
   const fosterPortalToken = crypto.randomUUID()
 

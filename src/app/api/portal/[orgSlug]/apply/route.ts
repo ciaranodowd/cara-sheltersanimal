@@ -1,10 +1,32 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { rateLimit } from "@/lib/rate-limit"
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const VALID_APPLICATION_TYPES = new Set(["ADOPT", "FOSTER"])
+
+// Field length limits
+const MAX_NAME = 200
+const MAX_EMAIL = 254
+const MAX_PHONE = 30
+const MAX_ADDRESS = 500
+const MAX_SHORT = 500
+const MAX_LONG = 5000
 
 export async function POST(
   req: NextRequest,
   { params }: { params: { orgSlug: string } }
 ) {
+  // Rate limit public-facing endpoint: 5 applications per IP per hour
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown"
+  const rl = rateLimit(`apply:${ip}`, { limit: 5, windowMs: 60 * 60 * 1000 })
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
+    )
+  }
+
   const org = await prisma.organization.findUnique({
     where: { slug: params.orgSlug },
     select: { id: true },
@@ -20,10 +42,52 @@ export async function POST(
     whyAdopt, workingHours, applicationType, gdprConsent,
   } = body
 
+  // Required field presence
   if (!animalId || !applicantName || !applicantEmail || !whyAdopt) {
     return NextResponse.json({ error: "Required fields missing" }, { status: 400 })
   }
 
+  // GDPR consent is mandatory — enforce server-side, not just client-side
+  if (gdprConsent !== true) {
+    return NextResponse.json({ error: "GDPR consent is required to submit an application" }, { status: 400 })
+  }
+
+  // Input validation
+  if (typeof applicantName !== "string" || applicantName.trim().length < 2 || applicantName.trim().length > MAX_NAME) {
+    return NextResponse.json({ error: "Invalid name" }, { status: 400 })
+  }
+  if (typeof applicantEmail !== "string" || !EMAIL_RE.test(applicantEmail) || applicantEmail.length > MAX_EMAIL) {
+    return NextResponse.json({ error: "Invalid email address" }, { status: 400 })
+  }
+  if (applicantPhone && (typeof applicantPhone !== "string" || applicantPhone.length > MAX_PHONE)) {
+    return NextResponse.json({ error: "Invalid phone number" }, { status: 400 })
+  }
+  if (applicantAddress && (typeof applicantAddress !== "string" || applicantAddress.length > MAX_ADDRESS)) {
+    return NextResponse.json({ error: "Address is too long" }, { status: 400 })
+  }
+  if (typeof whyAdopt !== "string" || whyAdopt.trim().length < 10 || whyAdopt.length > MAX_LONG) {
+    return NextResponse.json({ error: "Please provide a reason (10–5000 characters)" }, { status: 400 })
+  }
+  if (childrenAges && (typeof childrenAges !== "string" || childrenAges.length > MAX_SHORT)) {
+    return NextResponse.json({ error: "Children's ages field is too long" }, { status: 400 })
+  }
+  if (otherPetsDetails && (typeof otherPetsDetails !== "string" || otherPetsDetails.length > MAX_SHORT)) {
+    return NextResponse.json({ error: "Other pets field is too long" }, { status: 400 })
+  }
+  if (previousPets && (typeof previousPets !== "string" || previousPets.length > MAX_LONG)) {
+    return NextResponse.json({ error: "Previous pets field is too long" }, { status: 400 })
+  }
+  if (workingHours && (typeof workingHours !== "string" || workingHours.length > MAX_SHORT)) {
+    return NextResponse.json({ error: "Working hours field is too long" }, { status: 400 })
+  }
+
+  // Validate enum values
+  const resolvedType = applicationType ?? "ADOPT"
+  if (!VALID_APPLICATION_TYPES.has(resolvedType)) {
+    return NextResponse.json({ error: "Invalid application type" }, { status: 400 })
+  }
+
+  // Verify the animal is available and belongs to this org
   const animal = await prisma.animal.findFirst({
     where: { id: animalId, organizationId: org.id, status: "AVAILABLE" },
   })
@@ -33,10 +97,10 @@ export async function POST(
     data: {
       organizationId: org.id,
       animalId,
-      applicantName,
-      applicantEmail,
-      applicantPhone: applicantPhone || null,
-      applicantAddress: applicantAddress || null,
+      applicantName: applicantName.trim(),
+      applicantEmail: applicantEmail.toLowerCase().trim(),
+      applicantPhone: applicantPhone?.trim() || null,
+      applicantAddress: applicantAddress?.trim() || null,
       applicantCounty: applicantCounty || null,
       householdType: householdType || null,
       rentOrOwn: rentOrOwn || null,
@@ -44,16 +108,16 @@ export async function POST(
       hasGarden: hasGarden ?? false,
       gardenFenced: gardenFenced ?? null,
       hasChildren: hasChildren ?? false,
-      childrenAges: childrenAges || null,
+      childrenAges: childrenAges?.trim() || null,
       hasOtherPets: hasOtherPets ?? false,
-      otherPetsDetails: otherPetsDetails || null,
+      otherPetsDetails: otherPetsDetails?.trim() || null,
       experienceLevel: experienceLevel || null,
-      previousPets: previousPets || null,
-      whyAdopt: whyAdopt || null,
-      workingHours: workingHours || null,
-      applicationType: applicationType || "ADOPT",
-      gdprConsent: gdprConsent ?? false,
-      gdprConsentAt: gdprConsent ? new Date() : null,
+      previousPets: previousPets?.trim() || null,
+      whyAdopt: whyAdopt.trim(),
+      workingHours: workingHours?.trim() || null,
+      applicationType: resolvedType,
+      gdprConsent: true,
+      gdprConsentAt: new Date(),
       status: "PENDING",
     },
   })

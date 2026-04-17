@@ -15,7 +15,7 @@ export default async function NewDonationPage({ params }: { params: { orgSlug: s
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="p-8 max-w-2xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-2xl mx-auto">
         <DonationForm orgSlug={params.orgSlug} orgId={org.id} />
       </div>
     </div>

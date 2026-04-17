@@ -145,7 +145,7 @@ export default async function PublicAnimalProfilePage({
                 <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
                 Available for adoption
               </div>
-              <h1 className="text-4xl font-bold tracking-tight">{animal.name}</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">{animal.name}</h1>
               <p className="text-lg text-muted-foreground mt-1">
                 {SPECIES_LABELS[animal.species] ?? animal.species}
                 {animal.breed ? ` · ${animal.breed}` : ""}

@@ -28,7 +28,7 @@ export default async function NewFosterAssignmentPage({ params }: { params: { or
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="p-8 max-w-2xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-2xl mx-auto">
         <FosterAssignForm
           orgSlug={params.orgSlug}
           animalId={animal.id}

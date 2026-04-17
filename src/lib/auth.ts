@@ -4,10 +4,14 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
+import { rateLimit } from "@/lib/rate-limit"
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as any,
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   pages: {
     signIn: "/login",
     error: "/login",
@@ -21,6 +25,11 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
+
+        // Rate limit: 10 failed attempts per email per 15 minutes
+        const key = `login:${credentials.email.toLowerCase()}`
+        const rl = rateLimit(key, { limit: 10, windowMs: 15 * 60 * 1000 })
+        if (!rl.ok) return null
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email.toLowerCase() },
@@ -51,7 +60,6 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user && token.id) {
         session.user.id = token.id as string
-        // Attach org memberships
         const orgs = await prisma.userOrganization.findMany({
           where: { userId: token.id as string },
           include: { organization: { select: { id: true, name: true, slug: true } } },

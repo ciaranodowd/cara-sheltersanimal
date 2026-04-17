@@ -1,13 +1,37 @@
 import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
+import { rateLimit } from "@/lib/rate-limit"
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function POST(req: NextRequest) {
-  try {
-    const { name, email, password } = await req.json()
+  // 5 registration attempts per IP per 15 minutes
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown"
+  const rl = rateLimit(`register:${ip}`, { limit: 5, windowMs: 15 * 60 * 1000 })
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
+    )
+  }
 
-    if (!email || !password || !name) {
+  try {
+    const body = await req.json()
+    const { name, email, password } = body
+
+    if (!name || !email || !password) {
       return NextResponse.json({ error: "Name, email and password are required" }, { status: 400 })
+    }
+
+    if (typeof name !== "string" || name.trim().length < 2 || name.trim().length > 100) {
+      return NextResponse.json({ error: "Name must be between 2 and 100 characters" }, { status: 400 })
+    }
+    if (typeof email !== "string" || !EMAIL_RE.test(email) || email.length > 254) {
+      return NextResponse.json({ error: "Invalid email address" }, { status: 400 })
+    }
+    if (typeof password !== "string" || password.length < 8 || password.length > 128) {
+      return NextResponse.json({ error: "Password must be between 8 and 128 characters" }, { status: 400 })
     }
 
     const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } })
@@ -17,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     const hashed = await bcrypt.hash(password, 12)
     await prisma.user.create({
-      data: { name, email: email.toLowerCase(), password: hashed },
+      data: { name: name.trim(), email: email.toLowerCase(), password: hashed },
     })
 
     return NextResponse.json({ success: true }, { status: 201 })
@@ -26,10 +50,7 @@ export async function POST(req: NextRequest) {
     const message = err instanceof Error ? err.message : String(err)
     console.error("[register] error:", message)
     return NextResponse.json(
-      {
-        error: "Registration failed",
-        ...(isDev && { detail: message }),
-      },
+      { error: "Registration failed", ...(isDev && { detail: message }) },
       { status: 500 }
     )
   }

@@ -24,7 +24,15 @@
       "Bash(xargs cat *)",
       "Bash(cat *)",
       "Bash(grep *)",
-      "Bash(xargs ls *)"
+      "Bash(xargs ls *)",
+      "Bash(npm audit *)",
+      "Bash(python -c \" import sys, json data = json.load\\(sys.stdin\\) vulns = data.get\\('vulnerabilities', {}\\) high_crit = {k: v for k, v in vulns.items\\(\\) if v.get\\('severity'\\) in \\('high', 'critical'\\)} print\\(f'Total vulnerabilities: {data.get\\(\\\\\"metadata\\\\\", {}\\).get\\(\\\\\"vulnerabilities\\\\\", {}\\)}'\\) print\\(f'High/Critical: {len\\(high_crit\\)}'\\) for name, info in high_crit.items\\(\\): print\\(f' {name}: {info[\\\\\"severity\\\\\"]} - {info.get\\(\\\\\"title\\\\\", \\\\\"\\\\\"\\)}'\\) \")",
+      "Bash(python -c \" import sys, json data = json.load\\(sys.stdin\\) vulns = data.get\\('vulnerabilities', {}\\) high_crit = {k: v for k, v in vulns.items\\(\\) if v.get\\('severity'\\) in \\('high', 'critical'\\)} for name, info in high_crit.items\\(\\): print\\(f'{name}: severity={info[\\\\\"severity\\\\\"]}'\\) print\\(f' via: {[x.get\\(\\\\\"title\\\\\",\\\\\"\\\\\"\\) or x.get\\(\\\\\"url\\\\\",\\\\\"\\\\\"\\) for x in info.get\\(\\\\\"via\\\\\", []\\) if isinstance\\(x, dict\\)]}'\\) print\\(f' fixAvailable: {info.get\\(\\\\\"fixAvailable\\\\\"\\)}'\\) print\\(\\) \")",
+      "Bash(npm show *)",
+      "Bash(python -c \"import sys,json; vs=json.load\\(sys.stdin\\); stable=[v for v in vs if not any\\(x in v for x in ['alpha','beta','rc','canary']\\)]; print\\('Latest stable versions:', stable[-5:]\\)\")",
+      "Bash(python -c \"import sys,json; vs=json.load\\(sys.stdin\\); v14=[v for v in vs if v.startswith\\('14.'\\) and not any\\(x in v for x in ['alpha','beta','rc','canary']\\)]; print\\('Latest 14.x:', v14[-5:]\\)\")",
+      "Bash(git rm *)",
+      "Bash(echo \"exit: $?\")"
     ]
   }
 }

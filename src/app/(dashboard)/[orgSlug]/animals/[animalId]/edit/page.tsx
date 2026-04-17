@@ -19,7 +19,7 @@ export default async function EditAnimalPage({ params }: { params: { orgSlug: st
   if (!animal) notFound()
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-3xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Edit {animal.name}</h1>
       </div>

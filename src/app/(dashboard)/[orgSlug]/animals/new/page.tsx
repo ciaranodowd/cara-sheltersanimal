@@ -14,7 +14,7 @@ export default async function NewAnimalPage({ params }: { params: { orgSlug: str
   if (!org) notFound()
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-3xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Add animal</h1>
         <p className="text-muted-foreground text-sm">Record a new animal intake</p>

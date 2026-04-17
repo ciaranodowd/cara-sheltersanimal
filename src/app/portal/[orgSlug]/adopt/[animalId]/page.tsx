@@ -146,7 +146,7 @@ export default async function AdoptAnimalPage({
                 <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
                 Available for adoption
               </div>
-              <h1 className="text-4xl font-bold tracking-tight">{a.name}</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">{a.name}</h1>
               <p className="text-lg text-muted-foreground mt-1">
                 {SPECIES_LABELS[a.species] ?? a.species}
                 {a.breed ? ` · ${a.breed}` : ""}

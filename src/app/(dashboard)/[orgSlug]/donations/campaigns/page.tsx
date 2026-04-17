@@ -70,7 +70,7 @@ export default async function CampaignsPage({ params }: { params: { orgSlug: str
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="p-8 max-w-4xl mx-auto space-y-8">
+      <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-8">
         <div>
           <Link href={`/${params.orgSlug}/donations`} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 mb-4 transition-colors">
             <ArrowLeft className="h-4 w-4" /> Back to donations

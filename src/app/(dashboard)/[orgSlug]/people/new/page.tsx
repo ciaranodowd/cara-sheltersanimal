@@ -21,7 +21,7 @@ export default async function NewPersonPage({
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="p-8 max-w-2xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-2xl mx-auto">
         <PersonForm orgSlug={params.orgSlug} orgId={org.id} defaultType={searchParams.type ?? "adopter"} />
       </div>
     </div>

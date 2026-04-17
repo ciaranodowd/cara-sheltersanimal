@@ -76,7 +76,7 @@ export default async function ReportsPage({ params }: { params: { orgSlug: strin
   const maxIntake = Math.max(...intakeByMonth.map(m => m.count), 1)
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold">Reports</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

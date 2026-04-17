@@ -68,7 +68,7 @@ export default async function AnimalPage({
   const mainPhoto = animal.photos[0]
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <Link href={`/${params.orgSlug}/animals`}>
           <Button variant="ghost" size="sm" className="gap-1.5">
@@ -159,13 +159,15 @@ export default async function AnimalPage({
       )}
 
       <Tabs defaultValue="overview">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="photos">Photos ({animal.photos.length})</TabsTrigger>
-          <TabsTrigger value="medical">Medical</TabsTrigger>
-          <TabsTrigger value="foster">Foster history</TabsTrigger>
-          <TabsTrigger value="applications">Applications ({animal.adoptionApps.length})</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <TabsList className="w-max">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="photos">Photos ({animal.photos.length})</TabsTrigger>
+            <TabsTrigger value="medical">Medical</TabsTrigger>
+            <TabsTrigger value="foster">Foster history</TabsTrigger>
+            <TabsTrigger value="applications">Applications ({animal.adoptionApps.length})</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="photos" className="mt-4">
           <Card>

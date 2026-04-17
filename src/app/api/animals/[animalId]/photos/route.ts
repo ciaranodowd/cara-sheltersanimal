@@ -76,9 +76,6 @@ export async function POST(
     .from(ANIMAL_PHOTOS_BUCKET)
     .getPublicUrl(storagePath)
 
-  console.log("[photo upload] storagePath:", storagePath)
-  console.log("[photo upload] publicUrl from Supabase:", publicUrl)
-
   // First photo becomes the primary automatically
   const count = await prisma.animalPhoto.count({ where: { animalId: params.animalId } })
   const isPrimary = count === 0
@@ -92,8 +89,6 @@ export async function POST(
       position: count,
     },
   })
-
-  console.log("[photo upload] saved to DB:", { id: photo.id, url: photo.url, key: photo.key })
 
   return NextResponse.json(photo, { status: 201 })
 }

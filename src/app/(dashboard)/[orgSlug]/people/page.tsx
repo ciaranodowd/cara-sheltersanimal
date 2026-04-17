@@ -50,7 +50,7 @@ export default async function PeoplePage({
   )
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-5">
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">People</h1>
         <Button asChild>
@@ -61,12 +61,14 @@ export default async function PeoplePage({
       </div>
 
       <Tabs defaultValue={tab}>
-        <TabsList>
-          <TabsTrigger value="adopters">Adopters <Badge variant="secondary" className="ml-1.5 text-xs">{adopters.length}</Badge></TabsTrigger>
-          <TabsTrigger value="fosters">Fosters <Badge variant="secondary" className="ml-1.5 text-xs">{fosters.length}</Badge></TabsTrigger>
-          <TabsTrigger value="volunteers">Volunteers <Badge variant="secondary" className="ml-1.5 text-xs">{volunteers.length}</Badge></TabsTrigger>
-          <TabsTrigger value="donors">Donors <Badge variant="secondary" className="ml-1.5 text-xs">{donors.length}</Badge></TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <TabsList className="w-max">
+            <TabsTrigger value="adopters">Adopters <Badge variant="secondary" className="ml-1.5 text-xs">{adopters.length}</Badge></TabsTrigger>
+            <TabsTrigger value="fosters">Fosters <Badge variant="secondary" className="ml-1.5 text-xs">{fosters.length}</Badge></TabsTrigger>
+            <TabsTrigger value="volunteers">Volunteers <Badge variant="secondary" className="ml-1.5 text-xs">{volunteers.length}</Badge></TabsTrigger>
+            <TabsTrigger value="donors">Donors <Badge variant="secondary" className="ml-1.5 text-xs">{donors.length}</Badge></TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="adopters" className="mt-4">
           <div className="rounded-xl border bg-card">

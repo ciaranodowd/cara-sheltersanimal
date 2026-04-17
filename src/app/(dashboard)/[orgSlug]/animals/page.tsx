@@ -46,7 +46,7 @@ export default async function AnimalsPage({
   })
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-5">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Animals</h1>
@@ -61,7 +61,7 @@ export default async function AnimalsPage({
 
       {/* Filters */}
       <form className="flex flex-wrap gap-2">
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative flex-1 min-w-0">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input name="search" placeholder="Search name, breed, microchip…" defaultValue={searchParams.search}
             className="pl-8" />

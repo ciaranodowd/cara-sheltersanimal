@@ -74,7 +74,7 @@ export default function ApplicationPage() {
   ]
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6">
       <Link href={`/${params.orgSlug}/adoptions`}>
         <Button variant="ghost" size="sm" className="gap-1.5">
           <ArrowLeft className="h-4 w-4" /> Adoptions
@@ -105,7 +105,7 @@ export default function ApplicationPage() {
           <Card>
             <CardHeader><CardTitle className="text-base">Applicant details</CardTitle></CardHeader>
             <CardContent>
-              <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
                 {fields.map(([label, value]) => (
                   <div key={label}>
                     <dt className="text-muted-foreground">{label}</dt>
