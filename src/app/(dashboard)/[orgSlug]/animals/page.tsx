@@ -103,29 +103,35 @@ export default async function AnimalsPage({
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {animals.map(animal => (
             <Link key={animal.id} href={`/${params.orgSlug}/animals/${animal.id}`}
-              className="group rounded-xl border bg-card overflow-hidden hover:shadow-md transition-shadow">
-              <div className="aspect-square bg-slate-100 relative overflow-hidden">
+              className="group rounded-2xl border bg-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+              <div className="aspect-[4/3] bg-slate-100 relative overflow-hidden">
                 {animal.photos[0] ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={animal.photos[0].url} alt={animal.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-4xl text-slate-300">
+                  <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-slate-50 to-slate-100">
                     {animal.species === "DOG" ? "🐕" : animal.species === "CAT" ? "🐈" : "🐾"}
                   </div>
                 )}
                 <div className="absolute top-2 right-2">
-                  <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${STATUS_COLORS[animal.status] ?? "bg-slate-100 text-slate-600"}`}>
+                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold shadow-sm ${STATUS_COLORS[animal.status] ?? "bg-slate-100 text-slate-600"}`}>
                     {STATUS_LABELS[animal.status] ?? animal.status}
                   </span>
                 </div>
+                {animal._count.adoptionApps > 0 && (
+                  <div className="absolute bottom-2 left-2">
+                    <span className="text-[11px] px-2 py-0.5 rounded-full font-semibold bg-primary text-primary-foreground shadow-sm">
+                      {animal._count.adoptionApps} app{animal._count.adoptionApps !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="p-3">
-                <p className="font-semibold text-sm truncate">{animal.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{SPECIES_LABELS[animal.species] ?? animal.species}{animal.breed ? ` · ${animal.breed}` : ""}</p>
-                {animal._count.adoptionApps > 0 && (
-                  <p className="text-xs text-primary font-medium mt-1">{animal._count.adoptionApps} application{animal._count.adoptionApps !== 1 ? "s" : ""}</p>
-                )}
+                <p className="font-bold text-sm truncate">{animal.name}</p>
+                <p className="text-xs text-muted-foreground truncate mt-0.5">
+                  {SPECIES_LABELS[animal.species] ?? animal.species}{animal.breed ? ` · ${animal.breed}` : ""}
+                </p>
               </div>
             </Link>
           ))}

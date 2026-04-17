@@ -2,7 +2,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { signIn } from "next-auth/react"
+import { signIn, getSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 export function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/"
+  const callbackUrl = searchParams.get("callbackUrl")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -30,12 +30,14 @@ export function LoginForm() {
     if (result?.error) {
       setError("Invalid email or password")
     } else {
-      router.push(callbackUrl)
+      const session = await getSession()
+      const slug = session?.user?.organizations?.[0]?.slug
+      router.push(callbackUrl ?? (slug ? `/${slug}` : "/"))
     }
   }
 
   async function handleGoogle() {
-    await signIn("google", { callbackUrl })
+    await signIn("google", { callbackUrl: callbackUrl ?? "/" })
   }
 
   return (
