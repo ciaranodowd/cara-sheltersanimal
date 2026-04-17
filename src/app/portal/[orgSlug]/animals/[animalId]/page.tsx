@@ -3,7 +3,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { SPECIES_LABELS, SPECIES_EMOJI, SIZE_LABELS } from "@/lib/constants"
 import { formatDate } from "@/lib/utils"
-import { Heart, MapPin, Mail, Phone, Calendar, Ruler, CheckCircle, XCircle, ArrowLeft } from "lucide-react"
+import { Heart, MapPin, Mail, Phone, Calendar, Ruler, CheckCircle, XCircle, ArrowLeft, HandHeart } from "lucide-react"
 
 export const dynamic = 'force-dynamic'
 
@@ -238,6 +238,14 @@ export default async function PublicAnimalProfilePage({
             >
               <Heart className="h-4 w-4" />
               Apply to adopt or foster {animal.name}
+            </Link>
+
+            <Link
+              href={`/portal/${params.orgSlug}/donate`}
+              className="flex items-center justify-center gap-2 w-full border border-primary text-primary hover:bg-primary/5 font-semibold py-3 px-6 rounded-xl transition-colors text-sm"
+            >
+              <HandHeart className="h-4 w-4" />
+              Donate to {o.name}
             </Link>
           </div>
         </div>

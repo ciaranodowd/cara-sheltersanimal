@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { MapPin, Mail, Phone, Heart } from "lucide-react"
+import { MapPin, Mail, Phone, Heart, HandHeart } from "lucide-react"
 import { SPECIES_LABELS, SPECIES_EMOJI } from "@/lib/constants"
+import { DonateWidget } from "@/components/portal/donate-widget"
 
 export const dynamic = "force-dynamic"
 
@@ -102,6 +103,13 @@ export default async function PublicPortalPage({ params }: { params: { orgSlug: 
                 <Heart className="h-4 w-4" />
                 Meet the animals
               </a>
+              <Link
+                href={`/portal/${params.orgSlug}/donate`}
+                className="inline-flex items-center gap-2 border border-white/30 text-white font-semibold px-5 py-3 rounded-xl hover:bg-white/10 transition-colors text-sm"
+              >
+                <HandHeart className="h-4 w-4" />
+                Donate
+              </Link>
               {animals.length > 0 && (
                 <p className="text-[#a7c4b5] text-sm">
                   <span className="text-white font-bold text-2xl mr-1.5">{animals.length}</span>
@@ -218,8 +226,55 @@ export default async function PublicPortalPage({ params }: { params: { orgSlug: 
         )}
       </main>
 
+      {/* ── DONATION SECTION ── */}
+      <section style={{ backgroundColor: "#fdf8f5" }} className="py-12 sm:py-16">
+        <div className="max-w-xl mx-auto px-4 sm:px-6">
+          {/* Header */}
+          <div className="text-center mb-8 space-y-3">
+            <div className="flex justify-center gap-1 text-3xl mb-2">
+              <span>🐾</span><span>❤️</span><span>🐾</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-stone-900">
+              Support {org.name}
+            </h2>
+            <p className="text-stone-500 text-sm sm:text-base leading-relaxed max-w-md mx-auto">
+              Every donation goes directly to the animals in our care — food, vet visits,
+              and a warm place to sleep while they wait for their forever home.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3 pt-1">
+              {[
+                { emoji: "🍽️", label: "€5 feeds an animal for a week" },
+                { emoji: "🩺", label: "€20 covers a vet checkup" },
+                { emoji: "🏡", label: "€50 sponsors a month of care" },
+              ].map(b => (
+                <span key={b.label} className="inline-flex items-center gap-1.5 bg-white border border-stone-100 rounded-full px-3 py-1.5 text-xs text-stone-600 font-medium shadow-sm">
+                  {b.emoji} {b.label}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Widget */}
+          <div
+            className="rounded-3xl p-5 sm:p-7 shadow-md"
+            style={{ background: "linear-gradient(135deg, #fff7f5 0%, #fff1ee 100%)", border: "1px solid #fde8e4" }}
+          >
+            <DonateWidget
+              orgSlug={params.orgSlug}
+              orgName={org.name}
+              defaultAmount={10}
+              buttonLabel={`Donate now to ${org.name}`}
+            />
+          </div>
+
+          <p className="text-center text-xs text-stone-400 mt-4">
+            No platform fees · 100% to the animals · Powered by Stripe
+          </p>
+        </div>
+      </section>
+
       {/* ── FOOTER ── */}
-      <footer className="bg-[#1a3a2a] mt-8">
+      <footer className="bg-[#1a3a2a] mt-0">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="space-y-1.5">

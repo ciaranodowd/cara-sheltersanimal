@@ -76,8 +76,12 @@ model Organization {
   charityNumber   String?  // UK charity number
   registrationNum String?
   description     String?
-  stripeAccountId  String?  // Stripe Connect account
-  stripeOnboarded  Boolean  @default(false)
+  stripeAccountId      String?  // Stripe Connect account
+  stripeOnboarded      Boolean  @default(false)
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?
+  subscriptionStatus   SubscriptionStatus @default(TRIALING)
+  trialEndsAt          DateTime?
   contractTemplate String?  // Adoption contract template with {{placeholders}}
   vetName          String?  // Emergency vet name shown in foster portal
   vetPhone         String?  // Emergency vet phone shown in foster portal
@@ -795,6 +799,16 @@ enum GdprStatus {
   IN_PROGRESS
   COMPLETED
   REJECTED
+
+  @@schema("public")
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  INACTIVE
+  PAST_DUE
+  CANCELLED
 
   @@schema("public")
 }

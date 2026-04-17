@@ -14,6 +14,7 @@ export default withAuth(
           pathname === "/" ||
           pathname.startsWith("/portal") ||
           pathname.startsWith("/api/portal") ||
+          pathname.startsWith("/api/webhooks") ||
           pathname.startsWith("/login") ||
           pathname.startsWith("/register") ||
           pathname.startsWith("/forgot-password") ||
