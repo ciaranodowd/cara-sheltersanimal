@@ -7,7 +7,7 @@ import { initials } from "@/lib/utils"
 import {
   LayoutDashboard, PawPrint, Users, Heart,
   DollarSign, BarChart3, Settings, LogOut,
-  ChevronDown, Globe, Home, CreditCard
+  ChevronDown, Globe, Home, CreditCard, MessageSquare
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -24,6 +24,7 @@ function nav(slug: string) {
     { href: `/${slug}/people`, label: "People", icon: Users },
     { href: `/${slug}/adoptions`, label: "Adoptions", icon: Heart },
     { href: `/${slug}/foster`, label: "Foster", icon: Home },
+    { href: `/${slug}/messages`, label: "Messages", icon: MessageSquare },
     { href: `/${slug}/donations`, label: "Donations", icon: DollarSign },
     { href: `/${slug}/reports`, label: "Reports", icon: BarChart3 },
     { href: `/${slug}/portal`, label: "Public Portal", icon: Globe },

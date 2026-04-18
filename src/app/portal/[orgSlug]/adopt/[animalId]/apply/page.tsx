@@ -23,6 +23,7 @@ export default function AdoptApplicationPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [conversationToken, setConversationToken] = useState<string | null>(null)
   const [error, setError] = useState("")
 
   const [form, setForm] = useState({
@@ -61,6 +62,7 @@ export default function AdoptApplicationPage() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? "Failed to submit application"); setSubmitting(false); return }
+      setConversationToken(data.conversationToken ?? null)
       setSubmitted(true)
       window.scrollTo({ top: 0, behavior: "smooth" })
     } catch {
@@ -144,6 +146,28 @@ export default function AdoptApplicationPage() {
             ))}
           </div>
         </div>
+
+        {/* Message the shelter */}
+        {conversationToken && (
+          <div className="max-w-lg mx-auto px-4 pb-2">
+            <div className="rounded-2xl border bg-white p-5 flex flex-col sm:flex-row items-center gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm">Have a question?</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Send a message directly to {org?.name ?? "the shelter"} about your application.
+                </p>
+              </div>
+              <Link
+                href={`/portal/${params.orgSlug}/conversations/${conversationToken}`}
+                className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: "#1a3a2a" }}
+              >
+                <Mail className="h-4 w-4" />
+                Message the shelter
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Donation ask — the emotional hook */}
         <div className="max-w-lg mx-auto px-4 pb-10">

@@ -2,7 +2,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, PawPrint, Users, Heart, DollarSign } from "lucide-react"
+import { LayoutDashboard, PawPrint, Users, Heart, MessageSquare } from "lucide-react"
 
 interface MobileNavProps {
   orgSlug: string
@@ -16,7 +16,7 @@ export function MobileNav({ orgSlug }: MobileNavProps) {
     { href: `/${orgSlug}/animals`, label: "Animals", icon: PawPrint },
     { href: `/${orgSlug}/people`, label: "People", icon: Users },
     { href: `/${orgSlug}/adoptions`, label: "Adoptions", icon: Heart },
-    { href: `/${orgSlug}/donations`, label: "Donate", icon: DollarSign },
+    { href: `/${orgSlug}/messages`, label: "Messages", icon: MessageSquare },
   ]
 
   return (

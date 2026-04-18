@@ -122,5 +122,21 @@ export async function POST(
     },
   })
 
-  return NextResponse.json({ id: application.id }, { status: 201 })
+  const participant = await prisma.user.upsert({
+    where: { email: applicantEmail.toLowerCase().trim() },
+    update: {},
+    create: { email: applicantEmail.toLowerCase().trim(), name: applicantName.trim() },
+  })
+
+  const conversation = await prisma.conversation.create({
+    data: {
+      shelterOrganizationId: org.id,
+      participantUserId: participant.id,
+      animalId,
+      type: resolvedType === "FOSTER" ? "FOSTER" : "ADOPTION",
+    },
+    select: { id: true },
+  })
+
+  return NextResponse.json({ id: application.id, conversationToken: conversation.id }, { status: 201 })
 }

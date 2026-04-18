@@ -105,6 +105,7 @@ model Organization {
   emailTemplates     EmailTemplate[]
   gdprRequests       GdprRequest[]
   invites            Invite[]
+  conversations      Conversation[]
 
   @@schema("public")
 }
@@ -126,6 +127,8 @@ model User {
   assignedApps     AdoptionApplication[] @relation("AssignedTo")
   homeChecks       AdoptionApplication[] @relation("HomeChecker")
   activityLog      ActivityLog[]
+  conversations    Conversation[]
+  sentMessages     Message[]
 
   @@schema("public")
 }
@@ -210,6 +213,7 @@ model Animal {
   adoptionApps      AdoptionApplication[]
   adoptionContract  AdoptionContract?
   fosterAssignments FosterAssignment[]
+  conversations     Conversation[]
 
   @@index([organizationId])
   @@index([status])
@@ -810,5 +814,49 @@ enum SubscriptionStatus {
   PAST_DUE
   CANCELLED
 
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────
+// MESSAGING
+// ─────────────────────────────────────────────
+
+enum ConversationType {
+  FOSTER
+  ADOPTION
+
+  @@schema("public")
+}
+
+model Conversation {
+  id                    String           @id @default(uuid())
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  shelterOrganizationId String
+  participantUserId     String
+  animalId              String?
+  type                  ConversationType
+
+  organization Organization @relation(fields: [shelterOrganizationId], references: [id])
+  participant  User         @relation(fields: [participantUserId], references: [id])
+  animal       Animal?      @relation(fields: [animalId], references: [id], onDelete: SetNull)
+  messages     Message[]
+
+  @@index([shelterOrganizationId])
+  @@schema("public")
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  createdAt      DateTime     @default(now())
+  conversationId String
+  senderId       String
+  content        String
+  readAt         DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  sender       User         @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId])
   @@schema("public")
 }
