@@ -36,7 +36,7 @@ export default async function PublicAnimalProfilePage({
   if (!org) notFound()
 
   const animalResult = await prisma.animal.findFirst({
-    where: { id: params.animalId, organizationId: org!.id, status: "AVAILABLE" },
+    where: { id: params.animalId, organizationId: org!.id, status: "AVAILABLE", publicProfile: true },
     include: { photos: { orderBy: { position: "asc" } } },
   })
   if (!animalResult) notFound()

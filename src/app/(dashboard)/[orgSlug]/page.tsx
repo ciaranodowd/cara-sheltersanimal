@@ -95,7 +95,7 @@ export default async function DashboardPage({ params }: { params: { orgSlug: str
       icon: Heart,
       iconBg: "bg-blue-100",
       iconColor: "text-blue-600",
-      href: `/${params.orgSlug}/animals?status=IN_FOSTER`,
+      href: `/${params.orgSlug}/animals?status=FOSTERED`,
     },
     {
       label: "Pending Applications",

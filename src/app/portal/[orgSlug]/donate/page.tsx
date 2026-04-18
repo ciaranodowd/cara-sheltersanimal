@@ -106,12 +106,9 @@ export default async function DonatePage({ params }: { params: { orgSlug: string
         </div>
 
         {/* The widget */}
-        <div
-          className="rounded-3xl p-5 sm:p-6"
-          style={{ background: "linear-gradient(135deg, #fff7f5, #fff1ee)", border: "1px solid #fde8e4" }}
-        >
-          <p className="text-center text-sm font-semibold text-stone-600 mb-4">
-            Choose how much to give
+        <div className="rounded-2xl p-5 sm:p-7" style={{ backgroundColor: "#1a3a2a" }}>
+          <p className="text-center text-xs font-semibold tracking-widest uppercase text-[#4ade80]/60 mb-5">
+            Choose an amount
           </p>
           <DonateWidget orgSlug={params.orgSlug} orgName={org.name} defaultAmount={10} />
         </div>

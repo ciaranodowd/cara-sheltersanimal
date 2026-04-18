@@ -227,49 +227,25 @@ export default async function PublicPortalPage({ params }: { params: { orgSlug: 
       </main>
 
       {/* ── DONATION SECTION ── */}
-      <section style={{ backgroundColor: "#fdf8f5" }} className="py-12 sm:py-16">
-        <div className="max-w-xl mx-auto px-4 sm:px-6">
-          {/* Header */}
-          <div className="text-center mb-8 space-y-3">
-            <div className="flex justify-center gap-1 text-3xl mb-2">
-              <span>🐾</span><span>❤️</span><span>🐾</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-stone-900">
-              Support {org.name}
-            </h2>
-            <p className="text-stone-500 text-sm sm:text-base leading-relaxed max-w-md mx-auto">
-              Every donation goes directly to the animals in our care — food, vet visits,
-              and a warm place to sleep while they wait for their forever home.
+      <section style={{ backgroundColor: "#1a3a2a" }} className="py-16 sm:py-20">
+        <div className="max-w-lg mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <p className="text-xs font-semibold tracking-widest uppercase text-[#4ade80]/60 mb-4">
+              Support our work
             </p>
-            <div className="flex flex-wrap justify-center gap-3 pt-1">
-              {[
-                { emoji: "🍽️", label: "€5 feeds an animal for a week" },
-                { emoji: "🩺", label: "€20 covers a vet checkup" },
-                { emoji: "🏡", label: "€50 sponsors a month of care" },
-              ].map(b => (
-                <span key={b.label} className="inline-flex items-center gap-1.5 bg-white border border-stone-100 rounded-full px-3 py-1.5 text-xs text-stone-600 font-medium shadow-sm">
-                  {b.emoji} {b.label}
-                </span>
-              ))}
-            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight tracking-tight mb-4">
+              Make a difference today
+            </h2>
+            <p className="text-[#a7c4b5] text-base leading-relaxed max-w-sm mx-auto">
+              Every donation helps cover food, vet care, and shelter costs for the animals in our care — while they wait for their forever home.
+            </p>
           </div>
-
-          {/* Widget */}
-          <div
-            className="rounded-3xl p-5 sm:p-7 shadow-md"
-            style={{ background: "linear-gradient(135deg, #fff7f5 0%, #fff1ee 100%)", border: "1px solid #fde8e4" }}
-          >
-            <DonateWidget
-              orgSlug={params.orgSlug}
-              orgName={org.name}
-              defaultAmount={10}
-              buttonLabel={`Donate now to ${org.name}`}
-            />
-          </div>
-
-          <p className="text-center text-xs text-stone-400 mt-4">
-            No platform fees · 100% to the animals · Powered by Stripe
-          </p>
+          <DonateWidget
+            orgSlug={params.orgSlug}
+            orgName={org.name}
+            defaultAmount={10}
+            buttonLabel={`Donate to ${org.name}`}
+          />
         </div>
       </section>
 

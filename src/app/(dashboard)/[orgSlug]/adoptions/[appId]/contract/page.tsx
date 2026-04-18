@@ -76,7 +76,7 @@ export default function ContractPage() {
 
   useEffect(() => {
     fetch(`/api/applications/${params.appId}`)
-      .then(r => r.json())
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
       .then(data => {
         setApp(data)
         if (data.contract) {
@@ -98,7 +98,7 @@ export default function ContractPage() {
           setForm(f => ({
             ...f,
             contractText: resolvePlaceholders(template, {
-              adopterName: data.applicantName,
+              adopterName: data.applicantName ?? "",
               animalName: data.animal?.name ?? "",
               orgName: data.organization?.name ?? "",
               adopterEmail: data.applicantEmail,
@@ -106,6 +106,10 @@ export default function ContractPage() {
             }),
           }))
         }
+        setLoading(false)
+      })
+      .catch(() => {
+        setApp(null)
         setLoading(false)
       })
   // eslint-disable-next-line react-hooks/exhaustive-deps

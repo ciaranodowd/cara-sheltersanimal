@@ -10,18 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DonateWidget } from "@/components/portal/donate-widget"
-import { ArrowLeft, Loader2, CheckCircle, Clock, Home, PartyPopper } from "lucide-react"
+import { ArrowLeft, Loader2, CheckCircle, Clock, Home, PartyPopper, Mail } from "lucide-react"
 import { COUNTIES } from "@/lib/constants"
 
-// Floating celebration elements above the post-submit hero
-const FLOATERS = [
-  { el: "🐾", top: "8%",  left: "5%",  delay: "0s",    duration: "2.8s" },
-  { el: "❤️", top: "5%",  left: "18%", delay: "0.4s",  duration: "3.2s" },
-  { el: "🐾", top: "12%", left: "72%", delay: "0.7s",  duration: "2.6s" },
-  { el: "❤️", top: "6%",  left: "85%", delay: "0.2s",  duration: "3s"   },
-  { el: "✨", top: "15%", left: "45%", delay: "0.9s",  duration: "2.4s" },
-  { el: "🐾", top: "3%",  left: "55%", delay: "0.5s",  duration: "3.1s" },
-]
 
 export default function AdoptApplicationPage() {
   const params = useParams()
@@ -95,22 +86,6 @@ export default function AdoptApplicationPage() {
           className="relative overflow-hidden pt-14 pb-12 px-4 text-center"
           style={{ background: "linear-gradient(160deg, #1a3a2a 0%, #2d5a3d 60%, #1a3a2a 100%)" }}
         >
-          {/* Floating emoji */}
-          {FLOATERS.map((f, i) => (
-            <span
-              key={i}
-              className="absolute text-xl pointer-events-none select-none"
-              style={{
-                top: f.top,
-                left: f.left,
-                animation: `bounce ${f.duration} ${f.delay} infinite`,
-                opacity: 0.75,
-              }}
-            >
-              {f.el}
-            </span>
-          ))}
-
           {/* Checkmark */}
           <div className="relative z-10 inline-flex items-center justify-center mb-5">
             <div className="w-20 h-20 rounded-full bg-[#4ade80]/20 flex items-center justify-center">
@@ -137,7 +112,7 @@ export default function AdoptApplicationPage() {
           {/* Email reminder */}
           {form.applicantEmail && (
             <div className="relative z-10 mt-4 inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-[#a7c4b5] text-xs px-4 py-2 rounded-full">
-              <span className="text-base">📧</span>
+              <Mail className="h-3.5 w-3.5 shrink-0" />
               Updates will be sent to <strong className="text-white">{form.applicantEmail}</strong>
             </div>
           )}
@@ -152,7 +127,7 @@ export default function AdoptApplicationPage() {
             {[
               { icon: <Clock className="h-4 w-4" />, text: `${org?.name ?? "The shelter"} reviews your application`, sub: "Usually within a few days" },
               { icon: <Home className="h-4 w-4" />, text: "Home check or meet-and-greet", sub: "If you're a great match" },
-              { icon: <CheckCircle className="h-4 w-4" />, text: `${animal?.name ?? "Your new pet"} comes home!`, sub: "The best day ❤️" },
+              { icon: <CheckCircle className="h-4 w-4" />, text: `${animal?.name ?? "Your new pet"} comes home!`, sub: "The best day of all" },
             ].map((step, i) => (
               <div key={i} className="flex items-start gap-3 relative">
                 <div className="flex flex-col items-center">
@@ -173,27 +148,23 @@ export default function AdoptApplicationPage() {
         {/* Donation ask — the emotional hook */}
         <div className="max-w-lg mx-auto px-4 pb-10">
           <div
-            className="rounded-3xl p-5 sm:p-6 space-y-5"
-            style={{ background: "linear-gradient(135deg, #fff7f5 0%, #fff1ee 100%)", border: "1px solid #fde8e4" }}
+            className="rounded-2xl p-6 sm:p-8"
+            style={{ backgroundColor: "#1a3a2a" }}
           >
-            {/* Header */}
-            <div className="text-center space-y-1.5">
-              <div className="flex justify-center gap-1 text-2xl mb-1">
-                <span style={{ animationDelay: "0s" }}>🐾</span>
-                <span style={{ animationDelay: "0.3s" }}>🐕</span>
-                <span style={{ animationDelay: "0.6s" }}>🐈</span>
-              </div>
-              <h2 className="text-lg font-extrabold text-stone-800">
-                While you wait — help the others
+            <div className="text-center mb-7">
+              <p className="text-xs font-semibold tracking-widest uppercase text-[#4ade80]/60 mb-3">
+                While you wait
+              </p>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-white leading-tight mb-3">
+                Help the animals still waiting
               </h2>
-              <p className="text-sm text-stone-500 max-w-xs mx-auto leading-relaxed">
+              <p className="text-sm text-[#a7c4b5] max-w-xs mx-auto leading-relaxed">
                 {animal?.name
-                  ? <>While {org?.name ?? "the shelter"} reviews your application for <strong className="text-stone-700">{animal.name}</strong>, there are more animals still waiting for their forever home.</>
+                  ? <>While {org?.name ?? "the shelter"} reviews your application for <strong className="text-white">{animal.name}</strong>, there are more animals still waiting for their forever home.</>
                   : <>There are more animals still waiting for their forever home.</>}
                 {" "}A small donation helps cover food, vet care, and shelter costs.
               </p>
             </div>
-
             <DonateWidget
               orgSlug={params.orgSlug as string}
               orgName={org?.name ?? "the shelter"}

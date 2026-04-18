@@ -31,11 +31,15 @@ export default function ApplicationPage() {
 
   useEffect(() => {
     fetch(`/api/applications/${params.appId}`)
-      .then(r => r.json())
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
       .then(data => {
         setApp(data)
         setNotes(data.internalNotes ?? "")
-        setStatus(data.status)
+        setStatus(data.status ?? "PENDING")
+        setLoading(false)
+      })
+      .catch(() => {
+        setApp(null)
         setLoading(false)
       })
   }, [params.appId])

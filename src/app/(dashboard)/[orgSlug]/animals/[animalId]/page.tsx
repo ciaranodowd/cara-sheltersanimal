@@ -53,15 +53,17 @@ export default async function AnimalPage({
   ])
   if (!animal) notFound()
 
-  console.log(`[animal page] photos for animal ${params.animalId}:`, animal.photos.map(p => ({ id: p.id, url: p.url, isPrimary: p.isPrimary })))
-
   const statusColors: Record<string, string> = {
     AVAILABLE: "bg-green-100 text-green-800",
+    FOSTERED: "bg-blue-100 text-blue-800",
     IN_FOSTER: "bg-blue-100 text-blue-800",
+    ADOPTION_PENDING: "bg-orange-100 text-orange-800",
     ADOPTED: "bg-purple-100 text-purple-800",
     MEDICAL_HOLD: "bg-red-100 text-red-800",
     QUARANTINE: "bg-yellow-100 text-yellow-800",
-    INTAKE: "bg-orange-100 text-orange-800",
+    ON_HOLD: "bg-yellow-100 text-yellow-800",
+    INTAKE: "bg-amber-100 text-amber-800",
+    ASSESSMENT: "bg-slate-100 text-slate-700",
     DECEASED: "bg-slate-100 text-slate-500",
   }
 
@@ -259,8 +261,8 @@ export default async function AnimalPage({
                         </p>
                         {a.notes && <p className="text-xs text-muted-foreground mt-0.5 italic">{a.notes}</p>}
                       </div>
-                      {(a as any).fosterPortalToken && (
-                        <Link href={`/foster/${(a as any).fosterPortalToken}`} target="_blank">
+                      {a.fosterPortalToken && (
+                        <Link href={`/foster/${a.fosterPortalToken}`} target="_blank">
                           <Badge variant="outline" className="text-xs cursor-pointer hover:bg-slate-50">
                             View portal ↗
                           </Badge>

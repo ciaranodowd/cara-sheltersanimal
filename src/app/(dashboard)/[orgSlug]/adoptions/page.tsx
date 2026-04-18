@@ -25,12 +25,14 @@ export default async function AdoptionsPage({ params }: { params: { orgSlug: str
   if (!org) notFound()
 
   const applications = await prisma.adoptionApplication.findMany({
-    where: { organizationId: org.id, status: { not: "REJECTED" } },
+    where: {
+      organizationId: org.id,
+      status: { notIn: ["REJECTED", "WITHDRAWN", "UNDER_REVIEW", "HOME_CHECK_SCHEDULED", "HOME_CHECK_DONE"] },
+    },
     orderBy: { updatedAt: "desc" },
     include: {
       animal: { select: { name: true, species: true } },
     },
-    // Note: applicationType is a new field — existing records will show "Adopt" by default
   })
 
   const byStatus = Object.fromEntries(
@@ -73,11 +75,11 @@ export default async function AdoptionsPage({ params }: { params: { orgSlug: str
                       <div className="flex items-center justify-between mt-1.5">
                         <p className="text-xs text-muted-foreground">{formatDate(app.createdAt)}</p>
                         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
-                          (app as any).applicationType === "FOSTER"
+                          app.applicationType === "FOSTER"
                             ? "bg-blue-100 text-blue-700"
                             : "bg-green-100 text-green-700"
                         }`}>
-                          {(app as any).applicationType === "FOSTER" ? "Foster" : "Adopt"}
+                          {app.applicationType === "FOSTER" ? "Foster" : "Adopt"}
                         </span>
                       </div>
                     </div>

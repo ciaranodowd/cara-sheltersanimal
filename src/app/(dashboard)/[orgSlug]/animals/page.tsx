@@ -83,9 +83,11 @@ export default async function AnimalsPage({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All statuses</SelectItem>
-            {Object.entries(STATUS_LABELS).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v}</SelectItem>
-            ))}
+            {Object.entries(STATUS_LABELS)
+              .filter(([k]) => k !== "IN_FOSTER")
+              .map(([k, v]) => (
+                <SelectItem key={k} value={k}>{v}</SelectItem>
+              ))}
           </SelectContent>
         </Select>
         <Button type="submit" variant="outline">Filter</Button>
