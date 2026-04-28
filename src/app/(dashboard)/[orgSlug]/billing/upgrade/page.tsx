@@ -1,4 +1,3 @@
-/*
 "use client"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -102,9 +101,4 @@ export default function BillingUpgradePage({
       </Card>
     </div>
   )
-}
-*/
-
-export default function BillingUpgradePage() {
-  return null
 }

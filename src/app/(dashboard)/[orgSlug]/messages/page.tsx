@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { formatDistanceToNow } from "date-fns"
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic"
 
 export default async function MessagesPage({ params }: { params: { orgSlug: string } }) {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.id) return null
+  if (!session?.user?.id) redirect("/login")
 
   const org = await prisma.organization.findUnique({
     where: { slug: params.orgSlug },
@@ -24,28 +24,39 @@ export default async function MessagesPage({ params }: { params: { orgSlug: stri
   })
   if (!membership) notFound()
 
-  const conversations = await prisma.conversation.findMany({
-    where: { shelterOrganizationId: org.id },
-    orderBy: { updatedAt: "desc" },
-    include: {
-      participant: { select: { id: true, name: true, email: true } },
-      animal: { select: { id: true, name: true, species: true } },
-      messages: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-        select: { content: true, createdAt: true, senderId: true },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let conversations: any[] = []
+  try {
+    conversations = await prisma.conversation.findMany({
+      where: { shelterOrganizationId: org.id },
+      orderBy: { updatedAt: "desc" },
+      include: {
+        participant: { select: { id: true, name: true, email: true } },
+        animal: { select: { id: true, name: true, species: true } },
+        messages: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: { content: true, createdAt: true, senderId: true },
+        },
       },
-    },
-  })
+    })
+  } catch {
+    // Messaging tables may not be migrated yet — show empty state gracefully
+  }
 
-  const conversationIds = conversations.map(c => c.id)
-  const participantMap = Object.fromEntries(conversations.map(c => [c.id, c.participantUserId]))
-  const participantIds = Array.from(new Set(Object.values(participantMap)))
+  const conversationIds = conversations.map((c: { id: string }) => c.id)
+  const participantMap = Object.fromEntries(conversations.map((c: { id: string; participantUserId: string }) => [c.id, c.participantUserId]))
+  const participantIds = Array.from(new Set(Object.values(participantMap) as string[]))
 
-  const unreadMessages = await prisma.message.findMany({
-    where: { conversationId: { in: conversationIds }, senderId: { in: participantIds }, readAt: null },
-    select: { conversationId: true, senderId: true },
-  })
+  let unreadMessages: { conversationId: string; senderId: string }[] = []
+  try {
+    unreadMessages = await prisma.message.findMany({
+      where: { conversationId: { in: conversationIds }, senderId: { in: participantIds }, readAt: null },
+      select: { conversationId: true, senderId: true },
+    })
+  } catch {
+    // ignore
+  }
 
   const unreadMap: Record<string, number> = {}
   for (const msg of unreadMessages) {

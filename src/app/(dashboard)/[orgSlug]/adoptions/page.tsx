@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { formatDate } from "@/lib/utils"
@@ -19,7 +19,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function AdoptionsPage({ params }: { params: { orgSlug: string } }) {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.id) return null
+  if (!session?.user?.id) redirect("/login")
 
   const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { id: true } })
   if (!org) notFound()

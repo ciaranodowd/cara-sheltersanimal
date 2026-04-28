@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { formatCurrency } from "@/lib/utils"
 import Link from "next/link"
 import {
@@ -36,7 +36,7 @@ function formatAge(ageYears?: number | null, ageMonths?: number | null): string 
 
 export default async function DashboardPage({ params }: { params: { orgSlug: string } }) {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.id) return null
+  if (!session?.user?.id) redirect("/login")
 
   const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { id: true, name: true } })
   if (!org) notFound()
