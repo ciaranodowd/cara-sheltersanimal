@@ -21,7 +21,10 @@ export default async function AdoptionsPage({ params }: { params: { orgSlug: str
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) redirect("/login")
 
-  const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { id: true } })
+  const org = await prisma.organization.findUnique({
+    where: { slug: params.orgSlug },
+    select: { id: true },
+  }).catch(() => null)
   if (!org) notFound()
 
   const applications = await prisma.adoptionApplication.findMany({
@@ -33,7 +36,7 @@ export default async function AdoptionsPage({ params }: { params: { orgSlug: str
     include: {
       animal: { select: { name: true, species: true } },
     },
-  })
+  }).catch(() => [])
 
   const byStatus = Object.fromEntries(
     PIPELINE_STAGES.map(s => [s.key, applications.filter(a => a.status === s.key)])

@@ -8,33 +8,37 @@ export const dynamic = "force-dynamic"
 
 export default async function BillingPage({
   params,
-  searchParams,
 }: {
   params: { orgSlug: string }
-  searchParams: { success?: string }
 }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) redirect("/login")
 
-  const org = await prisma.organization.findUnique({
-    where: { slug: params.orgSlug },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      subscriptionStatus: true,
-      stripeCustomerId: true,
-      stripeSubscriptionId: true,
-      trialEndsAt: true,
-    },
-  })
-  if (!org) notFound()
+  let org, membership
+  try {
+    org = await prisma.organization.findUnique({
+      where: { slug: params.orgSlug },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        plan: true,
+        planStatus: true,
+        trialEndDate: true,
+        trialEndsAt: true,
+      },
+    })
+    if (!org) notFound()
+    membership = await prisma.userOrganization.findUnique({
+      where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
+      select: { role: true },
+    })
+  } catch {
+    notFound()
+  }
+  if (!org || !membership) notFound()
 
-  const membership = await prisma.userOrganization.findUnique({
-    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
-    select: { role: true },
-  })
-  if (!membership) notFound()
+  const effectiveTrialEnd = org.trialEndDate ?? org.trialEndsAt
 
   return (
     <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
@@ -44,11 +48,10 @@ export default async function BillingPage({
       </div>
       <BillingClient
         orgSlug={params.orgSlug}
-        subscriptionStatus={org.subscriptionStatus}
-        trialEndsAt={org.trialEndsAt?.toISOString() ?? null}
-        hasStripeCustomer={!!org.stripeCustomerId}
+        plan={org.plan}
+        planStatus={org.planStatus}
+        trialEndDate={effectiveTrialEnd?.toISOString() ?? null}
         isAdmin={membership.role === "ADMIN"}
-        showSuccess={searchParams.success === "true"}
       />
     </div>
   )

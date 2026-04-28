@@ -7,7 +7,7 @@ import { initials } from "@/lib/utils"
 import {
   LayoutDashboard, PawPrint, Users, Heart,
   DollarSign, BarChart3, Settings, LogOut,
-  ChevronDown, Globe, Home, CreditCard, MessageSquare
+  ChevronDown, Globe, CreditCard, MessageSquare
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -15,28 +15,29 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 interface SidebarProps {
   orgSlug: string
   orgName: string
+  plan?: string
 }
 
-function nav(slug: string) {
+function nav(slug: string, plan?: string) {
+  const planBadge = plan === "pro" ? "Pro" : "Trial"
   return [
     { href: `/${slug}`, label: "Dashboard", icon: LayoutDashboard, exact: true },
     { href: `/${slug}/animals`, label: "Animals", icon: PawPrint },
     { href: `/${slug}/people`, label: "People", icon: Users },
     { href: `/${slug}/adoptions`, label: "Adoptions", icon: Heart },
-    { href: `/${slug}/foster`, label: "Foster", icon: Home },
     { href: `/${slug}/messages`, label: "Messages", icon: MessageSquare },
     { href: `/${slug}/donations`, label: "Donations", icon: DollarSign },
     { href: `/${slug}/reports`, label: "Reports", icon: BarChart3 },
     { href: `/${slug}/portal`, label: "Public Portal", icon: Globe },
-    { href: `/${slug}/billing`, label: "Billing", icon: CreditCard },
+    { href: `/${slug}/billing`, label: "Billing", icon: CreditCard, badge: planBadge },
     { href: `/${slug}/settings`, label: "Settings", icon: Settings },
   ]
 }
 
-export function Sidebar({ orgSlug, orgName }: SidebarProps) {
+export function Sidebar({ orgSlug, orgName, plan }: SidebarProps) {
   const pathname = usePathname()
   const { data: session } = useSession()
-  const navItems = nav(orgSlug)
+  const navItems = nav(orgSlug, plan)
 
   return (
     <aside className="hidden md:flex flex-col w-60 h-screen sticky top-0 shrink-0" style={{ backgroundColor: "#1a3a2a" }}>
@@ -69,7 +70,21 @@ export function Sidebar({ orgSlug, orgName }: SidebarProps) {
               )}
             >
               <item.icon className="h-4 w-4 shrink-0" />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {item.badge && (
+                <span
+                  className={cn(
+                    "text-xs px-1.5 py-0.5 rounded font-semibold leading-none",
+                    item.badge === "Pro"
+                      ? "bg-[#4ade80] text-[#1a3a2a]"
+                      : active
+                        ? "bg-[#1a3a2a]/20 text-[#1a3a2a]"
+                        : "bg-white/15 text-white/80"
+                  )}
+                >
+                  {item.badge}
+                </span>
+              )}
             </Link>
           )
         })}

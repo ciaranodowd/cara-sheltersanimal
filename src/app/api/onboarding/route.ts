@@ -19,8 +19,10 @@ export async function POST(req: NextRequest) {
     slug = `${baseSlug}-${suffix++}`
   }
 
-  const trialEndsAt = new Date()
-  trialEndsAt.setDate(trialEndsAt.getDate() + 30)
+  const now = new Date()
+  const trialStartDate = now
+  const trialEndDate = new Date(now)
+  trialEndDate.setDate(trialEndDate.getDate() + 30)
 
   const org = await prisma.organization.create({
     data: {
@@ -36,7 +38,11 @@ export async function POST(req: NextRequest) {
       chyNumber: chyNumber || null,
       description: description || null,
       subscriptionStatus: "TRIALING",
-      trialEndsAt,
+      trialEndsAt: trialEndDate,
+      trialStartDate,
+      trialEndDate,
+      plan: "trial",
+      planStatus: "active",
       users: {
         create: {
           userId: session.user.id,

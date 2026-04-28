@@ -82,6 +82,10 @@ model Organization {
   stripeSubscriptionId String?
   subscriptionStatus   SubscriptionStatus @default(TRIALING)
   trialEndsAt          DateTime?
+  trialStartDate       DateTime?
+  trialEndDate         DateTime?
+  plan                 String    @default("trial")
+  planStatus           String    @default("active")
   contractTemplate String?  // Adoption contract template with {{placeholders}}
   vetName          String?  // Emergency vet name shown in foster portal
   vetPhone         String?  // Emergency vet phone shown in foster portal
@@ -94,12 +98,10 @@ model Organization {
   animals            Animal[]
   locations          Location[]
   adopters           Adopter[]
-  fosters            Foster[]
   volunteers         Volunteer[]
   donors             Donor[]
   adoptionApps       AdoptionApplication[]
   adoptionContracts  AdoptionContract[]
-  fosterAssignments  FosterAssignment[]
   donations          Donation[]
   campaigns          Campaign[]
   emailTemplates     EmailTemplate[]
@@ -212,7 +214,6 @@ model Animal {
   weightLogs        WeightLog[]
   adoptionApps      AdoptionApplication[]
   adoptionContract  AdoptionContract?
-  fosterAssignments FosterAssignment[]
   conversations     Conversation[]
 
   @@index([organizationId])
@@ -308,89 +309,6 @@ model Adopter {
 
   @@unique([email, organizationId])
   @@index([organizationId])
-  @@schema("public")
-}
-
-model Foster {
-  id                  String    @id @default(cuid())
-  organizationId      String
-  firstName           String
-  lastName            String
-  email               String
-  phone               String?
-  address             String?
-  city                String?
-  county              String?
-  country             String    @default("IE")
-  postcode            String?
-  approved            Boolean   @default(false)
-  approvedAt          DateTime?
-  maxAnimals          Int       @default(1)
-  hasGarden           Boolean?
-  hasChildren         Boolean?
-  hasOtherPets        Boolean?
-  otherPetsDetails    String?
-  homeType            String?   // house, apartment, farm
-  speciesPreferences String // JSON array
-  availableFrom       DateTime?
-  availableTo         DateTime?
-  notes               String?
-  gdprConsent         Boolean   @default(false)
-  gdprConsentAt       DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-
-  organization  Organization       @relation(fields: [organizationId], references: [id])
-  assignments   FosterAssignment[]
-
-  @@unique([email, organizationId])
-  @@index([organizationId])
-  @@schema("public")
-}
-
-model FosterAssignment {
-  id                String    @id @default(cuid())
-  organizationId    String
-  animalId          String
-  fosterId          String
-  startDate         DateTime
-  endDate           DateTime?
-  notes             String?
-  status            String    @default("ACTIVE") // ACTIVE | ENDED
-  fosterPortalToken String?   @unique
-  createdAt         DateTime  @default(now())
-
-  organization  Organization       @relation(fields: [organizationId], references: [id])
-  animal        Animal             @relation(fields: [animalId], references: [id])
-  foster        Foster             @relation(fields: [fosterId], references: [id])
-  diaryEntries  FosterDiaryEntry[]
-  fosterUpdates FosterUpdate[]
-
-  @@index([organizationId])
-  @@schema("public")
-}
-
-model FosterDiaryEntry {
-  id                 String           @id @default(cuid())
-  fosterAssignmentId String
-  content            String
-  photos             String // JSON array of uploadthing URLs
-  createdAt          DateTime         @default(now())
-  assignment         FosterAssignment @relation(fields: [fosterAssignmentId], references: [id], onDelete: Cascade)
-
-  @@schema("public")
-}
-
-model FosterUpdate {
-  id                 String           @id @default(cuid())
-  fosterAssignmentId String
-  content            String
-  photoUrl           String?
-  authorType         String           @default("FOSTER") // FOSTER | SHELTER
-  createdAt          DateTime         @default(now())
-  assignment         FosterAssignment @relation(fields: [fosterAssignmentId], references: [id], onDelete: Cascade)
-
-  @@index([fosterAssignmentId])
   @@schema("public")
 }
 

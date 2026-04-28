@@ -1,183 +1,158 @@
 "use client"
 import { useState } from "react"
-import Link from "next/link"
-import { CheckCircle, AlertCircle, Clock, XCircle, ExternalLink, ArrowRight } from "lucide-react"
+import { CheckCircle, Clock, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { SubscriptionStatus } from "@prisma/client"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 
 interface Props {
   orgSlug: string
-  subscriptionStatus: SubscriptionStatus
-  trialEndsAt: string | null
-  hasStripeCustomer: boolean
+  plan: string
+  planStatus: string
+  trialEndDate: string | null
   isAdmin: boolean
-  showSuccess: boolean
 }
 
-const STATUS_CONFIG: Record<
-  SubscriptionStatus,
-  { label: string; description: string; icon: React.ReactNode; colour: string }
-> = {
-  ACTIVE: {
-    label: "Active",
-    description: "Your subscription is active. Full access to all features.",
-    icon: <CheckCircle className="h-5 w-5 text-green-500" />,
-    colour: "bg-green-50 border-green-200",
-  },
-  TRIALING: {
-    label: "Free trial",
-    description: "You're on a free trial.",
-    icon: <Clock className="h-5 w-5 text-blue-500" />,
-    colour: "bg-blue-50 border-blue-200",
-  },
-  PAST_DUE: {
-    label: "Payment overdue",
-    description: "Your last payment failed. Please update your payment method.",
-    icon: <AlertCircle className="h-5 w-5 text-amber-500" />,
-    colour: "bg-amber-50 border-amber-200",
-  },
-  INACTIVE: {
-    label: "Inactive",
-    description: "Your subscription is inactive. Subscribe to restore access.",
-    icon: <XCircle className="h-5 w-5 text-slate-400" />,
-    colour: "bg-slate-50 border-slate-200",
-  },
-  CANCELLED: {
-    label: "Cancelled",
-    description: "Your subscription has been cancelled.",
-    icon: <XCircle className="h-5 w-5 text-red-400" />,
-    colour: "bg-red-50 border-red-200",
-  },
-}
+const FEATURES = [
+  "Unlimited animals & intake records",
+  "Full adoption workflow & e-sign contracts",
+  "Public adoption portal for your shelter",
+  "Team access with role-based permissions",
+  "Email templates & donor tracking",
+  "GDPR tools & reporting",
+]
 
-export function BillingClient({
-  orgSlug,
-  subscriptionStatus,
-  trialEndsAt,
-  hasStripeCustomer,
-  isAdmin,
-  showSuccess,
-}: Props) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+export function BillingClient({ plan, trialEndDate, isAdmin }: Props) {
+  const [modalOpen, setModalOpen] = useState(false)
 
-  const config = STATUS_CONFIG[subscriptionStatus]
-
-  async function handlePortal() {
-    setLoading(true)
-    setError("")
-    try {
-      const res = await fetch(`/api/orgs/${orgSlug}/billing/portal`, { method: "POST" })
-      const data = await res.json()
-      if (!res.ok) { setError(data.error ?? "Something went wrong"); setLoading(false); return }
-      window.location.href = data.url
-    } catch {
-      setError("Something went wrong. Please try again.")
-      setLoading(false)
-    }
-  }
-
-  const trialDate = trialEndsAt ? new Date(trialEndsAt) : null
+  const trialDate = trialEndDate ? new Date(trialEndDate) : null
   const trialDaysLeft = trialDate
     ? Math.max(0, Math.ceil((trialDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : null
+    : 0
+
+  const isExpired = plan === "trial" && trialDaysLeft === 0
+  const isPro = plan === "pro"
+  const isActiveTrial = plan === "trial" && trialDaysLeft > 0
 
   return (
     <div className="space-y-4">
-      {showSuccess && (
-        <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
-          <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
-          <p className="text-sm font-medium text-green-800">
-            Subscription activated! Welcome to Cara.
-          </p>
-        </div>
-      )}
-
-      {error && (
-        <div className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
-          {error}
-        </div>
-      )}
-
-      {/* Current plan */}
-      <Card className={`border ${config.colour}`}>
+      {/* Status card */}
+      <Card
+        className={
+          isPro
+            ? "border-green-200 bg-green-50"
+            : isExpired
+              ? "border-red-200 bg-red-50"
+              : "border-blue-200 bg-blue-50"
+        }
+      >
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            {config.icon}
-            <CardTitle className="text-base">{config.label}</CardTitle>
+          <div className="flex items-center gap-3">
+            {isPro ? (
+              <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
+            ) : isExpired ? (
+              <AlertTriangle className="h-5 w-5 text-red-500 shrink-0" />
+            ) : (
+              <Clock className="h-5 w-5 text-blue-500 shrink-0" />
+            )}
+
+            <Badge
+              className={
+                isPro
+                  ? "bg-green-600 text-white hover:bg-green-600"
+                  : isExpired
+                    ? "bg-red-500 text-white hover:bg-red-500"
+                    : "bg-blue-500 text-white hover:bg-blue-500"
+              }
+            >
+              {isPro ? "Cara Pro ✓" : isExpired ? "Trial Expired" : "Free Trial"}
+            </Badge>
           </div>
-          <CardDescription>{config.description}</CardDescription>
         </CardHeader>
+
         <CardContent className="space-y-4">
-          {subscriptionStatus === "TRIALING" && trialDaysLeft !== null && (
-            <p className="text-sm font-medium">
-              {trialDaysLeft > 0
-                ? `${trialDaysLeft} day${trialDaysLeft !== 1 ? "s" : ""} remaining in your trial`
-                : "Your trial has ended"}
-            </p>
+          {isPro && (
+            <>
+              <p className="font-semibold text-green-800">You&apos;re on Cara Pro — €30/month</p>
+              <p className="text-sm text-green-700">Thank you for supporting Cara.</p>
+            </>
           )}
 
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-bold">€35</span>
-            <span className="text-muted-foreground text-sm">/month</span>
-          </div>
-
-          {isAdmin && (
-            <div className="flex flex-col sm:flex-row gap-2 pt-1">
-              {hasStripeCustomer ? (
+          {isActiveTrial && (
+            <>
+              <p className="text-sm font-medium text-blue-800">
+                You have {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} left on your free trial
+              </p>
+              {isAdmin && (
                 <Button
-                  onClick={handlePortal}
-                  disabled={loading}
-                  className="flex items-center gap-2"
+                  onClick={() => setModalOpen(true)}
+                  className="bg-[#1a3a2a] hover:bg-[#1a3a2a]/90 text-white"
                 >
-                  {loading ? "Loading…" : "Manage subscription"}
-                  {!loading && <ExternalLink className="h-4 w-4" />}
+                  Upgrade to Cara Pro — €30/month
                 </Button>
-              ) : (
-                <Link href={`/${orgSlug}/billing/upgrade`}>
-                  <Button className="flex items-center gap-2">
-                    Subscribe now
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
               )}
+            </>
+          )}
 
-              {hasStripeCustomer && (subscriptionStatus === "INACTIVE" || subscriptionStatus === "CANCELLED") && (
-                <Link href={`/${orgSlug}/billing/upgrade`}>
-                  <Button variant="outline">Resubscribe</Button>
-                </Link>
+          {isExpired && (
+            <>
+              <p className="text-sm font-medium text-red-800">Your free trial has ended</p>
+              <p className="text-sm text-red-700">
+                Some features may be restricted until you upgrade to Cara Pro.
+              </p>
+              {isAdmin && (
+                <Button
+                  onClick={() => setModalOpen(true)}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Upgrade to Cara Pro — €30/month
+                </Button>
               )}
-            </div>
+            </>
           )}
         </CardContent>
       </Card>
 
-      {/* Plan features */}
+      {/* Features list */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">What&apos;s included</CardTitle>
+          <CardTitle className="text-base">What&apos;s included in Cara Pro</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
-            {[
-              "Unlimited animals",
-              "Adoption workflow",
-              "Foster management",
-              "Public portal",
-              "Team access",
-              "Email templates",
-              "Donor tracking",
-              "GDPR tools",
-            ].map(f => (
-              <li key={f} className="flex items-center gap-2">
-                <CheckCircle className="h-3.5 w-3.5 text-green-500 shrink-0" />
+            {FEATURES.map(f => (
+              <li key={f} className="flex items-start gap-2">
+                <CheckCircle className="h-3.5 w-3.5 text-green-500 shrink-0 mt-0.5" />
                 {f}
               </li>
             ))}
           </ul>
         </CardContent>
       </Card>
+
+      {/* Interest modal */}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Thanks for your interest in Cara Pro!</DialogTitle>
+            <DialogDescription className="pt-1">
+              We&apos;ll be in touch shortly to get you set up.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="pt-2">
+            <Button className="w-full" onClick={() => setModalOpen(false)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

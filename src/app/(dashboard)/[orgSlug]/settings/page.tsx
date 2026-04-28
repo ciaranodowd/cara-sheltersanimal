@@ -20,17 +20,22 @@ export default async function SettingsPage({
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) redirect("/login")
 
-  const org = await prisma.organization.findUnique({
-    where: { slug: params.orgSlug },
-    include: {
-      users: {
-        include: { user: { select: { id: true, name: true, email: true, image: true } } },
+  let org
+  try {
+    org = await prisma.organization.findUnique({
+      where: { slug: params.orgSlug },
+      include: {
+        users: {
+          include: { user: { select: { id: true, name: true, email: true, image: true } } },
+        },
       },
-    },
-  })
+    })
+  } catch {
+    notFound()
+  }
   if (!org) notFound()
 
-  const membership = org.users.find(u => u.userId === session.user.id)
+  const membership = org.users.find((u: any) => u.userId === session.user.id)
   if (!membership) notFound()
 
   return (

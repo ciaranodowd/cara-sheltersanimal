@@ -43,7 +43,7 @@ export default function OnboardingPage() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? "Something went wrong"); setLoading(false); return }
-      router.push(`/${data.slug}/billing/upgrade`)
+      router.push(`/${data.slug}`)
     } catch {
       setError("Something went wrong. Please try again.")
       setLoading(false)

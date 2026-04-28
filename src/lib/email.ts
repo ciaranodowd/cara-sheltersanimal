@@ -3,60 +3,6 @@ import { Resend } from "resend"
 const resend = new Resend(process.env.RESEND_API_KEY!)
 const FROM = process.env.RESEND_FROM_EMAIL ?? "noreply@cara.ie"
 
-export async function sendFosterInviteEmail({
-  to,
-  fosterName,
-  animalName,
-  orgName,
-  portalUrl,
-}: {
-  to: string
-  fosterName: string
-  animalName: string
-  orgName: string
-  portalUrl: string
-}) {
-  await resend.emails.send({
-    from: FROM,
-    to,
-    subject: `You've been matched with ${animalName}!`,
-    html: `
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="font-family:sans-serif;color:#1a1a1a;max-width:600px;margin:0 auto;padding:32px 24px">
-  <div style="margin-bottom:32px">
-    <span style="display:inline-block;background:#1a3a2a;color:#4ade80;font-weight:700;font-size:18px;padding:6px 14px;border-radius:6px;letter-spacing:0.5px">cara</span>
-  </div>
-  <h1 style="font-size:22px;font-weight:700;margin:0 0 8px">You've been matched with ${animalName}! 🐾</h1>
-  <p style="color:#555;margin:0 0 24px">Hi ${fosterName},</p>
-  <p style="color:#555;margin:0 0 24px">
-    <strong>${orgName}</strong> has assigned <strong>${animalName}</strong> to your care.
-    Thank you so much for opening your home — it makes a huge difference.
-  </p>
-  <p style="color:#555;margin:0 0 24px">
-    Access your foster portal below to see ${animalName}&apos;s details, post updates, and
-    stay in touch with the shelter team.
-  </p>
-  <div style="text-align:center;margin:32px 0">
-    <a href="${portalUrl}" style="display:inline-block;background:#1a3a2a;color:#fff;text-decoration:none;font-weight:600;padding:14px 32px;border-radius:8px;font-size:15px">
-      Open foster portal
-    </a>
-  </div>
-  <p style="color:#888;font-size:13px;margin:0 0 8px">Or copy this link into your browser:</p>
-  <p style="color:#888;font-size:13px;word-break:break-all;margin:0 0 32px">${portalUrl}</p>
-  <p style="color:#888;font-size:13px;margin:0 0 16px">
-    Save this link — it&apos;s your permanent access to ${animalName}&apos;s foster portal.
-  </p>
-  <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
-  <p style="color:#aaa;font-size:12px;margin:0">
-    This email was sent by ${orgName} via Cara. If you believe you received this in error, please ignore it.
-  </p>
-</body>
-</html>`,
-  })
-}
-
 export async function sendContractSigningEmail({
   to,
   adopterName,

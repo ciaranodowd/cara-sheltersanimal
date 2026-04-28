@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Sidebar } from "@/components/layout/sidebar"
 import { MobileNav } from "@/components/layout/mobile-nav"
+import { TrialBanner } from "@/components/layout/trial-banner"
 
 export const dynamic = 'force-dynamic'
 
@@ -19,7 +20,7 @@ export default async function OrgLayout({
 
   const org = await prisma.organization.findUnique({
     where: { slug: params.orgSlug },
-    select: { id: true, name: true, slug: true },
+    select: { id: true, name: true, slug: true, plan: true, planStatus: true, trialEndDate: true, trialEndsAt: true },
   })
   if (!org) notFound()
 
@@ -29,10 +30,17 @@ export default async function OrgLayout({
   })
   if (!membership) notFound()
 
+  const effectiveTrialEnd = org.trialEndDate ?? org.trialEndsAt
+
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <Sidebar orgSlug={org.slug} orgName={org.name} />
+      <Sidebar orgSlug={org.slug} orgName={org.name} plan={org.plan} />
       <main className="flex-1 min-w-0 pb-16 md:pb-0">
+        <TrialBanner
+          plan={org.plan}
+          trialEndDate={effectiveTrialEnd?.toISOString() ?? null}
+          orgSlug={org.slug}
+        />
         {children}
       </main>
       <MobileNav orgSlug={org.slug} />

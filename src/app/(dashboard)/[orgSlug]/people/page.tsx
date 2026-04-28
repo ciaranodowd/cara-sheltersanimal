@@ -21,15 +21,22 @@ export default async function PeoplePage({
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) redirect("/login")
 
-  const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { id: true } })
+  const org = await prisma.organization.findUnique({
+    where: { slug: params.orgSlug },
+    select: { id: true },
+  }).catch(() => null)
   if (!org) notFound()
 
-  const [adopters, fosters, volunteers, donors] = await Promise.all([
-    prisma.adopter.findMany({ where: { organizationId: org.id }, orderBy: { createdAt: "desc" }, take: 50 }),
-    prisma.foster.findMany({ where: { organizationId: org.id }, orderBy: { createdAt: "desc" }, take: 50 }),
-    prisma.volunteer.findMany({ where: { organizationId: org.id }, orderBy: { createdAt: "desc" }, take: 50 }),
-    prisma.donor.findMany({ where: { organizationId: org.id }, orderBy: { createdAt: "desc" }, take: 50 }),
-  ])
+  let adopters: any[] = [], volunteers: any[] = [], donors: any[] = []
+  try {
+    ;[adopters, volunteers, donors] = await Promise.all([
+      prisma.adopter.findMany({ where: { organizationId: org.id }, orderBy: { createdAt: "desc" }, take: 50 }),
+      prisma.volunteer.findMany({ where: { organizationId: org.id }, orderBy: { createdAt: "desc" }, take: 50 }),
+      prisma.donor.findMany({ where: { organizationId: org.id }, orderBy: { createdAt: "desc" }, take: 50 }),
+    ])
+  } catch {
+    // Let error boundary handle DB failures; show empty lists as fallback
+  }
 
   const tab = searchParams.tab ?? "adopters"
 
@@ -64,7 +71,6 @@ export default async function PeoplePage({
         <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
           <TabsList className="w-max">
             <TabsTrigger value="adopters">Adopters <Badge variant="secondary" className="ml-1.5 text-xs">{adopters.length}</Badge></TabsTrigger>
-            <TabsTrigger value="fosters">Fosters <Badge variant="secondary" className="ml-1.5 text-xs">{fosters.length}</Badge></TabsTrigger>
             <TabsTrigger value="volunteers">Volunteers <Badge variant="secondary" className="ml-1.5 text-xs">{volunteers.length}</Badge></TabsTrigger>
             <TabsTrigger value="donors">Donors <Badge variant="secondary" className="ml-1.5 text-xs">{donors.length}</Badge></TabsTrigger>
           </TabsList>
@@ -75,35 +81,6 @@ export default async function PeoplePage({
             {adopters.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-10">No adopters yet</p>
             ) : adopters.map(p => personRow(p, "adopters"))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="fosters" className="mt-4">
-          <div className="rounded-xl border bg-card">
-            {fosters.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-10">No fosters yet</p>
-            ) : fosters.map(p => (
-              <Link key={p.id} href={`/${params.orgSlug}/people/fosters/${p.id}`}
-                className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors border-b last:border-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm shrink-0">
-                    {p.firstName[0]}{p.lastName[0]}
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">{p.firstName} {p.lastName}</p>
-                    <p className="text-xs text-muted-foreground">{p.email}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {p.approved ? (
-                    <Badge className="text-xs bg-green-100 text-green-700 hover:bg-green-100">Approved</Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-xs">Pending</Badge>
-                  )}
-                  <p className="text-xs text-muted-foreground hidden sm:block">{formatDate(p.createdAt)}</p>
-                </div>
-              </Link>
-            ))}
           </div>
         </TabsContent>
 

@@ -22,7 +22,10 @@ export default async function AnimalsPage({
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) redirect("/login")
 
-  const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { id: true } })
+  const org = await prisma.organization.findUnique({
+    where: { slug: params.orgSlug },
+    select: { id: true },
+  }).catch(() => null)
   if (!org) notFound()
 
   const where: any = { organizationId: org.id }
@@ -43,7 +46,7 @@ export default async function AnimalsPage({
       photos: { take: 1, orderBy: { position: "asc" } },
       _count: { select: { adoptionApps: true } },
     },
-  })
+  }).catch(() => [])
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-5">

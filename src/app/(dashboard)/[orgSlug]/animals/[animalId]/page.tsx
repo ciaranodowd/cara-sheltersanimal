@@ -13,7 +13,6 @@ import { formatDate } from "@/lib/utils"
 import { PhotoUpload } from "@/components/photo-upload"
 import { ShareAnimalButton } from "@/components/share-animal-button"
 import { MicrochipDisplay } from "@/components/microchip-lookup"
-import { AssignFosterModal } from "./_components/assign-foster-modal"
 
 export const dynamic = 'force-dynamic'
 
@@ -25,32 +24,29 @@ export default async function AnimalPage({
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) redirect("/login")
 
-  const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { id: true } })
+  const org = await prisma.organization.findUnique({
+    where: { slug: params.orgSlug },
+    select: { id: true },
+  }).catch(() => null)
   if (!org) notFound()
 
-  const [animal, approvedFosters] = await Promise.all([
-    prisma.animal.findFirst({
+  let animal
+  try {
+    animal = await prisma.animal.findFirst({
       where: { id: params.animalId, organizationId: org.id },
       include: {
         photos: { orderBy: { position: "asc" } },
         medicalRecords: { orderBy: { date: "desc" }, take: 10 },
         weightLogs: { orderBy: { date: "desc" }, take: 10 },
-        fosterAssignments: {
-          include: { foster: true },
-          orderBy: { startDate: "desc" },
-        },
         adoptionApps: {
           orderBy: { createdAt: "desc" },
           select: { id: true, applicantName: true, applicantEmail: true, status: true, createdAt: true },
         },
       },
-    }),
-    prisma.foster.findMany({
-      where: { organizationId: org.id, approved: true },
-      select: { id: true, firstName: true, lastName: true, email: true },
-      orderBy: { firstName: "asc" },
-    }),
-  ])
+    })
+  } catch {
+    notFound()
+  }
   if (!animal) notFound()
 
   const statusColors: Record<string, string> = {
@@ -67,7 +63,7 @@ export default async function AnimalPage({
     DECEASED: "bg-slate-100 text-slate-500",
   }
 
-  const mainPhoto = animal.photos[0]
+  const mainPhoto = animal.photos[0] ?? null
 
   return (
     <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-6">
@@ -87,7 +83,7 @@ export default async function AnimalPage({
       </div>
 
       <div className="flex flex-col sm:flex-row gap-6">
-        {/* Main photo preview */}
+        {/* Main photo */}
         <div className="w-full sm:w-48 shrink-0">
           <div className="aspect-square rounded-xl overflow-hidden bg-slate-100">
             {mainPhoto ? (
@@ -143,7 +139,7 @@ export default async function AnimalPage({
             ))}
             <div className="col-span-2 pt-1">
               <dt className="text-muted-foreground mb-1.5">Microchip</dt>
-              <dd><MicrochipDisplay chipNumber={animal.microchipNumber} /></dd>
+              <dd><MicrochipDisplay chipNumber={animal.microchipNumber ?? null} /></dd>
             </div>
           </dl>
         </div>
@@ -166,24 +162,9 @@ export default async function AnimalPage({
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="photos">Photos ({animal.photos.length})</TabsTrigger>
             <TabsTrigger value="medical">Medical</TabsTrigger>
-            <TabsTrigger value="foster">Foster history</TabsTrigger>
             <TabsTrigger value="applications">Applications ({animal.adoptionApps.length})</TabsTrigger>
           </TabsList>
         </div>
-
-        <TabsContent value="photos" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Photos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PhotoUpload
-                animalId={animal.id}
-                initialPhotos={animal.photos.map(p => ({ id: p.id, url: p.url, isPrimary: p.isPrimary }))}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="overview" className="space-y-4 mt-4">
           {animal.description && (
@@ -201,6 +182,20 @@ export default async function AnimalPage({
           {!animal.description && !animal.notes && (
             <p className="text-sm text-muted-foreground py-4 text-center">No description or notes yet.</p>
           )}
+        </TabsContent>
+
+        <TabsContent value="photos" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Photos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PhotoUpload
+                animalId={animal.id}
+                initialPhotos={animal.photos.map(p => ({ id: p.id, url: p.url, isPrimary: p.isPrimary }))}
+              />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="medical" className="mt-4">
@@ -221,53 +216,15 @@ export default async function AnimalPage({
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <p className="font-medium text-sm">{record.type.replace(/_/g, " ")}</p>
-                          <p className="text-xs text-muted-foreground">{formatDate(record.date)} {record.vetName ? `· ${record.vetName}` : ""}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(record.date)}{record.vetName ? ` · ${record.vetName}` : ""}
+                          </p>
                         </div>
                         {record.nextDueDate && (
                           <Badge variant="outline" className="text-xs">Next: {formatDate(record.nextDueDate)}</Badge>
                         )}
                       </div>
                       {record.notes && <p className="text-xs text-muted-foreground mt-1">{record.notes}</p>}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="foster" className="mt-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Foster assignments</CardTitle>
-              <AssignFosterModal
-                orgSlug={params.orgSlug}
-                animalId={animal.id}
-                animalName={animal.name}
-                fosters={approvedFosters}
-              />
-            </CardHeader>
-            <CardContent>
-              {animal.fosterAssignments.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">No foster history</p>
-              ) : (
-                <div className="divide-y">
-                  {animal.fosterAssignments.map(a => (
-                    <div key={a.id} className="py-3 flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-medium text-sm">{a.foster.firstName} {a.foster.lastName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDate(a.startDate)} — {a.endDate ? formatDate(a.endDate) : "Present"}
-                        </p>
-                        {a.notes && <p className="text-xs text-muted-foreground mt-0.5 italic">{a.notes}</p>}
-                      </div>
-                      {a.fosterPortalToken && (
-                        <Link href={`/foster/${a.fosterPortalToken}`} target="_blank">
-                          <Badge variant="outline" className="text-xs cursor-pointer hover:bg-slate-50">
-                            View portal ↗
-                          </Badge>
-                        </Link>
-                      )}
                     </div>
                   ))}
                 </div>

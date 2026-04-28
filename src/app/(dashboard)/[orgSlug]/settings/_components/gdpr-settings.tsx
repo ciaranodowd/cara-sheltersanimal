@@ -58,7 +58,7 @@ export function GdprSettings({ orgSlug }: { orgId: string; orgSlug: string }) {
         <CardContent>
           <ul className="space-y-2 text-sm">
             {[
-              "All adopter and foster data collected with explicit consent",
+              "All adopter data collected with explicit consent",
               "Consent timestamp and IP recorded at point of collection",
               "Marketing consent recorded separately from necessary processing",
               "Data retention policy enforced — records auto-expire after configurable period",

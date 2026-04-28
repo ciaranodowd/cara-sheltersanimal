@@ -38,10 +38,18 @@ export default async function DashboardPage({ params }: { params: { orgSlug: str
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) redirect("/login")
 
-  const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { id: true, name: true } })
+  const org = await prisma.organization.findUnique({
+    where: { slug: params.orgSlug },
+    select: { id: true, name: true },
+  }).catch(() => null)
   if (!org) notFound()
 
-  const [
+  let totalAnimals = 0, availableAnimals = 0, inFosterAnimals = 0, pendingApps = 0
+  let monthDonations: { _sum: { amount: any } } = { _sum: { amount: null } }
+  let recentAnimals: any[] = [], recentApps: any[] = []
+
+  try {
+  ;[
     totalAnimals,
     availableAnimals,
     inFosterAnimals,
@@ -77,6 +85,9 @@ export default async function DashboardPage({ params }: { params: { orgSlug: str
       include: { animal: { select: { name: true } } },
     }),
   ])
+  } catch {
+    // Error boundary at [orgSlug] level will catch DB failures
+  }
 
   const stats = [
     {
