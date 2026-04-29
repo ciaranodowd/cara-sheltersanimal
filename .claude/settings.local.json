@@ -40,7 +40,8 @@
       "Bash(rm -f \"src/app/\\(dashboard\\)/[orgSlug]/animals/[animalId]/_components/assign-foster-modal.tsx\")",
       "Bash(rm -rf \"src/app/\\(dashboard\\)/[orgSlug]/foster\")",
       "Bash(rm -rf \"src/app/\\(dashboard\\)/[orgSlug]/people/fosters\")",
-      "Bash(rm -rf \"src/app/api/animals/[animalId]/foster\")"
+      "Bash(rm -rf \"src/app/api/animals/[animalId]/foster\")",
+      "Bash(git *)"
     ]
   }
 }

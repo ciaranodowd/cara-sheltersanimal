@@ -2,37 +2,50 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { signIn, getSession } from "next-auth/react"
+import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  CredentialsSignin: "Invalid email or password",
+  OAuthAccountNotLinked: "This email is already linked to a different sign-in method",
+  OAuthSignin: "Could not sign in with Google. Please try again",
+  Default: "Something went wrong. Please try again",
+}
+
 export function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl")
+  const authError = searchParams.get("error")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [error, setError] = useState(
+    authError ? (AUTH_ERROR_MESSAGES[authError] ?? AUTH_ERROR_MESSAGES.Default) : ""
+  )
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError("")
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    })
-    setLoading(false)
-    if (result?.error) {
-      setError("Invalid email or password")
-    } else {
-      const session = await getSession()
-      const slug = session?.user?.organizations?.[0]?.slug
-      router.push(callbackUrl ?? (slug ? `/${slug}` : "/"))
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      })
+      if (result?.error) {
+        setError("Invalid email or password")
+      } else {
+        router.push(callbackUrl ?? "/")
+      }
+    } catch {
+      setError("Something went wrong. Please try again.")
+    } finally {
+      setLoading(false)
     }
   }
 

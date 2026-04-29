@@ -4,7 +4,7 @@ import { X } from "lucide-react"
 import Link from "next/link"
 
 interface Props {
-  plan: string
+  plan?: string
   trialEndDate: string | null
   orgSlug: string
 }
@@ -12,7 +12,8 @@ interface Props {
 export function TrialBanner({ plan, trialEndDate, orgSlug }: Props) {
   const [dismissed, setDismissed] = useState(false)
 
-  if (dismissed || plan === "pro") return null
+  // Don't show if plan unknown (Prisma client not regenerated yet) or already pro
+  if (dismissed || !plan || plan === "pro") return null
 
   const trialDate = trialEndDate ? new Date(trialEndDate) : null
   const trialDaysLeft = trialDate

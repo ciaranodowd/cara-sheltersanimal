@@ -18,10 +18,21 @@ export default async function OrgLayout({
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) redirect("/login")
 
-  const org = await prisma.organization.findUnique({
-    where: { slug: params.orgSlug },
-    select: { id: true, name: true, slug: true, plan: true, planStatus: true, trialEndDate: true, trialEndsAt: true },
-  })
+  // Try to load all billing fields; if SQL migration hasn't been run yet the
+  // DB will reject the query — fall back to the fields that always exist.
+  type OrgRow = { id: string; name: string; slug: string; plan?: string; trialEndDate?: Date | null; trialEndsAt?: Date | null }
+  let org: OrgRow | null = null
+  try {
+    org = await prisma.organization.findUnique({
+      where: { slug: params.orgSlug },
+      select: { id: true, name: true, slug: true, plan: true, trialEndDate: true, trialEndsAt: true },
+    })
+  } catch {
+    org = await prisma.organization.findUnique({
+      where: { slug: params.orgSlug },
+      select: { id: true, name: true, slug: true, trialEndsAt: true },
+    }).catch(() => null)
+  }
   if (!org) notFound()
 
   const membership = await prisma.userOrganization.findUnique({

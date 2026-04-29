@@ -20,37 +20,36 @@ export async function POST(req: NextRequest) {
   }
 
   const now = new Date()
-  const trialStartDate = now
-  const trialEndDate = new Date(now)
-  trialEndDate.setDate(trialEndDate.getDate() + 30)
+  const trialEndsAt = new Date(now)
+  trialEndsAt.setDate(trialEndsAt.getDate() + 30)
 
-  const org = await prisma.organization.create({
-    data: {
-      name,
-      slug,
-      email,
-      phone: phone || null,
-      address: address || null,
-      city: city || null,
-      county: county || null,
-      country: country || "IE",
-      website: website || null,
-      chyNumber: chyNumber || null,
-      description: description || null,
-      subscriptionStatus: "TRIALING",
-      trialEndsAt: trialEndDate,
-      trialStartDate,
-      trialEndDate,
-      plan: "trial",
-      planStatus: "active",
-      users: {
-        create: {
-          userId: session.user.id,
-          role: "ADMIN",
-        },
-      },
-    },
-  })
+  const baseData = {
+    name,
+    slug,
+    email,
+    phone: phone || null,
+    address: address || null,
+    city: city || null,
+    county: county || null,
+    country: country || "IE",
+    website: website || null,
+    chyNumber: chyNumber || null,
+    description: description || null,
+    subscriptionStatus: "TRIALING" as const,
+    trialEndsAt,
+    users: { create: { userId: session.user.id, role: "ADMIN" as const } },
+  }
+
+  // Try to set new billing columns; if SQL migration not yet run the create
+  // will fail on unknown columns — fall back to base data only.
+  let org
+  try {
+    org = await prisma.organization.create({
+      data: { ...baseData, trialStartDate: now, trialEndDate: trialEndsAt, plan: "trial", planStatus: "active" },
+    })
+  } catch {
+    org = await prisma.organization.create({ data: baseData })
+  }
 
   return NextResponse.json({ slug: org.slug }, { status: 201 })
 }

@@ -14,29 +14,27 @@ export default async function BillingPage({
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) redirect("/login")
 
-  let org, membership
+  type OrgRow = { id: string; name: string; slug: string; plan?: string; planStatus?: string; trialEndDate?: Date | null; trialEndsAt?: Date | null }
+  let org: OrgRow | null = null
   try {
     org = await prisma.organization.findUnique({
       where: { slug: params.orgSlug },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        plan: true,
-        planStatus: true,
-        trialEndDate: true,
-        trialEndsAt: true,
-      },
-    })
-    if (!org) notFound()
-    membership = await prisma.userOrganization.findUnique({
-      where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
-      select: { role: true },
+      select: { id: true, name: true, slug: true, plan: true, planStatus: true, trialEndDate: true, trialEndsAt: true },
     })
   } catch {
-    notFound()
+    // Fallback if SQL migration not yet run
+    org = await prisma.organization.findUnique({
+      where: { slug: params.orgSlug },
+      select: { id: true, name: true, slug: true, trialEndsAt: true },
+    }).catch(() => null)
   }
-  if (!org || !membership) notFound()
+  if (!org) notFound()
+
+  const membership = await prisma.userOrganization.findUnique({
+    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
+    select: { role: true },
+  }).catch(() => null)
+  if (!membership) notFound()
 
   const effectiveTrialEnd = org.trialEndDate ?? org.trialEndsAt
 
@@ -48,10 +46,10 @@ export default async function BillingPage({
       </div>
       <BillingClient
         orgSlug={params.orgSlug}
-        plan={org.plan}
-        planStatus={org.planStatus}
+        plan={org.plan ?? "trial"}
+        planStatus={org.planStatus ?? "active"}
         trialEndDate={effectiveTrialEnd?.toISOString() ?? null}
-        isAdmin={membership.role === "ADMIN"}
+        isAdmin={membership!.role === "ADMIN"}
       />
     </div>
   )
