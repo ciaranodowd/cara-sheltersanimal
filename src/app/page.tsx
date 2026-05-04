@@ -19,43 +19,44 @@ import {
 
 export const dynamic = "force-dynamic"
 
+// ── MARKETING IMAGE CONFIG ─────────────────────────────────────────────────
+// 1. Upload images to Supabase Storage → bucket: marketinganimals
+// 2. Set each value below to the exact filename as it appears in the bucket
+//    (including file extension). Set to "" to show a neutral placeholder.
+const MARKETING_BUCKET = "marketinganimals"
+const MARKETING_IMAGES: Record<string, string> = {
+  hero:    "Screenshot 2026-05-04 203014.png",
+  buddy:   "Screenshot 2026-05-04 203014.png",
+  rex:     "Screenshot 2026-05-04 203035.png",
+  mittens: "Screenshot 2026-05-04 203105.png",
+  luna:    "Screenshot 2026-05-04 203116.png",
+  charlie: "Screenshot 2026-05-04 203035.png",
+  bella:   "Screenshot 2026-05-04 203130.png",
+}
+
+function marketingImageUrl(key: string): string {
+  const filename = MARKETING_IMAGES[key] ?? ""
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (!filename || !base) return ""
+  const encoded = filename.split("/").map(encodeURIComponent).join("/")
+  return `${base}/storage/v1/object/public/${MARKETING_BUCKET}/${encoded}`
+}
+
 const ANIMALS = [
-  {
-    name: "Buddy",
-    type: "Dog",
-    status: "Available",
-    image: "/images/Screenshot%202026-05-04%20203014.png",
-  },
-  {
-    name: "Mittens",
-    type: "Cat",
-    status: "Applied",
-    image: "/images/Screenshot%202026-05-04%20203105.png",
-  },
-  {
-    name: "Rex",
-    type: "Dog",
-    status: "Available",
-    image: "/images/Screenshot%202026-05-04%20203035.png",
-  },
-  {
-    name: "Luna",
-    type: "Cat",
-    status: "Adopted",
-    image: "/images/Screenshot%202026-05-04%20203116.png",
-  },
-  {
-    name: "Charlie",
-    type: "Dog",
-    status: "Available",
-    image: "/images/Screenshot%202026-05-04%20203035.png",
-  },
-  {
-    name: "Bella",
-    type: "Cat",
-    status: "Applied",
-    image: "/images/Screenshot%202026-05-04%20203130.png",
-  },
+  { name: "Buddy",   type: "Dog", status: "Available", imageKey: "buddy"   },
+  { name: "Mittens", type: "Cat", status: "Applied",   imageKey: "mittens" },
+  { name: "Rex",     type: "Dog", status: "Available", imageKey: "rex"     },
+  { name: "Luna",    type: "Cat", status: "Adopted",   imageKey: "luna"    },
+  { name: "Charlie", type: "Dog", status: "Available", imageKey: "charlie" },
+  { name: "Bella",   type: "Cat", status: "Applied",   imageKey: "bella"   },
+]
+
+const ANIMAL_STRIP = [
+  { key: "buddy",   alt: "Tan dog with blue collar available for adoption", name: "Buddy",   label: "Dog · Available" },
+  { key: "rex",     alt: "Happy black and tan dog sitting on a bench",      name: "Rex",     label: "Dog · Available" },
+  { key: "mittens", alt: "Tabby cat with green eyes looking for a home",   name: "Mittens", label: "Cat · Applied"   },
+  { key: "luna",    alt: "Tabby cat in a shelter waiting for adoption",     name: "Luna",    label: "Cat · Adopted"   },
+  { key: "bella",   alt: "Black and white cat with striking eyes",          name: "Bella",   label: "Cat · Applied"   },
 ]
 
 export default async function HomePage() {
@@ -184,11 +185,15 @@ export default async function HomePage() {
             {/* Right: hero dog photo */}
             <div className="flex justify-center lg:justify-end pb-8 lg:pb-0">
               <div className="relative w-72 sm:w-96 lg:w-full lg:max-w-md">
-                <img
-                  src="/images/Screenshot%202026-05-04%20203014.png"
-                  alt="Rescue dog available for adoption"
-                  className="w-full aspect-square object-cover rounded-2xl shadow-2xl border-4 border-[#2d5a3d]"
-                />
+                {marketingImageUrl("hero") ? (
+                  <img
+                    src={marketingImageUrl("hero")}
+                    alt="Rescue dog available for adoption"
+                    className="w-full aspect-square object-cover rounded-2xl shadow-2xl border-4 border-[#2d5a3d]"
+                  />
+                ) : (
+                  <div className="w-full aspect-square rounded-2xl shadow-2xl border-4 border-[#2d5a3d] bg-[#2d5a3d]" />
+                )}
                 <div className="absolute bottom-4 left-4 bg-white rounded-xl px-4 py-2.5 shadow-lg flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
                   <span className="text-sm font-semibold text-[#1a3a2a]">Available for adoption</span>
@@ -247,29 +252,34 @@ export default async function HomePage() {
                     <div className="text-xs bg-[#1a3a2a] text-white px-3 py-1 rounded-lg">+ Add animal</div>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {ANIMALS.map((animal) => (
-                      <div key={animal.name} className="bg-white rounded-lg p-2.5 border border-gray-100 shadow-sm">
-                        <div className="rounded-md h-14 mb-2 overflow-hidden">
-                          <img
-                            src={animal.image}
-                            alt={`${animal.name} the ${animal.type.toLowerCase()}`}
-                            className="w-full h-full object-cover"
-                          />
+                    {ANIMALS.map((animal) => {
+                      const imgUrl = marketingImageUrl(animal.imageKey)
+                      return (
+                        <div key={animal.name} className="bg-white rounded-lg p-2.5 border border-gray-100 shadow-sm">
+                          <div className="rounded-md h-14 mb-2 overflow-hidden bg-gray-100">
+                            {imgUrl && (
+                              <img
+                                src={imgUrl}
+                                alt={`${animal.name} the ${animal.type.toLowerCase()}`}
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+                          </div>
+                          <div className="text-xs font-semibold text-gray-800">{animal.name}</div>
+                          <div
+                            className={`text-xs mt-0.5 ${
+                              animal.status === "Available"
+                                ? "text-green-600"
+                                : animal.status === "Applied"
+                                ? "text-amber-600"
+                                : "text-blue-600"
+                            }`}
+                          >
+                            {animal.status}
+                          </div>
                         </div>
-                        <div className="text-xs font-semibold text-gray-800">{animal.name}</div>
-                        <div
-                          className={`text-xs mt-0.5 ${
-                            animal.status === "Available"
-                              ? "text-green-600"
-                              : animal.status === "Applied"
-                              ? "text-amber-600"
-                              : "text-blue-600"
-                          }`}
-                        >
-                          {animal.status}
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               </div>
@@ -436,50 +446,24 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {[
-              {
-                src: "/images/Screenshot%202026-05-04%20203014.png",
-                alt: "Tan dog with blue collar available for adoption",
-                name: "Buddy",
-                label: "Dog · Available",
-              },
-              {
-                src: "/images/Screenshot%202026-05-04%20203035.png",
-                alt: "Happy black and tan dog sitting on a bench",
-                name: "Rex",
-                label: "Dog · Available",
-              },
-              {
-                src: "/images/Screenshot%202026-05-04%20203105.png",
-                alt: "Tabby cat with green eyes looking for a home",
-                name: "Mittens",
-                label: "Cat · Applied",
-              },
-              {
-                src: "/images/Screenshot%202026-05-04%20203116.png",
-                alt: "Tabby cat in a shelter waiting for adoption",
-                name: "Luna",
-                label: "Cat · Adopted",
-              },
-              {
-                src: "/images/Screenshot%202026-05-04%20203130.png",
-                alt: "Black and white cat with striking eyes",
-                name: "Bella",
-                label: "Cat · Applied",
-              },
-            ].map((animal) => (
-              <div key={animal.name} className="group">
-                <div className="overflow-hidden rounded-xl aspect-square mb-3 shadow-sm border border-gray-100">
-                  <img
-                    src={animal.src}
-                    alt={animal.alt}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+            {ANIMAL_STRIP.map((animal) => {
+              const imgUrl = marketingImageUrl(animal.key)
+              return (
+                <div key={animal.name} className="group">
+                  <div className="overflow-hidden rounded-xl aspect-square mb-3 shadow-sm border border-gray-100 bg-gray-100">
+                    {imgUrl && (
+                      <img
+                        src={imgUrl}
+                        alt={animal.alt}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    )}
+                  </div>
+                  <p className="text-sm font-semibold text-[#1a3a2a] text-center">{animal.name}</p>
+                  <p className="text-xs text-gray-400 text-center mt-0.5">{animal.label}</p>
                 </div>
-                <p className="text-sm font-semibold text-[#1a3a2a] text-center">{animal.name}</p>
-                <p className="text-xs text-gray-400 text-center mt-0.5">{animal.label}</p>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </section>

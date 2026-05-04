@@ -43,7 +43,9 @@
       "Bash(rm -rf \"src/app/api/animals/[animalId]/foster\")",
       "Bash(git *)",
       "Bash(Get-ChildItem -Path \"C:\\\\Projects\\\\cara\" -Filter \"next.config*\" -Recurse -Depth 2)",
-      "Bash(Select-Object FullName)"
+      "Bash(Select-Object FullName)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\senan\\\\cara-sheltersanimal\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)"
     ]
   }
 }
