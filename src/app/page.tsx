@@ -187,12 +187,12 @@ export default async function HomePage() {
             <div className="flex justify-center lg:justify-end pb-8 lg:pb-0">
               <div className="relative w-72 sm:w-96 lg:w-full lg:max-w-md">
                 {marketingImageUrl("hero") ? (
-                  <div className="relative w-full aspect-square overflow-hidden rounded-2xl shadow-2xl border-4 border-[#2d5a3d]">
+                  <div className="relative w-full aspect-square overflow-hidden rounded-2xl shadow-2xl border-4 border-[#2d5a3d] bg-[#2d5a3d]">
                     <Image
                       src={marketingImageUrl("hero") as string}
                       alt="Rescue dog available for adoption"
                       fill
-                      className="object-cover object-top"
+                      className="object-contain"
                     />
                   </div>
                 ) : (
@@ -266,7 +266,7 @@ export default async function HomePage() {
                                 src={imgUrl}
                                 alt={`${animal.name} the ${animal.type.toLowerCase()}`}
                                 fill
-                                className="object-cover object-top"
+                                className="object-contain"
                               />
                             )}
                           </div>
@@ -455,13 +455,13 @@ export default async function HomePage() {
               const imgUrl = marketingImageUrl(animal.key)
               return (
                 <div key={animal.name} className="group">
-                  <div className="relative overflow-hidden rounded-xl aspect-[4/3] mb-3 shadow-sm border border-gray-100 bg-gray-100">
+                  <div className="relative overflow-hidden rounded-xl aspect-[4/3] mb-3 shadow-sm border border-gray-100 bg-gray-50">
                     {imgUrl && (
                       <Image
                         src={imgUrl}
                         alt={animal.alt}
                         fill
-                        className="object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                        className="object-contain"
                       />
                     )}
                   </div>
