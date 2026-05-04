@@ -69,6 +69,7 @@ export default function ContractPage() {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState("")
   const [sendError, setSendError] = useState("")
+  const [sendEmailWarning, setSendEmailWarning] = useState(false)
   const [sentInfo, setSentInfo] = useState<{ sentAt: string; signingUrl: string } | null>(null)
   const [copied, setCopied] = useState(false)
 
@@ -142,6 +143,7 @@ export default function ContractPage() {
 
   async function handleSend() {
     setSendError("")
+    setSendEmailWarning(false)
     setSending(true)
     try {
       const res = await fetch(`/api/applications/${params.appId}/contract/send`, {
@@ -151,6 +153,10 @@ export default function ContractPage() {
       if (!res.ok) { setSendError(data.error ?? "Failed to send"); return }
       setSentInfo({ sentAt: data.sentAt, signingUrl: data.signingUrl })
       setContract((c: any) => ({ ...c, sentAt: data.sentAt }))
+      if (data.emailError) {
+        setSendError(`Email failed to send (${data.emailError}) — share the signing link below directly with the adopter.`)
+        setSendEmailWarning(true)
+      }
     } catch {
       setSendError("Network error — please try again")
     } finally {
@@ -305,7 +311,7 @@ export default function ContractPage() {
               </p>
             </div>
             {sendError && (
-              <div className="rounded-lg bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">{sendError}</div>
+              <div className={`rounded-lg px-4 py-3 text-sm ${sendEmailWarning ? "bg-amber-50 border border-amber-100 text-amber-800" : "bg-red-50 border border-red-100 text-red-700"}`}>{sendError}</div>
             )}
             <div className="flex gap-3">
               <Button

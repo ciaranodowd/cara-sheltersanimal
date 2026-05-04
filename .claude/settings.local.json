@@ -41,7 +41,9 @@
       "Bash(rm -rf \"src/app/\\(dashboard\\)/[orgSlug]/foster\")",
       "Bash(rm -rf \"src/app/\\(dashboard\\)/[orgSlug]/people/fosters\")",
       "Bash(rm -rf \"src/app/api/animals/[animalId]/foster\")",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Projects\\\\cara\" -Filter \"next.config*\" -Recurse -Depth 2)",
+      "Bash(Select-Object FullName)"
     ]
   }
 }
