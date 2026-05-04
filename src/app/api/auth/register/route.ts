@@ -36,7 +36,16 @@ export async function POST(req: NextRequest) {
 
     const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } })
     if (existing) {
-      return NextResponse.json({ error: "An account with this email already exists" }, { status: 400 })
+      // Placeholder accounts (created via invite, no password set) can complete registration
+      if (existing.password) {
+        return NextResponse.json({ error: "An account with this email already exists" }, { status: 400 })
+      }
+      const hashed = await bcrypt.hash(password, 12)
+      await prisma.user.update({
+        where: { id: existing.id },
+        data: { name: name.trim(), password: hashed },
+      })
+      return NextResponse.json({ success: true }, { status: 200 })
     }
 
     const hashed = await bcrypt.hash(password, 12)
