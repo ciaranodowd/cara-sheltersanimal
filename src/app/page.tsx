@@ -261,7 +261,7 @@ export default async function HomePage() {
                               <img
                                 src={imgUrl}
                                 alt={`${animal.name} the ${animal.type.toLowerCase()}`}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover object-top"
                               />
                             )}
                           </div>
@@ -450,12 +450,12 @@ export default async function HomePage() {
               const imgUrl = marketingImageUrl(animal.key)
               return (
                 <div key={animal.name} className="group">
-                  <div className="overflow-hidden rounded-xl aspect-square mb-3 shadow-sm border border-gray-100 bg-gray-100">
+                  <div className="overflow-hidden rounded-xl aspect-[4/3] mb-3 shadow-sm border border-gray-100 bg-gray-100">
                     {imgUrl && (
                       <img
                         src={imgUrl}
                         alt={animal.alt}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
                       />
                     )}
                   </div>
