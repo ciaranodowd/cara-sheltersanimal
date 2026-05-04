@@ -43,7 +43,6 @@ export async function POST(req: NextRequest, { params }: { params: { appId: stri
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000"
   const signingUrl = `${baseUrl}/sign/${signingToken}`
 
-  let emailError: string | undefined
   try {
     await sendContractSigningEmail({
       to: app.applicantEmail,
@@ -54,8 +53,9 @@ export async function POST(req: NextRequest, { params }: { params: { appId: stri
     })
   } catch (err) {
     console.error("Failed to send contract email:", err)
-    emailError = err instanceof Error ? err.message : "Unknown error"
+    const message = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: `Email failed: ${message}` }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true, sentAt, signingUrl, emailError })
+  return NextResponse.json({ ok: true, sentAt, signingUrl })
 }

@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, Loader2 } from "lucide-react"
+import { ArrowLeft, Loader2, Send } from "lucide-react"
 
 const STATUS_OPTIONS = [
   { value: "PENDING", label: "Pending" },
@@ -26,6 +26,8 @@ export default function ApplicationPage() {
   const [app, setApp] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [sendResult, setSendResult] = useState<{ ok: boolean; message: string } | null>(null)
   const [notes, setNotes] = useState("")
   const [status, setStatus] = useState("")
 
@@ -53,6 +55,26 @@ export default function ApplicationPage() {
     })
     setSaving(false)
     router.refresh()
+  }
+
+  async function sendContract() {
+    setSending(true)
+    setSendResult(null)
+    try {
+      const res = await fetch(`/api/applications/${params.appId}/contract/send`, { method: "POST" })
+      const data = await res.json()
+      if (!res.ok) {
+        setSendResult({ ok: false, message: data.error ?? "Failed to send contract email" })
+      } else {
+        setSendResult({ ok: true, message: `Contract email sent to ${app.applicantEmail}` })
+        setApp((a: any) => ({ ...a, status: "CONTRACT_SENT" }))
+        setStatus("CONTRACT_SENT")
+      }
+    } catch {
+      setSendResult({ ok: false, message: "Network error — please try again" })
+    } finally {
+      setSending(false)
+    }
   }
 
   if (loading) return <div className="p-6 flex items-center gap-2 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading…</div>
@@ -174,11 +196,25 @@ export default function ApplicationPage() {
                     <p className="text-xs">Contract sent to {app.applicantEmail}</p>
                   </div>
                 ) : null}
+
+                {sendResult && (
+                  <div className={`rounded-lg px-3 py-2.5 text-sm ${sendResult.ok ? "bg-green-50 border border-green-100 text-green-700" : "bg-red-50 border border-red-100 text-red-700"}`}>
+                    {sendResult.message}
+                  </div>
+                )}
+
                 <Button className="w-full" variant="outline" asChild>
                   <Link href={`/${params.orgSlug}/adoptions/${params.appId}/contract`}>
-                    {app.contract ? "View contract" : "Prepare contract"}
+                    {app.contract ? "View / edit contract" : "Prepare contract"}
                   </Link>
                 </Button>
+
+                {app.status === "APPROVED" && app.contract && (
+                  <Button className="w-full gap-2" onClick={sendContract} disabled={sending} style={{ backgroundColor: "#1a3a2a" }}>
+                    {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    {sending ? "Sending…" : "Send contract for signing"}
+                  </Button>
+                )}
               </CardContent>
             </Card>
           )}
