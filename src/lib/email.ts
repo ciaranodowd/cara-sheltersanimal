@@ -16,7 +16,7 @@ export async function sendContractSigningEmail({
   orgName: string
   signingUrl: string
 }) {
-  await resend.emails.send({
+  const { error } = await resend.emails.send({
     from: FROM,
     to,
     subject: `Your adoption contract for ${animalName} — please sign`,
@@ -48,6 +48,7 @@ export async function sendContractSigningEmail({
 </body>
 </html>`,
   })
+  if (error) throw new Error(error.message)
 }
 
 export async function sendSignedContractEmails({
