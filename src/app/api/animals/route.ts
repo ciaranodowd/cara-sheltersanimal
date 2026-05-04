@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json()
   const { organizationId, name, species, breed, colour, sex, size, dobApprox, intakeDate,
-    intakeType, microchipNumber, weight, neutered, vaccinated, description, notes } = body
+    intakeType, microchipNumber, weight, neutered, vaccinated, description, notes, publicProfile, status } = body
 
   if (!organizationId || !name || !species || !intakeDate) {
     return NextResponse.json({ error: "Required fields missing" }, { status: 400 })
@@ -39,7 +39,8 @@ export async function POST(req: NextRequest) {
       vaccinated: vaccinated ?? false,
       description: description || null,
       notes: notes || null,
-      status: "INTAKE",
+      publicProfile: publicProfile ?? false,
+      status: publicProfile ? (status ?? "AVAILABLE") : "INTAKE",
     },
   })
 

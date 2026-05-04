@@ -50,6 +50,10 @@ export function AnimalForm({ orgSlug, orgId, animal }: AnimalFormProps) {
   function setCheck(field: string) {
     return (e: React.ChangeEvent<HTMLInputElement>) => setForm(f => ({ ...f, [field]: e.target.checked }))
   }
+  function setPublicProfile(e: React.ChangeEvent<HTMLInputElement>) {
+    const checked = e.target.checked
+    setForm(f => ({ ...f, publicProfile: checked, ...(checked && { status: "AVAILABLE" }) }))
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -59,8 +63,8 @@ export function AnimalForm({ orgSlug, orgId, animal }: AnimalFormProps) {
     if (form.dobApprox) body.dobApprox = new Date(form.dobApprox).toISOString()
     if (form.weight) body.weight = parseFloat(form.weight)
     else delete body.weight
-    // Only send status on edit; new animals always start as INTAKE
-    if (!animal) delete body.status
+    // New animals start as INTAKE unless being published
+    if (!animal && !form.publicProfile) delete body.status
 
     const url = animal ? `/api/animals/${animal.id}` : "/api/animals"
     const method = animal ? "PATCH" : "POST"
@@ -195,7 +199,7 @@ export function AnimalForm({ orgSlug, orgId, animal }: AnimalFormProps) {
               <span className="text-sm">Vaccinated</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" className="rounded" checked={form.publicProfile} onChange={setCheck("publicProfile")} />
+              <input type="checkbox" className="rounded" checked={form.publicProfile} onChange={setPublicProfile} />
               <span className="text-sm">Publish to public portal</span>
             </label>
           </div>
