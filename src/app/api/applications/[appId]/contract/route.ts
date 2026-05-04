@@ -24,10 +24,22 @@ export async function POST(req: NextRequest, { params }: { params: { appId: stri
 
   const app = await getAppAndVerify(params.appId, session.user.id)
   if (!app) return NextResponse.json({ error: "Not found or forbidden" }, { status: 404 })
+  // If this exact application already has a contract the client should PATCH, not POST
   if (app.contract) return NextResponse.json({ error: "Contract already exists" }, { status: 409 })
 
   const { adoptionFee, contractText } = await req.json()
   if (!contractText?.trim()) return NextResponse.json({ error: "Contract text is required" }, { status: 400 })
+
+  // Guard: if another application already produced a *signed* contract for this animal, refuse
+  const existingAnimalContract = await prisma.adoptionContract.findUnique({
+    where: { animalId: app.animalId },
+  })
+  if (existingAnimalContract?.signedAt) {
+    return NextResponse.json(
+      { error: "This animal already has a signed contract. Please contact support if the previous adoption has ended." },
+      { status: 409 }
+    )
+  }
 
   // Ensure adopter profile exists — create one from application data if needed
   let adopterId = app.adopterId
@@ -61,8 +73,10 @@ export async function POST(req: NextRequest, { params }: { params: { appId: stri
     })
   }
 
-  const contract = await prisma.adoptionContract.create({
-    data: {
+  // Upsert on animalId: replaces any stale unsigned contract from a previous adoption
+  const contract = await prisma.adoptionContract.upsert({
+    where: { animalId: app.animalId },
+    create: {
       organizationId: app.organizationId,
       animalId: app.animalId,
       adopterId,
@@ -70,6 +84,23 @@ export async function POST(req: NextRequest, { params }: { params: { appId: stri
       contractText,
       adoptionFee: adoptionFee ?? null,
       currency: "EUR",
+    },
+    update: {
+      organizationId: app.organizationId,
+      adopterId,
+      applicationId: params.appId,
+      contractText,
+      adoptionFee: adoptionFee ?? null,
+      currency: "EUR",
+      // Reset all signing state from the previous adoption
+      sentAt: null,
+      signingToken: null,
+      signedAt: null,
+      signatureData: null,
+      signerIp: null,
+      signedPdfPath: null,
+      completedAt: null,
+      stripePaymentId: null,
     },
   })
 
