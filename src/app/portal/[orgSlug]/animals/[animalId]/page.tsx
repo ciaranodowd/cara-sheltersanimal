@@ -105,13 +105,13 @@ export default async function PublicAnimalProfilePage({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
           {/* Photo */}
           <div className="space-y-3">
-            <div className="aspect-square rounded-2xl overflow-hidden bg-slate-100 shadow-sm">
+            <div className="rounded-2xl overflow-hidden bg-slate-100 shadow-sm">
               {mainPhoto ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={mainPhoto.url}
                   alt={animal.name}
-                  className="w-full h-full object-cover"
+                  className="w-full max-h-[500px] object-contain"
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-slate-300">
