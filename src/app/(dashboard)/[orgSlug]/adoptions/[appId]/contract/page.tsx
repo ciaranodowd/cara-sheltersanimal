@@ -71,7 +71,6 @@ export default function ContractPage() {
   const [sendError, setSendError] = useState("")
   const [sentInfo, setSentInfo] = useState<{ sentAt: string; signingUrl: string } | null>(null)
   const [copied, setCopied] = useState(false)
-  const [sendEmailWarning, setSendEmailWarning] = useState(false)
 
   const [form, setForm] = useState({ adoptionFee: "", contractText: "" })
 
@@ -143,7 +142,6 @@ export default function ContractPage() {
 
   async function handleSend() {
     setSendError("")
-    setSendEmailWarning(false)
     setSending(true)
     try {
       const res = await fetch(`/api/applications/${params.appId}/contract/send`, {
