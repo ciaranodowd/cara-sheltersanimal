@@ -192,7 +192,7 @@ export default async function HomePage() {
                       src={marketingImageUrl("hero") as string}
                       alt="Rescue dog available for adoption"
                       fill
-                      className="object-cover"
+                      className="object-cover object-top"
                     />
                   </div>
                 ) : (
