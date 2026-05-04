@@ -71,6 +71,7 @@ export default function ContractPage() {
   const [sendError, setSendError] = useState("")
   const [sentInfo, setSentInfo] = useState<{ sentAt: string; signingUrl: string } | null>(null)
   const [copied, setCopied] = useState(false)
+  const [sendEmailWarning, setSendEmailWarning] = useState(false)
 
   const [form, setForm] = useState({ adoptionFee: "", contractText: "" })
 
