@@ -187,12 +187,12 @@ export default async function HomePage() {
             <div className="flex justify-center lg:justify-end pb-8 lg:pb-0">
               <div className="relative w-72 sm:w-96 lg:w-full lg:max-w-md">
                 {marketingImageUrl("hero") ? (
-                  <div className="relative w-full aspect-square overflow-hidden rounded-2xl shadow-2xl border-4 border-[#2d5a3d] bg-[#2d5a3d]">
+                  <div className="relative w-full aspect-square overflow-hidden rounded-2xl shadow-2xl border-4 border-[#2d5a3d]">
                     <Image
                       src={marketingImageUrl("hero") as string}
                       alt="Rescue dog available for adoption"
                       fill
-                      className="object-contain"
+                      className="object-cover object-[center_20%]"
                     />
                   </div>
                 ) : (
@@ -260,13 +260,13 @@ export default async function HomePage() {
                       const imgUrl = marketingImageUrl(animal.imageKey)
                       return (
                         <div key={animal.name} className="bg-white rounded-lg p-2.5 border border-gray-100 shadow-sm">
-                          <div className="relative rounded-md h-14 mb-2 overflow-hidden bg-gray-100">
+                          <div className="relative rounded-md h-16 mb-2 overflow-hidden bg-gray-100">
                             {imgUrl && (
                               <Image
                                 src={imgUrl}
                                 alt={`${animal.name} the ${animal.type.toLowerCase()}`}
                                 fill
-                                className="object-contain"
+                                className="object-cover object-[center_20%]"
                               />
                             )}
                           </div>
@@ -455,13 +455,13 @@ export default async function HomePage() {
               const imgUrl = marketingImageUrl(animal.key)
               return (
                 <div key={animal.name} className="group">
-                  <div className="relative overflow-hidden rounded-xl aspect-[4/3] mb-3 shadow-sm border border-gray-100 bg-gray-50">
+                  <div className="relative overflow-hidden rounded-xl aspect-[4/3] mb-3 shadow-sm border border-gray-100">
                     {imgUrl && (
                       <Image
                         src={imgUrl}
                         alt={animal.alt}
                         fill
-                        className="object-contain"
+                        className="object-cover object-[center_20%] group-hover:scale-105 transition-transform duration-300"
                       />
                     )}
                   </div>
