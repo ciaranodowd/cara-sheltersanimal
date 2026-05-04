@@ -106,13 +106,13 @@ export default async function AdoptAnimalPage({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
           {/* Photos */}
           <div className="space-y-3">
-            <div className="aspect-square rounded-2xl overflow-hidden bg-slate-100 shadow-sm">
+            <div className="rounded-2xl overflow-hidden bg-slate-100 shadow-sm flex items-center justify-center h-[300px] sm:h-[450px]">
               {mainPhoto ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={mainPhoto.url}
                   alt={a.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-slate-300">
