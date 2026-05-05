@@ -45,7 +45,7 @@ function ageLabel(dob: Date | null): string | null {
 function heroImageUrl(): string {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL
   if (!base) return ""
-  const filename = "Screenshot 2026-05-04 203035.png"
+  const filename = "publicportaldog.png"
   const encoded = filename.split("/").map(encodeURIComponent).join("/")
   return `${base}/storage/v1/object/public/marketinganimals/${encoded}`
 }
