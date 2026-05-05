@@ -12,11 +12,14 @@ export default withAuth(
         // Public routes
         if (
           pathname === "/" ||
+          pathname.startsWith("/adopt") ||
+          pathname.startsWith("/about") ||
           pathname.startsWith("/portal") ||
           pathname.startsWith("/api/portal") ||
           pathname.startsWith("/api/webhooks") ||
           pathname.startsWith("/login") ||
           pathname.startsWith("/register") ||
+          pathname.startsWith("/onboarding") ||
           pathname.startsWith("/forgot-password") ||
           pathname.startsWith("/api/auth") ||
           pathname.startsWith("/sign") ||
