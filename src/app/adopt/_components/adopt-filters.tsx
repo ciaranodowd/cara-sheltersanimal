@@ -5,11 +5,17 @@ import { SPECIES_LABELS, COUNTIES } from "@/lib/constants"
 
 const SPECIES_OPTIONS = ["DOG", "CAT", "RABBIT", "BIRD", "SMALL_ANIMAL", "FARM", "REPTILE", "OTHER"] as const
 
-export function AdoptFilters({ total }: { total: number }) {
+interface AdoptFiltersProps {
+  total: number
+  filtered: number
+}
+
+export function AdoptFilters({ total, filtered }: AdoptFiltersProps) {
   const router = useRouter()
   const params = useSearchParams()
   const species = params.get("species") ?? ""
   const county = params.get("county") ?? ""
+  const hasFilters = species || county
 
   const update = useCallback(
     (key: string, value: string) => {
@@ -21,11 +27,13 @@ export function AdoptFilters({ total }: { total: number }) {
     [params, router]
   )
 
+  const countText = hasFilters
+    ? `Showing ${filtered} of ${total} ${total === 1 ? "animal" : "animals"}`
+    : `${total} ${total === 1 ? "animal" : "animals"} looking for a home`
+
   return (
     <div className="space-y-3">
-      <p className="text-sm text-gray-500">
-        {total} {total === 1 ? "animal" : "animals"} looking for a home
-      </p>
+      <p className="text-sm text-gray-500">{countText}</p>
       <div className="flex flex-wrap gap-2">
         <select
           value={species}
@@ -49,7 +57,7 @@ export function AdoptFilters({ total }: { total: number }) {
           ))}
         </select>
 
-        {(species || county) && (
+        {hasFilters && (
           <button
             onClick={() => router.push("/adopt")}
             className="text-sm text-gray-400 hover:text-[#1a3a2a] px-2 py-2 transition-colors"

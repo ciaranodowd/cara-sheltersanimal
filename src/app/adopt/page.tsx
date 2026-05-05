@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
-import { PawPrint, Heart, MapPin } from "lucide-react"
+import { Heart, MapPin } from "lucide-react"
 import { SPECIES_LABELS, SPECIES_EMOJI } from "@/lib/constants"
 import { Suspense } from "react"
 import { AdoptFilters } from "./_components/adopt-filters"
-import type { Species } from "@prisma/client"
+import { PublicNav } from "@/components/layout/public-nav"
+import type { Species, AnimalStatus } from "@prisma/client"
 
 export const dynamic = "force-dynamic"
 
@@ -41,28 +42,42 @@ function ageLabel(dob: Date | null): string | null {
   return m ? `${y}y ${m}m` : `${y}y`
 }
 
+function heroImageUrl(): string {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (!base) return ""
+  const filename = "Screenshot 2026-05-04 203035.png"
+  const encoded = filename.split("/").map(encodeURIComponent).join("/")
+  return `${base}/storage/v1/object/public/marketinganimals/${encoded}`
+}
+
 export default async function AdoptPage({
   searchParams,
 }: {
   searchParams: { species?: string; county?: string }
 }) {
+  const baseWhere = { status: "AVAILABLE" as AnimalStatus, publicProfile: true }
+
   const where: any = {
-    status: "AVAILABLE",
-    publicProfile: true,
+    ...baseWhere,
     ...(searchParams.species && { species: searchParams.species as Species }),
     ...(searchParams.county && {
       organization: { county: searchParams.county },
     }),
   }
 
-  const animals = await prisma.animal.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    include: {
-      photos: { take: 1, orderBy: { position: "asc" } },
-      organization: { select: { name: true, slug: true, city: true, county: true } },
-    },
-  })
+  const [animals, totalCount] = await Promise.all([
+    prisma.animal.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      include: {
+        photos: { take: 1, orderBy: { position: "asc" } },
+        organization: { select: { name: true, slug: true, city: true, county: true } },
+      },
+    }),
+    prisma.animal.count({ where: baseWhere }),
+  ])
+
+  const heroImg = heroImageUrl()
 
   const itemListJsonLd = {
     "@context": "https://schema.org",
@@ -87,28 +102,32 @@ export default async function AdoptPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
       />
 
-      {/* Header */}
-      <header className="bg-[#1a3a2a] pt-10 pb-10 px-4 sm:px-6">
-        <div className="max-w-5xl mx-auto">
-          <Link href="/" className="flex items-center gap-2 mb-8">
-            <div className="w-8 h-8 rounded-full bg-[#4ade80]/20 flex items-center justify-center">
-              <PawPrint className="w-4 h-4 text-[#4ade80]" />
-            </div>
-            <span className="text-white font-semibold">Cara</span>
-          </Link>
+      <PublicNav navLinks={[{ label: "For shelters", href: "/" }]} />
+
+      {/* Hero */}
+      <section
+        className="relative overflow-hidden"
+        style={
+          heroImg
+            ? { backgroundImage: `url(${heroImg})`, backgroundSize: "cover", backgroundPosition: "center 30%" }
+            : { backgroundColor: "#1a3a2a" }
+        }
+      >
+        {heroImg && <div className="absolute inset-0 bg-black/60" />}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight mb-3">
             Find your perfect companion
           </h1>
-          <p className="text-[#a7c4b5] text-base sm:text-lg max-w-xl">
+          <p className="text-white/80 text-base sm:text-lg max-w-xl">
             Every one of these animals is waiting for a loving home. Could yours be the one?
           </p>
         </div>
-      </header>
+      </section>
 
       {/* Filters + grid */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Suspense>
-          <AdoptFilters total={animals.length} />
+          <AdoptFilters total={totalCount} filtered={animals.length} />
         </Suspense>
 
         {animals.length === 0 ? (
@@ -118,22 +137,28 @@ export default async function AdoptPage({
             <p className="text-sm text-gray-500">Try a different species or location.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
             {animals.map(animal => {
               const photo = animal.photos[0]
               const emoji = SPECIES_EMOJI[animal.species] ?? "🐾"
               const age = ageLabel(animal.dobApprox)
               const sexLabel = animal.sex === "MALE" ? "Male" : animal.sex === "FEMALE" ? "Female" : null
-              const location = [animal.organization.city, animal.organization.county].filter(Boolean).join(", ")
+              const city = animal.organization.city
+              const county = animal.organization.county
+              const location = city && county && city === county
+                ? county
+                : [city, county].filter(Boolean).join(", ")
 
               return (
-                <Link
+                <div
                   key={animal.id}
-                  href={`/portal/${animal.organization.slug}/animals/${animal.id}`}
-                  className="group relative rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 bg-white"
+                  className="group rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 bg-white flex flex-col"
                 >
-                  {/* Photo */}
-                  <div className="aspect-[3/4] relative overflow-hidden bg-gradient-to-br from-stone-100 to-stone-200">
+                  {/* Photo — links to animal profile */}
+                  <Link
+                    href={`/portal/${animal.organization.slug}/animals/${animal.id}`}
+                    className="block relative overflow-hidden bg-gradient-to-br from-stone-100 to-stone-200 aspect-[3/4]"
+                  >
                     {photo ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -163,7 +188,7 @@ export default async function AdoptPage({
                       </div>
                     )}
 
-                    {/* Gradient + info overlay */}
+                    {/* Gradient + name overlay */}
                     <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
                     <div className="absolute inset-x-0 bottom-0 p-3">
                       <p className="text-white font-bold text-base leading-tight drop-shadow">
@@ -173,10 +198,10 @@ export default async function AdoptPage({
                         {animal.breed ?? SPECIES_LABELS[animal.species]}
                       </p>
                     </div>
-                  </div>
+                  </Link>
 
                   {/* Card footer */}
-                  <div className="p-3 space-y-2">
+                  <div className="p-3 flex flex-col gap-1.5 flex-1">
                     {location && (
                       <div className="flex items-center gap-1 text-gray-400 text-xs">
                         <MapPin className="w-3 h-3 shrink-0" />
@@ -184,12 +209,16 @@ export default async function AdoptPage({
                       </div>
                     )}
                     <p className="text-xs text-gray-500 truncate">{animal.organization.name}</p>
-                    <div className="flex items-center gap-1.5 pt-0.5 text-[#1a3a2a] text-xs font-semibold group-hover:text-[#2d5a3d] transition-colors">
+
+                    <Link
+                      href={`/portal/${animal.organization.slug}/adopt/${animal.id}/apply`}
+                      className="mt-auto flex items-center justify-center gap-1.5 w-full bg-[#1a3a2a] hover:bg-[#2d5a3d] text-white text-xs font-semibold py-2 px-3 rounded-lg transition-colors"
+                    >
                       <Heart className="w-3.5 h-3.5 shrink-0" />
                       Apply to adopt
-                    </div>
+                    </Link>
                   </div>
-                </Link>
+                </div>
               )
             })}
           </div>
