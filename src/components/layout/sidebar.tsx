@@ -7,7 +7,7 @@ import { initials } from "@/lib/utils"
 import {
   LayoutDashboard, PawPrint, Users, Heart,
   DollarSign, BarChart3, Settings, LogOut,
-  ChevronDown, Globe, CreditCard, MessageSquare
+  ChevronDown, Globe, CreditCard, MessageSquare, ExternalLink
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -28,7 +28,7 @@ function nav(slug: string, plan?: string) {
     { href: `/${slug}/messages`, label: "Messages", icon: MessageSquare },
     { href: `/${slug}/donations`, label: "Donations", icon: DollarSign },
     { href: `/${slug}/reports`, label: "Reports", icon: BarChart3 },
-    { href: `/${slug}/portal`, label: "Public Portal", icon: Globe },
+    { href: `/portal/${slug}`, label: "Public Portal", icon: Globe, external: true },
     { href: `/${slug}/billing`, label: "Billing", icon: CreditCard, badge: planBadge },
     { href: `/${slug}/settings`, label: "Settings", icon: Settings },
   ]
@@ -55,13 +55,14 @@ export function Sidebar({ orgSlug, orgName, plan }: SidebarProps) {
       {/* Nav */}
       <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
         {navItems.map(item => {
-          const active = item.exact
+          const active = !item.external && (item.exact
             ? pathname === item.href
-            : pathname === item.href || pathname.startsWith(item.href + "/")
+            : pathname === item.href || pathname.startsWith(item.href + "/"))
           return (
             <Link
               key={item.href}
               href={item.href}
+              {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                 active
@@ -71,6 +72,7 @@ export function Sidebar({ orgSlug, orgName, plan }: SidebarProps) {
             >
               <item.icon className="h-4 w-4 shrink-0" />
               <span className="flex-1">{item.label}</span>
+              {item.external && <ExternalLink className="h-3 w-3 opacity-50 shrink-0" />}
               {item.badge && (
                 <span
                   className={cn(
