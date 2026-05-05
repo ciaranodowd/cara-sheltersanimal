@@ -79,6 +79,19 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen">
+      {/* ── ADOPTER BANNER ── */}
+      <Link
+        href="/adopt"
+        className="flex items-center justify-center gap-2 bg-[#edf7f0] border-b border-[#c6e8d3] py-3 px-4 hover:bg-[#d4efdf] transition-colors group"
+      >
+        <span className="text-lg leading-none">🐾</span>
+        <span className="text-sm sm:text-base text-[#1a3a2a]">
+          Looking to adopt a pet?{" "}
+          <span className="font-semibold underline underline-offset-2">Browse animals available near you</span>
+        </span>
+        <ArrowRight className="w-4 h-4 text-[#1a3a2a] shrink-0 group-hover:translate-x-0.5 transition-transform" />
+      </Link>
+
       {/* ── NAVBAR ── */}
       <nav className="bg-white sticky top-0 z-50 border-b border-gray-100 shadow-sm">
         <div className="h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
