@@ -1,0 +1,42 @@
+# Cara
+
+> Cara is animal shelter management software built for Irish and European rescue organisations. It also operates carashelters.ie/adopt — a public directory of animals available for adoption from shelters across Ireland.
+
+Cara helps rescue shelters replace spreadsheets and Facebook DMs with a purpose-built platform. Shelters manage animals, adoption applications, digital contracts, donor records, and public adoption portals in one place.
+
+## Key pages
+
+- [Home](https://carashelters.ie): Overview of Cara shelter management software for Irish rescues
+- [Adopt](https://carashelters.ie/adopt): Browse all animals available for adoption across shelters in Ireland — dogs, cats, rabbits and more
+- [About](https://carashelters.ie/about): Cara's mission and background
+- [Register](https://carashelters.ie/register): Register an animal rescue shelter on Cara
+
+## What carashelters.ie/adopt contains
+
+The /adopt page lists every animal currently marked as available for adoption across all shelters registered on Cara. Each listing shows:
+- Animal name, species, and breed
+- Approximate age and sex
+- The shelter's name and county in Ireland
+- A direct link to apply to adopt that animal
+
+Users can filter by species (dog, cat, rabbit, bird, small animal, farm animal, reptile) and by county.
+
+## What Cara does for shelters
+
+- Animal intake records with photos, medical history, and current status
+- Online adoption application forms — no paper required
+- Digital e-sign adoption contracts sent by email
+- A public-facing adoption portal for each shelter (e.g. carashelters.ie/portal/shelter-name)
+- Team management with admin and staff roles
+- Donor management and one-off donation collection via Stripe
+- GDPR tools for handling data requests
+
+## Pricing
+
+Cara charges €34.99 per month per shelter, with a 30-day free trial. There is no setup fee.
+
+## About Cara
+
+Cara is designed specifically for Irish and European animal rescue charities and shelters. It is built to replace the informal systems — spreadsheets, Facebook groups, paper contracts — that many small rescues still rely on. The goal is to help more animals find homes faster by making the adoption process simple for both shelters and adopters.
+
+Cara is based in Ireland.

@@ -50,6 +50,31 @@ export default async function PublicAnimalProfilePage({
   const mainPhoto = animal.photos.find(p => p.isPrimary) ?? animal.photos[0]
   const emoji = SPECIES_EMOJI[animal.species] ?? "🐾"
 
+  const petJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Thing",
+    additionalType: "https://schema.org/Animal",
+    name: animal.name,
+    description: animal.description
+      ?? `${animal.name} is a ${SPECIES_LABELS[animal.species]?.toLowerCase() ?? "animal"}${animal.breed ? ` (${animal.breed})` : ""} available for adoption from ${o.name}${o.county ? ` in ${o.county}` : ""}, Ireland.`,
+    url: `https://carashelters.ie/portal/${params.orgSlug}/animals/${params.animalId}`,
+    ...(mainPhoto && { image: mainPhoto.url }),
+    ...(animal.breed && { alternateName: animal.breed }),
+    offers: {
+      "@type": "Offer",
+      availability: "https://schema.org/InStock",
+      description: `Available for adoption from ${o.name}`,
+    },
+    provider: {
+      "@type": "Organization",
+      name: o.name,
+      url: `https://carashelters.ie/portal/${params.orgSlug}`,
+      ...(o.email && { email: o.email }),
+      ...(o.phone && { telephone: o.phone }),
+      ...(o.county && { address: { "@type": "PostalAddress", addressRegion: o.county, addressCountry: "IE" } }),
+    },
+  }
+
   function ageLabel(): string | null {
     if (animal.dobApprox) {
       const months = Math.floor(
@@ -75,6 +100,11 @@ export default async function PublicAnimalProfilePage({
 
   return (
     <div className="min-h-screen bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(petJsonLd) }}
+      />
+
       {/* Header */}
       <header className="border-b bg-white sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-4">

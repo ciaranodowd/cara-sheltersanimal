@@ -52,6 +52,39 @@ const jsonLd = {
   areaServed: ["Ireland", "United Kingdom"],
 }
 
+const FAQ_ITEMS = [
+  {
+    q: "How do I adopt a dog in Ireland?",
+    a: "To adopt a dog in Ireland, browse available dogs at carashelters.ie/adopt. Find a dog you'd like to adopt, click 'Apply to adopt', and fill in a short application form. The rescue shelter will review your application and contact you — usually within a few days. If you're a good match, they'll arrange a meet-and-greet or home visit before the adoption is finalised.",
+  },
+  {
+    q: "Where can I find rescue animals in Ireland?",
+    a: "You can browse all rescue animals currently available for adoption across Ireland at carashelters.ie/adopt. The page lists dogs, cats, rabbits, and other animals from rescue shelters around the country. You can filter by species and county to find animals near you.",
+  },
+  {
+    q: "How do animal shelter adoptions work in Ireland?",
+    a: "Animal shelter adoptions in Ireland typically follow a few steps: you find an animal you'd like to adopt, submit an application to the shelter, and the shelter reviews your suitability. Most shelters carry out a home check to make sure the environment is right for the animal. Once approved, you sign an adoption contract and pay a small adoption fee (which usually covers vaccinations and neutering). The whole process typically takes one to two weeks.",
+  },
+  {
+    q: "Is it free to adopt a rescue animal in Ireland?",
+    a: "Most rescue shelters in Ireland charge a small adoption fee, typically between €50 and €250, to cover the cost of vaccinations, microchipping, neutering, and veterinary care during the animal's time in the shelter. This fee is not profit — it helps the shelter care for other animals waiting for homes.",
+  },
+  {
+    q: "What rescue shelters are in Ireland?",
+    a: "There are rescue shelters across every county in Ireland, from large organisations like the Dublin SPCA and Cork Dog Action Welfare Group to small volunteer-run rescues in rural areas. Many of these shelters list their available animals on carashelters.ie/adopt, where you can browse and apply directly.",
+  },
+]
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ_ITEMS.map(({ q, a }) => ({
+    "@type": "Question",
+    name: q,
+    acceptedAnswer: { "@type": "Answer", text: a },
+  })),
+}
+
 // ── MARKETING IMAGE CONFIG ─────────────────────────────────────────────────
 // 1. Upload images to Supabase Storage → bucket: marketinganimals
 // 2. Set each value below to the exact filename as it appears in the bucket
@@ -114,6 +147,10 @@ export default async function HomePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
       {/* ── ADOPTER BANNER ── */}
@@ -639,6 +676,36 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section className="bg-gray-50 py-20 border-t border-gray-100">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#1a3a2a] mb-4">
+              Adopting a pet in Ireland
+            </h2>
+            <p className="text-gray-600">
+              Common questions about finding and adopting rescue animals in Ireland.
+            </p>
+          </div>
+          <div className="space-y-6">
+            {FAQ_ITEMS.map(({ q, a }) => (
+              <div key={q} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-7">
+                <h3 className="text-base sm:text-lg font-semibold text-[#1a3a2a] mb-3">{q}</h3>
+                <p className="text-gray-600 leading-relaxed text-sm sm:text-base">{a}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-center mt-8">
+            <Link
+              href="/adopt"
+              className="inline-flex items-center gap-2 text-[#1a3a2a] font-semibold hover:underline text-sm"
+            >
+              Browse animals available for adoption near you <ArrowRight className="w-4 h-4" />
+            </Link>
+          </p>
         </div>
       </section>
 

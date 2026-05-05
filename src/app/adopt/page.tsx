@@ -64,8 +64,29 @@ export default async function AdoptPage({
     },
   })
 
+  const itemListJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Animals available for adoption in Ireland",
+    description: "Dogs, cats, rabbits and more available for adoption from rescue shelters across Ireland.",
+    url: "https://carashelters.ie/adopt",
+    numberOfItems: animals.length,
+    itemListElement: animals.slice(0, 50).map((animal, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: `${animal.name} — ${SPECIES_LABELS[animal.species] ?? animal.species}${animal.breed ? ` (${animal.breed})` : ""}`,
+      url: `https://carashelters.ie/portal/${animal.organization.slug}/animals/${animal.id}`,
+      description: `${animal.name} is a ${SPECIES_LABELS[animal.species]?.toLowerCase() ?? "animal"}${animal.breed ? ` (${animal.breed})` : ""} available for adoption from ${animal.organization.name}${animal.organization.county ? ` in ${animal.organization.county}` : ""}, Ireland.`,
+    })),
+  }
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#f7f5f0" }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+      />
+
       {/* Header */}
       <header className="bg-[#1a3a2a] pt-10 pb-10 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
