@@ -108,14 +108,6 @@ function marketingImageUrl(key: string): string {
   return `${base}/storage/v1/object/public/${MARKETING_BUCKET}/${encoded}`
 }
 
-const ANIMALS = [
-  { name: "Buddy",   type: "Dog", status: "Available", imageKey: "buddy"   },
-  { name: "Mittens", type: "Cat", status: "Applied",   imageKey: "mittens" },
-  { name: "Rex",     type: "Dog", status: "Available", imageKey: "rex"     },
-  { name: "Luna",    type: "Cat", status: "Adopted",   imageKey: "luna"    },
-  { name: "Charlie", type: "Dog", status: "Available", imageKey: "charlie" },
-  { name: "Bella",   type: "Cat", status: "Applied",   imageKey: "bella"   },
-]
 
 const ANIMAL_STRIP = [
   { key: "buddy",   alt: "Tan dog with blue collar available for adoption", name: "Buddy",   label: "Dog · Available" },
@@ -152,19 +144,6 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
-
-      {/* ── ADOPTER BANNER ── */}
-      <Link
-        href="/adopt"
-        className="flex items-center justify-center gap-2 bg-[#edf7f0] border-b border-[#c6e8d3] py-3 px-4 hover:bg-[#d4efdf] transition-colors group"
-      >
-        <span className="text-lg leading-none">🐾</span>
-        <span className="text-sm sm:text-base text-[#1a3a2a]">
-          Looking to adopt a pet?{" "}
-          <span className="font-semibold underline underline-offset-2">Browse animals available near you</span>
-        </span>
-        <ArrowRight className="w-4 h-4 text-[#1a3a2a] shrink-0 group-hover:translate-x-0.5 transition-transform" />
-      </Link>
 
       {/* ── NAVBAR ── */}
       <nav className="bg-white sticky top-0 z-50 border-b border-gray-100 shadow-sm">
@@ -217,164 +196,107 @@ export default async function HomePage() {
         </div>
       </nav>
 
-      {/* ── HERO ── */}
-      <section className="bg-[#1a3a2a] pt-20 pb-0 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Two-column layout: text left, hero image right */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left: text content */}
-            <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 bg-[#2d5a3d] text-[#4ade80] text-sm font-medium px-4 py-2 rounded-full mb-8">
-                <PawPrint className="w-4 h-4" />
-                <span>Built for Irish &amp; European shelters</span>
-              </div>
+      {/* ── SPLIT HERO ── */}
+      {/*
+        Mobile:  adopter panel on top, shelter panel below (DOM order)
+        Desktop: shelter left, adopter right (sm:order-* swaps them)
+      */}
+      <section className="flex flex-col sm:flex-row" style={{ minHeight: "calc(100vh - 64px)" }}>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-                The modern home for
-                <br />
-                animal shelters
-              </h1>
+        {/* ── ADOPTER SIDE (top on mobile, right on desktop) ── */}
+        <Link
+          href="/adopt"
+          className="group order-1 sm:order-2 flex-1 flex flex-col items-center justify-center text-center
+                     px-8 py-16 sm:py-20 bg-[#fffbeb] hover:bg-[#fef3c7] transition-colors duration-300
+                     relative overflow-hidden"
+        >
+          {/* Decorative paw — background watermark */}
+          <PawPrint className="absolute right-6 bottom-6 w-40 h-40 text-[#1a3a2a]/5 pointer-events-none" aria-hidden />
 
-              <p className="text-lg text-[#a7c4b5] max-w-2xl mx-auto lg:mx-0 mb-10 leading-relaxed">
-                Replace Facebook DMs and spreadsheets with a purpose-built platform. Manage animals,
-                applications, and adoptions — all in one place.
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-14">
-                <Link
-                  href="/register"
-                  className="w-full sm:w-auto px-8 py-3.5 bg-[#4ade80] text-[#1a3a2a] font-semibold rounded-lg hover:bg-[#22c55e] transition-colors text-base"
-                >
-                  Start free trial
-                </Link>
-                <a
-                  href="#features"
-                  className="w-full sm:w-auto px-8 py-3.5 border border-[#4a7a5a] text-white font-medium rounded-lg hover:bg-[#2d5a3d] transition-colors text-base flex items-center justify-center gap-2"
-                >
-                  See a live demo <ArrowRight className="w-4 h-4" />
-                </a>
-              </div>
-
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 sm:gap-10">
-                {[
-                  { value: "8 hrs", label: "saved per week" },
-                  { value: "€35", label: "per month" },
-                  { value: "10 min", label: "to get started" },
-                  { value: "Free", label: "to try" },
-                ].map((stat) => (
-                  <div key={stat.label} className="flex flex-col items-center lg:items-start">
-                    <span className="text-2xl font-bold text-[#4ade80]">{stat.value}</span>
-                    <span className="text-sm text-[#a7c4b5] mt-0.5">{stat.label}</span>
-                  </div>
-                ))}
-              </div>
+          <div className="relative z-10 max-w-sm mx-auto">
+            <div className="inline-flex items-center gap-2 bg-[#1a3a2a]/10 text-[#1a3a2a] text-xs font-bold
+                            px-3 py-1.5 rounded-full uppercase tracking-widest mb-6">
+              For adopters
             </div>
 
-            {/* Right: hero dog photo */}
-            <div className="flex justify-center lg:justify-end pb-8 lg:pb-0">
-              <div className="relative w-72 sm:w-96 lg:w-full lg:max-w-md">
-                {marketingImageUrl("hero") ? (
-                  <div className="relative w-full aspect-square overflow-hidden rounded-2xl shadow-2xl border-4 border-[#2d5a3d]">
-                    <Image
-                      src={marketingImageUrl("hero") as string}
-                      alt="Rescue dog available for adoption"
-                      fill
-                      className="object-cover object-[center_20%]"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full aspect-square rounded-2xl shadow-2xl border-4 border-[#2d5a3d] bg-[#2d5a3d]" />
-                )}
-                <div className="absolute bottom-4 left-4 bg-white rounded-xl px-4 py-2.5 shadow-lg flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
-                  <span className="text-sm font-semibold text-[#1a3a2a]">Available for adoption</span>
-                </div>
-              </div>
+            <div className="text-6xl sm:text-7xl mb-6 leading-none select-none">🐾</div>
+
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#1a3a2a] leading-tight mb-4">
+              Looking to adopt?
+            </h2>
+
+            <p className="text-base sm:text-lg text-[#3d6b50] leading-relaxed mb-8">
+              Find rescue dogs, cats and more from shelters across Ireland — all in one place.
+            </p>
+
+            <div className="inline-flex items-center gap-2.5 bg-[#1a3a2a] text-white font-bold
+                            px-7 py-4 rounded-2xl text-base shadow-lg
+                            group-hover:bg-[#2d5a3d] group-hover:shadow-xl group-hover:scale-105
+                            transition-all duration-200">
+              Browse animals near you
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
             </div>
+
+            <p className="mt-4 text-xs text-[#3d6b50]/70">No account needed · Free to browse</p>
           </div>
+        </Link>
 
-          {/* Dashboard mockup */}
-          <div className="relative mx-auto max-w-5xl mt-16">
-            <div className="bg-[#0f2318] rounded-t-2xl border border-[#2d5a3d] border-b-0 overflow-hidden">
-              {/* Browser chrome */}
-              <div className="bg-[#162e1f] px-4 py-3 flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500/50" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-                <div className="w-3 h-3 rounded-full bg-green-500/50" />
-                <div className="flex-1 flex justify-center">
-                  <div className="bg-[#0f2318] rounded px-10 py-1 text-xs text-[#4a7a5a]">
-                    cara.ie/dublin-spca
-                  </div>
-                </div>
-              </div>
+        {/* Divider */}
+        <div className="order-2 sm:order-none h-px sm:h-auto sm:w-px bg-[#1a3a2a]/10 shrink-0" />
 
-              {/* App shell */}
-              <div className="flex" style={{ height: "340px" }}>
-                {/* Sidebar */}
-                <div className="w-44 bg-[#1a3a2a] flex-shrink-0 p-4 hidden sm:flex flex-col">
-                  <div className="flex items-center gap-2 mb-6">
-                    <div className="w-6 h-6 rounded-full bg-[#4ade80] flex items-center justify-center">
-                      <PawPrint className="w-3.5 h-3.5 text-[#1a3a2a]" />
-                    </div>
-                    <span className="text-white text-sm font-semibold">Cara</span>
-                  </div>
-                  {[
-                    { label: "Dashboard", active: false },
-                    { label: "Animals", active: true },
-                    { label: "Applications", active: false },
-                    { label: "Adoptions", active: false },
-                    { label: "Settings", active: false },
-                  ].map(({ label, active }) => (
-                    <div
-                      key={label}
-                      className={`px-3 py-2 rounded-lg mb-1 text-xs ${
-                        active ? "bg-[#4ade80]/20 text-[#4ade80] font-medium" : "text-[#a7c4b5]"
-                      }`}
-                    >
-                      {label}
-                    </div>
-                  ))}
-                </div>
+        {/* ── SHELTER SIDE (bottom on mobile, left on desktop) ── */}
+        <div className="order-3 sm:order-1 flex-1 flex flex-col items-center justify-center text-center
+                        px-8 py-16 sm:py-20 bg-[#1a3a2a] relative overflow-hidden">
+          {/* Decorative grid overlay */}
+          <div className="absolute inset-0 opacity-5 pointer-events-none"
+               style={{ backgroundImage: "radial-gradient(circle, #4ade80 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
 
-                {/* Main content */}
-                <div className="flex-1 bg-gray-50 p-5 overflow-hidden">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm font-semibold text-gray-800">Animals (12)</span>
-                    <div className="text-xs bg-[#1a3a2a] text-white px-3 py-1 rounded-lg">+ Add animal</div>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {ANIMALS.map((animal) => {
-                      const imgUrl = marketingImageUrl(animal.imageKey)
-                      return (
-                        <div key={animal.name} className="bg-white rounded-lg p-2.5 border border-gray-100 shadow-sm">
-                          <div className="relative rounded-md h-16 mb-2 overflow-hidden bg-gray-100">
-                            {imgUrl && (
-                              <Image
-                                src={imgUrl}
-                                alt={`${animal.name} the ${animal.type.toLowerCase()}`}
-                                fill
-                                className="object-cover object-[center_20%]"
-                              />
-                            )}
-                          </div>
-                          <div className="text-xs font-semibold text-gray-800">{animal.name}</div>
-                          <div
-                            className={`text-xs mt-0.5 ${
-                              animal.status === "Available"
-                                ? "text-green-600"
-                                : animal.status === "Applied"
-                                ? "text-amber-600"
-                                : "text-blue-600"
-                            }`}
-                          >
-                            {animal.status}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
+          <div className="relative z-10 max-w-sm mx-auto">
+            <div className="inline-flex items-center gap-2 bg-[#4ade80]/15 text-[#4ade80] text-xs font-bold
+                            px-3 py-1.5 rounded-full uppercase tracking-widest mb-6">
+              <PawPrint className="w-3.5 h-3.5" />
+              For shelters & rescues
+            </div>
+
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4">
+              Run an animal rescue?
+            </h2>
+
+            <p className="text-base sm:text-lg text-[#a7c4b5] leading-relaxed mb-8">
+              Replace spreadsheets and Facebook DMs with a platform built for Irish shelters.
+            </p>
+
+            <div className="flex flex-col sm:flex-col gap-3">
+              <Link
+                href="/register"
+                className="inline-flex items-center justify-center gap-2 bg-[#4ade80] text-[#1a3a2a] font-bold
+                           px-7 py-4 rounded-2xl text-base shadow-lg hover:bg-[#22c55e] hover:shadow-xl
+                           hover:scale-105 transition-all duration-200"
+              >
+                Register your shelter
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+              <a
+                href="#features"
+                className="inline-flex items-center justify-center gap-2 border border-[#4a7a5a] text-[#a7c4b5]
+                           font-medium px-6 py-3 rounded-xl text-sm hover:bg-[#2d5a3d] hover:text-white
+                           transition-colors duration-200"
+              >
+                See how it works
+              </a>
+            </div>
+
+            <div className="mt-8 flex flex-wrap justify-center gap-6">
+              {[
+                { value: "8 hrs", label: "saved/week" },
+                { value: "€35", label: "per month" },
+                { value: "Free", label: "to try" },
+              ].map(stat => (
+                <div key={stat.label} className="flex flex-col items-center">
+                  <span className="text-xl font-bold text-[#4ade80]">{stat.value}</span>
+                  <span className="text-xs text-[#a7c4b5] mt-0.5">{stat.label}</span>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
