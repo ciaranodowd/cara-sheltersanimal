@@ -4,13 +4,6 @@ import { CheckCircle, Clock, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog"
 
 interface Props {
   orgSlug: string
@@ -29,8 +22,9 @@ const FEATURES = [
   "GDPR tools & reporting",
 ]
 
-export function BillingClient({ plan, trialEndDate, isAdmin }: Props) {
-  const [modalOpen, setModalOpen] = useState(false)
+export function BillingClient({ orgSlug, plan, trialEndDate, isAdmin }: Props) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const trialDate = trialEndDate ? new Date(trialEndDate) : null
   const trialDaysLeft = trialDate
@@ -41,9 +35,48 @@ export function BillingClient({ plan, trialEndDate, isAdmin }: Props) {
   const isPro = plan === "pro"
   const isActiveTrial = plan === "trial" && trialDaysLeft > 0
 
+  async function handleUpgrade() {
+    setLoading(true)
+    setError("")
+    try {
+      const res = await fetch(`/api/orgs/${orgSlug}/billing/checkout`, { method: "POST" })
+      const data = await res.json()
+      if (res.ok && data.url) {
+        window.location.href = data.url
+      } else {
+        setError(data.error ?? "Something went wrong")
+        setLoading(false)
+      }
+    } catch {
+      setError("Something went wrong")
+      setLoading(false)
+    }
+  }
+
+  async function handlePortal() {
+    setLoading(true)
+    setError("")
+    try {
+      const res = await fetch(`/api/orgs/${orgSlug}/billing/portal`, { method: "POST" })
+      const data = await res.json()
+      if (res.ok && data.url) {
+        window.location.href = data.url
+      } else {
+        setError(data.error ?? "Something went wrong")
+        setLoading(false)
+      }
+    } catch {
+      setError("Something went wrong")
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
-      {/* Status card */}
+      {error && (
+        <div className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">{error}</div>
+      )}
+
       <Card
         className={
           isPro
@@ -62,7 +95,6 @@ export function BillingClient({ plan, trialEndDate, isAdmin }: Props) {
             ) : (
               <Clock className="h-5 w-5 text-blue-500 shrink-0" />
             )}
-
             <Badge
               className={
                 isPro
@@ -80,8 +112,13 @@ export function BillingClient({ plan, trialEndDate, isAdmin }: Props) {
         <CardContent className="space-y-4">
           {isPro && (
             <>
-              <p className="font-semibold text-green-800">You&apos;re on Cara Pro — €30/month</p>
+              <p className="font-semibold text-green-800">You&apos;re on Cara Pro — €34.99/month</p>
               <p className="text-sm text-green-700">Thank you for supporting Cara.</p>
+              {isAdmin && (
+                <Button variant="outline" onClick={handlePortal} disabled={loading}>
+                  {loading ? "Loading…" : "Manage subscription"}
+                </Button>
+              )}
             </>
           )}
 
@@ -92,10 +129,11 @@ export function BillingClient({ plan, trialEndDate, isAdmin }: Props) {
               </p>
               {isAdmin && (
                 <Button
-                  onClick={() => setModalOpen(true)}
+                  onClick={handleUpgrade}
+                  disabled={loading}
                   className="bg-[#1a3a2a] hover:bg-[#1a3a2a]/90 text-white"
                 >
-                  Upgrade to Cara Pro — €30/month
+                  {loading ? "Loading…" : "Upgrade to Cara Pro — €34.99/month"}
                 </Button>
               )}
             </>
@@ -109,10 +147,11 @@ export function BillingClient({ plan, trialEndDate, isAdmin }: Props) {
               </p>
               {isAdmin && (
                 <Button
-                  onClick={() => setModalOpen(true)}
+                  onClick={handleUpgrade}
+                  disabled={loading}
                   className="bg-red-600 hover:bg-red-700 text-white"
                 >
-                  Upgrade to Cara Pro — €30/month
+                  {loading ? "Loading…" : "Upgrade to Cara Pro — €34.99/month"}
                 </Button>
               )}
             </>
@@ -120,7 +159,6 @@ export function BillingClient({ plan, trialEndDate, isAdmin }: Props) {
         </CardContent>
       </Card>
 
-      {/* Features list */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">What&apos;s included in Cara Pro</CardTitle>
@@ -136,23 +174,6 @@ export function BillingClient({ plan, trialEndDate, isAdmin }: Props) {
           </ul>
         </CardContent>
       </Card>
-
-      {/* Interest modal */}
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Thanks for your interest in Cara Pro!</DialogTitle>
-            <DialogDescription className="pt-1">
-              We&apos;ll be in touch shortly to get you set up.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="pt-2">
-            <Button className="w-full" onClick={() => setModalOpen(false)}>
-              Close
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
