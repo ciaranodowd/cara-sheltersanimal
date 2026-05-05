@@ -20,6 +20,38 @@ import {
 
 export const dynamic = "force-dynamic"
 
+export const metadata = {
+  title: "Cara | Animal Shelter Management Software Ireland",
+  description:
+    "Manage adoptions, applications and animals in one place. Built for Irish animal rescues.",
+  alternates: { canonical: "https://carashelters.ie" },
+  openGraph: {
+    url: "https://carashelters.ie",
+    title: "Cara | Animal Shelter Management Software Ireland",
+    description:
+      "Manage adoptions, applications and animals in one place. Built for Irish animal rescues.",
+  },
+}
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Cara",
+  url: "https://carashelters.ie",
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  description:
+    "Animal shelter management software for Irish and European rescues. Manage adoptions, applications, and animals in one place.",
+  offers: {
+    "@type": "Offer",
+    price: "34.99",
+    priceCurrency: "EUR",
+    priceSpecification: { "@type": "UnitPriceSpecification", unitText: "MONTH" },
+  },
+  audience: { "@type": "Audience", audienceType: "Animal rescue organisations, shelters, charities" },
+  areaServed: ["Ireland", "United Kingdom"],
+}
+
 // ── MARKETING IMAGE CONFIG ─────────────────────────────────────────────────
 // 1. Upload images to Supabase Storage → bucket: marketinganimals
 // 2. Set each value below to the exact filename as it appears in the bucket
@@ -79,6 +111,11 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {/* ── ADOPTER BANNER ── */}
       <Link
         href="/adopt"

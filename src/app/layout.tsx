@@ -5,12 +5,42 @@ import { Providers } from "./providers"
 
 const inter = Inter({ subsets: ["latin"] })
 
+const BASE_URL = "https://carashelters.ie"
+
 export const metadata: Metadata = {
-  title: "Cara — Animal Shelter Management",
-  description: "European animal rescue management for Ireland & the EU",
-  icons: {
-    icon: "/logo.svg",
+  metadataBase: new URL(BASE_URL),
+  title: {
+    default: "Cara | Animal Shelter Management Software Ireland",
+    template: "%s | Cara",
   },
+  description:
+    "Manage adoptions, applications and animals in one place. Built for Irish animal rescues.",
+  keywords: [
+    "animal shelter software ireland",
+    "rescue management ireland",
+    "adopt a dog ireland",
+    "adopt a cat ireland",
+    "animal adoption ireland",
+    "cara shelters",
+  ],
+  icons: { icon: "/logo.svg" },
+  openGraph: {
+    type: "website",
+    locale: "en_IE",
+    url: BASE_URL,
+    siteName: "Cara",
+    title: "Cara | Animal Shelter Management Software Ireland",
+    description:
+      "Manage adoptions, applications and animals in one place. Built for Irish animal rescues.",
+    images: [{ url: "/logo.svg", width: 512, height: 512, alt: "Cara" }],
+  },
+  twitter: {
+    card: "summary",
+    title: "Cara | Animal Shelter Management Software Ireland",
+    description:
+      "Manage adoptions, applications and animals in one place. Built for Irish animal rescues.",
+  },
+  alternates: { canonical: BASE_URL },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

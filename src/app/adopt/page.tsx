@@ -9,8 +9,26 @@ import type { Species } from "@prisma/client"
 export const dynamic = "force-dynamic"
 
 export const metadata = {
-  title: "Adopt a Pet — Cara",
-  description: "Browse animals available for adoption from shelters near you.",
+  title: "Adopt a Pet in Ireland | Dogs, Cats & More",
+  description:
+    "Find dogs, cats, rabbits and more available for adoption from rescue shelters across Ireland. Browse animals near you and apply today.",
+  keywords: [
+    "adopt a dog ireland",
+    "adopt a cat ireland",
+    "rescue animals ireland",
+    "animal adoption ireland",
+    "dogs for adoption ireland",
+    "cats for adoption ireland",
+    "rescue dog ireland",
+    "shelter animals ireland",
+  ],
+  openGraph: {
+    url: "https://carashelters.ie/adopt",
+    title: "Adopt a Pet in Ireland | Dogs, Cats & More",
+    description:
+      "Find dogs, cats, rabbits and more available for adoption from rescue shelters across Ireland.",
+  },
+  alternates: { canonical: "https://carashelters.ie/adopt" },
 }
 
 function ageLabel(dob: Date | null): string | null {
