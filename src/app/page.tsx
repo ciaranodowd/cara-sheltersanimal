@@ -121,6 +121,8 @@ export default async function HomePage() {
   const session = await getServerSession(authOptions)
   const isAuthenticated = !!session?.user?.id
 
+  const heroAnimalImg = marketingImageUrl("buddy") || marketingImageUrl("rex")
+
   let dashboardUrl = "/onboarding"
   if (isAuthenticated) {
     const membership = await prisma.userOrganization.findFirst({
@@ -207,37 +209,39 @@ export default async function HomePage() {
         <Link
           href="/adopt"
           className="group order-1 sm:order-2 flex-1 flex flex-col items-center justify-center text-center
-                     px-8 py-16 sm:py-20 bg-[#fffbeb] hover:bg-[#fef3c7] transition-colors duration-300
-                     relative overflow-hidden"
+                     px-8 py-16 sm:py-20 relative overflow-hidden bg-[#1a3a2a]"
+          style={heroAnimalImg ? {
+            backgroundImage: `url(${heroAnimalImg})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center 20%",
+          } : undefined}
         >
-          {/* Decorative paw — background watermark */}
-          <PawPrint className="absolute right-6 bottom-6 w-40 h-40 text-[#1a3a2a]/5 pointer-events-none" aria-hidden />
+          {/* Dark overlay so text stays readable over the photo */}
+          <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors duration-300" />
 
           <div className="relative z-10 max-w-sm mx-auto">
-            <div className="inline-flex items-center gap-2 bg-[#1a3a2a]/10 text-[#1a3a2a] text-xs font-bold
-                            px-3 py-1.5 rounded-full uppercase tracking-widest mb-6">
+            <div className="inline-flex items-center gap-2 bg-white/20 text-white text-xs font-bold
+                            px-3 py-1.5 rounded-full uppercase tracking-widest mb-6 backdrop-blur-sm">
               For adopters
             </div>
 
-            <div className="text-6xl sm:text-7xl mb-6 leading-none select-none">🐾</div>
-
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#1a3a2a] leading-tight mb-4">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4 drop-shadow-lg">
               Looking to adopt?
             </h2>
 
-            <p className="text-base sm:text-lg text-[#3d6b50] leading-relaxed mb-8">
+            <p className="text-base sm:text-lg text-white/85 leading-relaxed mb-8 drop-shadow">
               Find rescue dogs, cats and more from shelters across Ireland — all in one place.
             </p>
 
-            <div className="inline-flex items-center gap-2.5 bg-[#1a3a2a] text-white font-bold
+            <div className="inline-flex items-center gap-2.5 bg-[#4ade80] text-[#1a3a2a] font-bold
                             px-7 py-4 rounded-2xl text-base shadow-lg
-                            group-hover:bg-[#2d5a3d] group-hover:shadow-xl group-hover:scale-105
+                            group-hover:bg-[#22c55e] group-hover:shadow-xl group-hover:scale-105
                             transition-all duration-200">
               Browse animals near you
               <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
             </div>
 
-            <p className="mt-4 text-xs text-[#3d6b50]/70">No account needed · Free to browse</p>
+            <p className="mt-4 text-xs text-white/60">No account needed · Free to browse</p>
           </div>
         </Link>
 
