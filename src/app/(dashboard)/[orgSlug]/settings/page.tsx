@@ -7,6 +7,7 @@ import { OrgSettingsForm } from "./_components/org-settings-form"
 import { TeamSettings } from "./_components/team-settings"
 import { GdprSettings } from "./_components/gdpr-settings"
 import { ContractTemplateSettings } from "./_components/contract-template-settings"
+import { BillingSettings } from "./_components/billing-settings"
 
 export const dynamic = 'force-dynamic'
 
@@ -51,6 +52,7 @@ export default async function SettingsPage({
           <TabsTrigger value="team">Team</TabsTrigger>
           <TabsTrigger value="contracts">Contracts</TabsTrigger>
           <TabsTrigger value="gdpr">GDPR</TabsTrigger>
+          <TabsTrigger value="billing">Billing</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="mt-4">
@@ -71,6 +73,16 @@ export default async function SettingsPage({
 
         <TabsContent value="gdpr" className="mt-4">
           <GdprSettings orgId={org.id} orgSlug={params.orgSlug} />
+        </TabsContent>
+
+        <TabsContent value="billing" className="mt-4">
+          <BillingSettings
+            orgSlug={params.orgSlug}
+            subscriptionStatus={org.subscriptionStatus}
+            stripeCustomerId={org.stripeCustomerId ?? null}
+            trialEndsAt={org.trialEndsAt ?? null}
+            isAdmin={membership.role === "ADMIN"}
+          />
         </TabsContent>
       </Tabs>
     </div>

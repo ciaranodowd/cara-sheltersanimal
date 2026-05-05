@@ -43,7 +43,18 @@ export default function OnboardingPage() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? "Something went wrong"); setLoading(false); return }
-      router.push(`/${data.slug}`)
+
+      // Redirect to Stripe Checkout for subscription
+      const checkoutRes = await fetch(`/api/orgs/${data.slug}/billing/checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      })
+      const checkoutData = await checkoutRes.json()
+      if (checkoutRes.ok && checkoutData.url) {
+        window.location.href = checkoutData.url
+      } else {
+        router.push(`/${data.slug}`)
+      }
     } catch {
       setError("Something went wrong. Please try again.")
       setLoading(false)
