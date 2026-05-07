@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, MapPin } from "lucide-react"
-import { DonateWidget } from "@/components/portal/donate-widget"
+import { ArrowLeft } from "lucide-react"
+import { DonatePanelClient } from "./_components/donate-panel-client"
+import { SPECIES_LABELS } from "@/lib/constants"
 
 export const dynamic = "force-dynamic"
 
@@ -11,28 +12,65 @@ export async function generateMetadata({ params }: { params: { orgSlug: string }
   return { title: org ? `Donate to ${org.name}` : "Donate" }
 }
 
+function generateStory(animal: { name: string; intakeDate: Date | null; description: string | null }): string {
+  if (animal.description && animal.description.length > 20) {
+    return animal.description.length > 150
+      ? animal.description.slice(0, 147) + "…"
+      : animal.description
+  }
+  if (animal.intakeDate) {
+    const weeks = Math.floor((Date.now() - new Date(animal.intakeDate).getTime()) / (7 * 24 * 3600 * 1000))
+    const timeStr = weeks < 1 ? "just this week" : weeks === 1 ? "1 week ago" : `${weeks} weeks ago`
+    return `Arrived ${timeStr}. Eating well, learning to trust again. Needs your support this week.`
+  }
+  return `In our care and waiting for a loving home. Your donation helps cover their food and vet care every single day.`
+}
+
 export default async function DonatePage({ params }: { params: { orgSlug: string } }) {
   const org = await prisma.organization.findUnique({
     where: { slug: params.orgSlug },
-    select: { id: true, name: true, logo: true, description: true, city: true, county: true, email: true },
+    select: { id: true, name: true, logo: true, city: true, county: true, email: true },
   })
   if (!org) notFound()
 
-  const animalCount = await prisma.animal.count({
-    where: { organizationId: org.id, status: { in: ["AVAILABLE", "IN_FOSTER", "FOSTERED", "INTAKE", "ASSESSMENT"] } },
+  const startOfMonth = new Date()
+  startOfMonth.setDate(1)
+  startOfMonth.setHours(0, 0, 0, 0)
+
+  // Spotlight animal: longest-waiting available animal first
+  const spotlightAnimal = await prisma.animal.findFirst({
+    where: { organizationId: org.id, status: "AVAILABLE", publicProfile: true },
+    orderBy: { intakeDate: "asc" },
+    include: { photos: { take: 1, orderBy: { position: "asc" } } },
+  }) ?? await prisma.animal.findFirst({
+    where: { organizationId: org.id, status: { in: ["INTAKE", "ASSESSMENT", "IN_FOSTER", "FOSTERED"] } },
+    orderBy: { intakeDate: "asc" },
+    include: { photos: { take: 1, orderBy: { position: "asc" } } },
   })
 
-  const location = [org.city, org.county].filter(Boolean).join(", ")
+  const [animalCount, monthDonationCount] = await Promise.all([
+    prisma.animal.count({
+      where: {
+        organizationId: org.id,
+        status: { in: ["AVAILABLE", "IN_FOSTER", "FOSTERED", "INTAKE", "ASSESSMENT"] },
+      },
+    }),
+    prisma.donation.count({
+      where: { organizationId: org.id, status: "COMPLETED", createdAt: { gte: startOfMonth } },
+    }),
+  ])
+
+  const photo = spotlightAnimal?.photos[0] ?? null
+  const story = spotlightAnimal ? generateStory(spotlightAnimal) : null
+  const speciesLabel = spotlightAnimal ? (SPECIES_LABELS[spotlightAnimal.species] ?? spotlightAnimal.species) : null
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#fdf8f5" }}>
-      {/* Header */}
+
+      {/* ── STICKY HEADER ── */}
       <header className="bg-white/90 backdrop-blur-sm border-b sticky top-0 z-20">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
-          <Link
-            href={`/portal/${params.orgSlug}`}
-            className="text-stone-400 hover:text-stone-700 transition-colors"
-          >
+          <Link href={`/portal/${params.orgSlug}`} className="text-stone-400 hover:text-stone-700 transition-colors">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div className="flex items-center gap-2 mx-auto">
@@ -49,82 +87,86 @@ export default async function DonatePage({ params }: { params: { orgSlug: string
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-8 space-y-6">
-        {/* Emotional hero */}
-        <div className="text-center space-y-4">
-          {/* Paw + heart stacked icon */}
-          <div className="relative inline-flex items-center justify-center mx-auto">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center text-5xl"
-              style={{ background: "linear-gradient(135deg, #fff1ee, #fde8e4)" }}>
-              🐾
-            </div>
-            <span className="absolute -bottom-1 -right-1 text-2xl">❤️</span>
+      {/* ── HERO ── */}
+      <section style={{ backgroundColor: "#1a3a2a" }} className="pt-10 pb-14 px-4 text-center">
+        {/* Animal photo — portrait card */}
+        {photo ? (
+          <div className="mx-auto w-44 h-56 rounded-2xl overflow-hidden shadow-2xl shadow-black/40 ring-4 ring-white/10 mb-7">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={photo.url} alt={spotlightAnimal?.name ?? "Animal in care"} className="w-full h-full object-cover" />
           </div>
+        ) : (
+          <div className="mx-auto w-44 h-56 rounded-2xl bg-[#2d5a3d] flex items-center justify-center text-7xl shadow-2xl mb-7">
+            🐾
+          </div>
+        )}
 
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-stone-900 leading-tight">
-              Support {org.name}
-            </h1>
-            {location && (
-              <p className="flex items-center justify-center gap-1 text-xs text-stone-400 mt-1">
-                <MapPin className="h-3 w-3" />
-                {location}
-              </p>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight tracking-tight mb-2">
+          They can&apos;t ask.
+          <br />
+          <span style={{ color: "#4ade80" }}>But you can give.</span>
+        </h1>
+
+        {animalCount > 0 && (
+          <div className="inline-flex items-center gap-2 mt-4 bg-white/10 backdrop-blur-sm text-white text-sm font-medium px-4 py-2 rounded-full">
+            <span className="w-2 h-2 rounded-full bg-[#4ade80] animate-pulse shrink-0" />
+            {animalCount} animal{animalCount !== 1 ? "s" : ""} in our care right now
+          </div>
+        )}
+      </section>
+
+      <main className="max-w-lg mx-auto px-4 -mt-6 pb-12 space-y-5">
+
+        {/* ── ANIMAL SPOTLIGHT CARD ── */}
+        {spotlightAnimal && (
+          <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-4 flex items-start gap-4">
+            {photo ? (
+              <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 shadow-sm">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={photo.url} alt={spotlightAnimal.name} className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div className="w-14 h-14 rounded-xl bg-stone-100 flex items-center justify-center text-2xl shrink-0">🐾</div>
             )}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <p className="font-bold text-stone-900">{spotlightAnimal.name}</p>
+                {speciesLabel && (
+                  <span className="text-xs bg-stone-100 text-stone-500 px-2 py-0.5 rounded-full font-medium">
+                    {speciesLabel}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-stone-500 leading-relaxed">{story}</p>
+            </div>
           </div>
+        )}
 
-          <p className="text-stone-500 text-sm leading-relaxed max-w-sm mx-auto">
-            {org.description
-              ? <>{org.description.slice(0, 120)}{org.description.length > 120 ? "…" : ""}</>
-              : <>Every animal deserves a safe place to heal and find love.</>}
+        {/* ── DONATE PANEL ── */}
+        <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5 sm:p-6">
+          <p className="text-xs font-semibold tracking-widest uppercase text-stone-400 mb-5 text-center">
+            Choose how you&apos;d like to help
           </p>
-
-          {/* Stats pill */}
-          {animalCount > 0 && (
-            <div className="inline-flex items-center gap-2 bg-white border border-stone-100 rounded-full px-4 py-2 text-sm shadow-sm">
-              <span className="text-lg">🏠</span>
-              <span className="text-stone-600">
-                Caring for <strong className="text-stone-900">{animalCount}</strong> animal{animalCount !== 1 ? "s" : ""} right now
-              </span>
-            </div>
-          )}
+          <DonatePanelClient
+            orgSlug={params.orgSlug}
+            orgName={org.name}
+            animalName={spotlightAnimal?.name ?? null}
+            monthDonationCount={monthDonationCount}
+          />
         </div>
 
-        {/* Impact cards — visual proof */}
-        <div className="grid grid-cols-3 gap-2 text-center">
-          {[
-            { icon: "🍽️", value: "€5",  sub: "Feeds an animal for a week" },
-            { icon: "💉", value: "€20", sub: "Covers a vet checkup" },
-            { icon: "🏡", value: "€50", sub: "One month of full care" },
-          ].map(c => (
-            <div key={c.value} className="rounded-2xl p-3 space-y-1 bg-white border border-stone-100 shadow-sm">
-              <p className="text-2xl">{c.icon}</p>
-              <p className="font-extrabold text-stone-800 text-sm">{c.value}</p>
-              <p className="text-[10px] text-stone-400 leading-snug">{c.sub}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* The widget */}
-        <div className="rounded-2xl p-5 sm:p-7" style={{ backgroundColor: "#1a3a2a" }}>
-          <p className="text-center text-xs font-semibold tracking-widest uppercase text-[#4ade80]/60 mb-5">
-            Choose an amount
-          </p>
-          <DonateWidget orgSlug={params.orgSlug} orgName={org.name} defaultAmount={10} />
-        </div>
-
-        {/* Trust signals */}
-        <div className="flex flex-col gap-2 text-center text-xs text-stone-400">
-          <p>All donations go directly to {org.name} · No platform fees taken</p>
+        {/* ── FOOTER NOTE ── */}
+        <p className="text-center text-xs text-stone-400 pb-4">
+          All donations go directly to {org.name} · No platform fees taken by Cara
           {org.email && (
-            <p>
-              Questions?{" "}
-              <a href={`mailto:${org.email}`} className="text-rose-400 hover:underline">
+            <>
+              {" · "}
+              <a href={`mailto:${org.email}`} className="hover:text-stone-600 transition-colors">
                 {org.email}
               </a>
-            </p>
+            </>
           )}
-        </div>
+        </p>
       </main>
     </div>
   )

@@ -13,8 +13,9 @@ export async function POST(
   if (!org) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
   const body = await req.json()
-  const { amount, donorName, donorEmail } = body as {
+  const { amount, frequency, donorName, donorEmail } = body as {
     amount: number
+    frequency?: "once" | "monthly"
     donorName?: string
     donorEmail?: string
   }
@@ -24,33 +25,68 @@ export async function POST(
   }
 
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000"
+  const successUrl = `${baseUrl}/portal/${org.slug}/donate/thank-you?session_id={CHECKOUT_SESSION_ID}`
+  const cancelUrl = `${baseUrl}/portal/${org.slug}/donate`
+  const unitAmount = Math.round(amount * 100)
+  const stripe = getStripe()
 
-  const session = await getStripe().checkout.sessions.create({
-    mode: "payment",
-    line_items: [
-      {
-        price_data: {
-          currency: "eur",
-          unit_amount: Math.round(amount * 100),
-          product_data: {
-            name: `Donation to ${org.name}`,
-            description: `Your donation supports animals at ${org.name}`,
+  let session
+
+  if (frequency === "monthly") {
+    session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      line_items: [
+        {
+          price_data: {
+            currency: "eur",
+            unit_amount: unitAmount,
+            recurring: { interval: "month" },
+            product_data: {
+              name: `Monthly donation to ${org.name}`,
+              description: `Your monthly donation supports animals at ${org.name}`,
+            },
           },
+          quantity: 1,
         },
-        quantity: 1,
+      ],
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      customer_email: donorEmail ?? undefined,
+      metadata: {
+        organizationId: org.id,
+        type: "donation_monthly",
+        donorName: donorName ?? "",
+        donorEmail: donorEmail ?? "",
       },
-    ],
-    success_url: `${baseUrl}/portal/${org.slug}/donate/thank-you?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${baseUrl}/portal/${org.slug}`,
-    metadata: {
-      organizationId: org.id,
-      type: "donation",
-      donorName: donorName ?? "",
-      donorEmail: donorEmail ?? "",
-    },
-    customer_email: donorEmail ?? undefined,
-    submit_type: "donate",
-  })
+    })
+  } else {
+    session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: "eur",
+            unit_amount: unitAmount,
+            product_data: {
+              name: `Donation to ${org.name}`,
+              description: `Your donation supports animals at ${org.name}`,
+            },
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      customer_email: donorEmail ?? undefined,
+      metadata: {
+        organizationId: org.id,
+        type: "donation",
+        donorName: donorName ?? "",
+        donorEmail: donorEmail ?? "",
+      },
+      submit_type: "donate",
+    })
+  }
 
   return NextResponse.json({ url: session.url })
 }
