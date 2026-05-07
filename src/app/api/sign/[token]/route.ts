@@ -104,6 +104,12 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     data: { status: "COMPLETED" },
   })
 
+  // Remove animal from public portal immediately — signed contract means adopted
+  await prisma.animal.update({
+    where: { id: contract.animalId },
+    data: { status: "ADOPTED", publicProfile: false },
+  })
+
   // Send signed PDFs via email
   try {
     await sendSignedContractEmails({
