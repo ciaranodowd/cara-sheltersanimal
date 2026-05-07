@@ -46,7 +46,7 @@ function ageLabel(dob: Date | null): string | null {
 function heroImageUrl(): string {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL
   if (!base) return ""
-  const filename = "publicportaldog.png"
+  const filename = "publicportaldog.jpg"
   const encoded = filename.split("/").map(encodeURIComponent).join("/")
   return `${base}/storage/v1/object/public/marketinganimals/${encoded}`
 }
@@ -111,11 +111,11 @@ export default async function AdoptPage({
         className="relative overflow-hidden"
         style={
           heroImg
-            ? { backgroundImage: `url(${heroImg})`, backgroundSize: "cover", backgroundPosition: "center 30%" }
+            ? { backgroundImage: `url(${heroImg})`, backgroundSize: "cover", backgroundPosition: "center 30%", backgroundRepeat: "no-repeat" }
             : { backgroundColor: "#1a3a2a" }
         }
       >
-        {heroImg && <div className="absolute inset-0 bg-black/60" />}
+        <div className="absolute inset-0 bg-[#1a3a2a]/70" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight mb-3">
             Find your perfect companion
