@@ -40,6 +40,13 @@ export async function POST(req: NextRequest, { params }: { params: { appId: stri
     data: { status: "CONTRACT_SENT" },
   })
 
+  // Mark animal as adoption-pending so it stops appearing as available
+  // on the public portal while the contract is out for signing
+  await prisma.animal.update({
+    where: { id: app.animalId },
+    data: { status: "ADOPTION_PENDING" },
+  })
+
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000"
   const signingUrl = `${baseUrl}/sign/${signingToken}`
 

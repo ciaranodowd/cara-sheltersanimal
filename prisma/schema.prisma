@@ -108,6 +108,7 @@ model Organization {
   gdprRequests       GdprRequest[]
   invites            Invite[]
   conversations      Conversation[]
+  activityLogs       ActivityLog[]
 
   @@schema("public")
 }
@@ -351,6 +352,7 @@ model Donor {
   notes           String?
   gdprConsent     Boolean  @default(false)
   gdprConsentAt   DateTime?
+  gdprConsentIp   String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -408,6 +410,7 @@ model AdoptionApplication {
   gdprConsentIp          String?
   privacyPolicyConsent   Boolean   @default(false)
   privacyPolicyConsentAt DateTime?
+  privacyPolicyConsentIp String?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
@@ -474,6 +477,9 @@ model Donation {
   source           String?        // "adoption_checkout", "campaign", "direct", "public_portal"
   giftAid          Boolean        @default(false)
   taxRelief        Boolean        @default(false)
+  gdprConsent      Boolean        @default(false)
+  gdprConsentAt    DateTime?
+  gdprConsentIp    String?
   notes            String?
   createdAt        DateTime       @default(now())
 
@@ -555,7 +561,8 @@ model ActivityLog {
   meta           Json?
   createdAt      DateTime @default(now())
 
-  user User? @relation(fields: [userId], references: [id])
+  user         User?         @relation(fields: [userId], references: [id])
+  organization Organization  @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId])
   @@index([entityType, entityId])
@@ -757,6 +764,7 @@ model Conversation {
   participantUserId     String
   animalId              String?
   type                  ConversationType
+  deletedAt             DateTime?
 
   organization Organization @relation(fields: [shelterOrganizationId], references: [id])
   participant  User         @relation(fields: [participantUserId], references: [id])
@@ -774,6 +782,7 @@ model Message {
   senderId       String
   content        String
   readAt         DateTime?
+  deletedAt      DateTime?
 
   conversation Conversation @relation(fields: [conversationId], references: [id])
   sender       User         @relation(fields: [senderId], references: [id])

@@ -124,6 +124,7 @@ export async function POST(
       gdprConsentIp: ip,
       privacyPolicyConsent: true,
       privacyPolicyConsentAt: new Date(),
+      privacyPolicyConsentIp: ip,
       status: "PENDING",
     },
   })
