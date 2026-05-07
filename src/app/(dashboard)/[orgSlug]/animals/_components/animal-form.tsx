@@ -47,6 +47,9 @@ export function AnimalForm({ orgSlug, orgId, animal }: AnimalFormProps) {
   function setSelect(field: string) {
     return (v: string) => setForm(f => ({ ...f, [field]: v }))
   }
+  function setStatusSelect(v: string) {
+    setForm(f => ({ ...f, status: v, publicProfile: v === "AVAILABLE" ? true : f.publicProfile }))
+  }
   function setCheck(field: string) {
     return (e: React.ChangeEvent<HTMLInputElement>) => setForm(f => ({ ...f, [field]: e.target.checked }))
   }
@@ -170,7 +173,7 @@ export function AnimalForm({ orgSlug, orgId, animal }: AnimalFormProps) {
           {animal && (
             <div className="space-y-1.5">
               <Label>Status</Label>
-              <Select value={form.status} onValueChange={setSelect("status")}>
+              <Select value={form.status} onValueChange={setStatusSelect}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="INTAKE">Intake</SelectItem>
