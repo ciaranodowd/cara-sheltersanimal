@@ -3,7 +3,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { MapPin, Mail, Phone, Heart, HandHeart } from "lucide-react"
 import { SPECIES_LABELS, SPECIES_EMOJI } from "@/lib/constants"
-import { DonateWidget } from "@/components/portal/donate-widget"
+import { PortalDonatePanel } from "./_components/portal-donate-panel"
 
 export const dynamic = "force-dynamic"
 
@@ -33,11 +33,20 @@ export default async function PublicPortalPage({ params }: { params: { orgSlug: 
   })
   if (!org) notFound()
 
-  const animals = await prisma.animal.findMany({
-    where: { organizationId: org.id, status: "AVAILABLE", publicProfile: true },
-    orderBy: { createdAt: "desc" },
-    include: { photos: { take: 1, orderBy: { position: "asc" } } },
-  })
+  const startOfMonth = new Date()
+  startOfMonth.setDate(1)
+  startOfMonth.setHours(0, 0, 0, 0)
+
+  const [animals, monthDonationCount] = await Promise.all([
+    prisma.animal.findMany({
+      where: { organizationId: org.id, status: "AVAILABLE", publicProfile: true },
+      orderBy: { createdAt: "desc" },
+      include: { photos: { take: 1, orderBy: { position: "asc" } } },
+    }),
+    prisma.donation.count({
+      where: { organizationId: org.id, status: "COMPLETED", createdAt: { gte: startOfMonth } },
+    }),
+  ])
 
   const location = [org.city, org.county].filter(Boolean).join(", ")
 
@@ -229,22 +238,24 @@ export default async function PublicPortalPage({ params }: { params: { orgSlug: 
       {/* ── DONATION SECTION ── */}
       <section style={{ backgroundColor: "#1a3a2a" }} className="py-16 sm:py-20">
         <div className="max-w-lg mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10">
+          <div className="text-center mb-8">
             <p className="text-xs font-semibold tracking-widest uppercase text-[#4ade80]/60 mb-4">
               Support our work
             </p>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight tracking-tight mb-4">
-              Make a difference today
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight tracking-tight mb-3">
+              {animals.length > 0
+                ? "Every animal you just met needs you."
+                : "They're waiting. You can help."}
             </h2>
             <p className="text-[#a7c4b5] text-base leading-relaxed max-w-sm mx-auto">
-              Every donation helps cover food, vet care, and shelter costs for the animals in our care — while they wait for their forever home.
+              100% of donations go directly to the animals in our care.
             </p>
           </div>
-          <DonateWidget
+          <PortalDonatePanel
             orgSlug={params.orgSlug}
             orgName={org.name}
-            defaultAmount={10}
-            buttonLabel={`Donate to ${org.name}`}
+            animalName={animals[0]?.name ?? null}
+            monthDonationCount={monthDonationCount}
           />
         </div>
       </section>
