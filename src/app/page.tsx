@@ -687,12 +687,19 @@ export default async function HomePage() {
             <p className="text-[#a7c4b5] text-sm text-center order-last sm:order-none">
               © {new Date().getFullYear()} Cara. All rights reserved.
             </p>
-            <div className="flex items-center gap-6">
-              {["Privacy", "Terms", "Contact"].map((link) => (
-                <a key={link} href="#" className="text-[#a7c4b5] text-sm hover:text-white transition-colors">
-                  {link}
-                </a>
-              ))}
+            <div className="flex items-center gap-6 flex-wrap justify-center">
+              <a href="/legal/cara-privacy-policy.docx" download className="text-[#a7c4b5] text-sm hover:text-white transition-colors">
+                Privacy Policy
+              </a>
+              <a href="/legal/cara-terms-of-service.docx" download className="text-[#a7c4b5] text-sm hover:text-white transition-colors">
+                Terms of Service
+              </a>
+              <a href="/legal/cara-data-processing-agreement.docx" download className="text-[#a7c4b5] text-sm hover:text-white transition-colors">
+                DPA
+              </a>
+              <a href="mailto:hello@carashelters.ie" className="text-[#a7c4b5] text-sm hover:text-white transition-colors">
+                Contact
+              </a>
             </div>
           </div>
         </div>

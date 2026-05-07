@@ -287,9 +287,22 @@ export default async function PublicPortalPage({ params }: { params: { orgSlug: 
                 )}
               </div>
             </div>
-            <p className="text-sm text-[#a7c4b5]">
-              Powered by <span className="text-[#4ade80] font-semibold">Cara</span>
-            </p>
+            <div className="flex flex-col items-end gap-2">
+              <p className="text-sm text-[#a7c4b5]">
+                Powered by <span className="text-[#4ade80] font-semibold">Cara</span>
+              </p>
+              <div className="flex items-center gap-4 flex-wrap justify-end">
+                <a href="/legal/cara-privacy-policy.docx" download className="text-xs text-[#a7c4b5] hover:text-white transition-colors">
+                  Privacy Policy
+                </a>
+                <a href="/legal/cara-terms-of-service.docx" download className="text-xs text-[#a7c4b5] hover:text-white transition-colors">
+                  Terms of Service
+                </a>
+                <a href="/legal/cara-data-processing-agreement.docx" download className="text-xs text-[#a7c4b5] hover:text-white transition-colors">
+                  DPA
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </footer>

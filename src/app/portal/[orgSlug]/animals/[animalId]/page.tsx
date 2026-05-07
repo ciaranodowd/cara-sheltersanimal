@@ -365,9 +365,22 @@ export default async function PublicAnimalProfilePage({
                 )}
               </div>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Powered by <span className="text-green-600 font-semibold">Cara</span>
-            </p>
+            <div className="flex flex-col items-end gap-2">
+              <p className="text-sm text-muted-foreground">
+                Powered by <span className="text-green-600 font-semibold">Cara</span>
+              </p>
+              <div className="flex items-center gap-4 flex-wrap justify-end">
+                <a href="/legal/cara-privacy-policy.docx" download className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  Privacy Policy
+                </a>
+                <a href="/legal/cara-terms-of-service.docx" download className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  Terms of Service
+                </a>
+                <a href="/legal/cara-data-processing-agreement.docx" download className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  DPA
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </footer>

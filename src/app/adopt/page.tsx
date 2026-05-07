@@ -227,8 +227,21 @@ export default async function AdoptPage({
         )}
       </main>
 
-      <footer className="text-center py-8 text-xs text-gray-400">
-        Powered by <span className="font-semibold text-[#1a3a2a]">Cara</span>
+      <footer className="py-8 text-xs text-gray-400">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <span>Powered by <span className="font-semibold text-[#1a3a2a]">Cara</span></span>
+          <div className="flex items-center gap-5">
+            <a href="/legal/cara-privacy-policy.docx" download className="hover:text-[#1a3a2a] transition-colors">
+              Privacy Policy
+            </a>
+            <a href="/legal/cara-terms-of-service.docx" download className="hover:text-[#1a3a2a] transition-colors">
+              Terms of Service
+            </a>
+            <a href="/legal/cara-data-processing-agreement.docx" download className="hover:text-[#1a3a2a] transition-colors">
+              DPA
+            </a>
+          </div>
+        </div>
       </footer>
     </div>
   )

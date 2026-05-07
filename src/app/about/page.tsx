@@ -176,6 +176,17 @@ export default function AboutPage() {
             <span className="font-semibold text-[#1a3a2a] text-sm">Cara</span>
           </Link>
           <p className="text-sm text-gray-400">© {new Date().getFullYear()} Cara. Built in Ireland.</p>
+          <div className="flex items-center gap-5 flex-wrap justify-center">
+            <a href="/legal/cara-privacy-policy.docx" download className="text-xs text-gray-400 hover:text-[#1a3a2a] transition-colors">
+              Privacy Policy
+            </a>
+            <a href="/legal/cara-terms-of-service.docx" download className="text-xs text-gray-400 hover:text-[#1a3a2a] transition-colors">
+              Terms of Service
+            </a>
+            <a href="/legal/cara-data-processing-agreement.docx" download className="text-xs text-gray-400 hover:text-[#1a3a2a] transition-colors">
+              DPA
+            </a>
+          </div>
         </div>
       </footer>
     </div>
