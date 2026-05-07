@@ -4,7 +4,7 @@ import { ShieldCheck, RefreshCw, Zap, Loader2 } from "lucide-react"
 
 interface Props {
   orgSlug: string
-  orgName: string
+  orgName?: string
   animalName: string | null
   monthDonationCount: number
 }
@@ -21,7 +21,7 @@ function presets(name: string | null) {
 
 const AVATAR_COLORS = ["#4ade80", "#60a5fa", "#f472b6", "#fb923c", "#a78bfa"]
 
-export function PortalDonatePanel({ orgSlug, orgName, animalName, monthDonationCount }: Props) {
+export function PortalDonatePanel({ orgSlug, animalName, monthDonationCount }: Props) {
   const [frequency, setFrequency] = useState<"monthly" | "once">("monthly")
   const [selected, setSelected] = useState<number>(10)
   const [custom, setCustom] = useState("")
