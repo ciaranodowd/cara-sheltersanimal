@@ -1,10 +1,10 @@
 "use client"
 import { useState } from "react"
-import { useSession } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, CheckCircle } from "lucide-react"
+import { ArrowLeft, CheckCircle, Download, Trash2, AlertTriangle } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 
@@ -15,6 +15,11 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState("")
+  const [deleteConfirm, setDeleteConfirm] = useState("")
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState("")
+  const [exporting, setExporting] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -35,6 +40,51 @@ export default function ProfilePage() {
       setError("Network error — please try again")
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleExport() {
+    setExporting(true)
+    try {
+      const res = await fetch("/api/gdpr/export")
+      if (!res.ok) { setError("Export failed — please try again"); return }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `cara-data-export-${new Date().toISOString().split("T")[0]}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      setError("Export failed — please try again")
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  async function handleDelete() {
+    if (deleteConfirm !== "DELETE MY ACCOUNT") {
+      setDeleteError("Please type the confirmation phrase exactly as shown")
+      return
+    }
+    setDeleting(true)
+    setDeleteError("")
+    try {
+      const res = await fetch("/api/gdpr/deletion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmation: "DELETE MY ACCOUNT" }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        setDeleteError(data.error ?? "Deletion failed")
+        setDeleting(false)
+        return
+      }
+      await signOut({ callbackUrl: "/login" })
+    } catch {
+      setDeleteError("Deletion failed — please try again")
+      setDeleting(false)
     }
   }
 
@@ -83,6 +133,88 @@ export default function ProfilePage() {
             </Button>
           </div>
         </form>
+
+        {/* Data export */}
+        <div className="mt-8 bg-white rounded-xl border border-slate-100 p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="font-semibold text-slate-900 text-sm">Download your data</h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Export a JSON file of everything Cara holds about your account — profile, messages,
+                and activity. Your right under GDPR Article 20.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              disabled={exporting}
+              className="shrink-0"
+            >
+              <Download className="h-4 w-4 mr-1.5" />
+              {exporting ? "Preparing…" : "Export"}
+            </Button>
+          </div>
+        </div>
+
+        {/* Account deletion */}
+        <div className="mt-4 bg-white rounded-xl border border-red-100 p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="font-semibold text-red-700 text-sm flex items-center gap-1.5">
+                <AlertTriangle className="h-4 w-4" /> Delete account
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Permanently deletes your Cara account. Your messages will be anonymised and you
+                will lose access to all organisations. This cannot be undone.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowDeleteDialog(true)}
+              className="shrink-0 border-red-200 text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4 mr-1.5" />
+              Delete
+            </Button>
+          </div>
+
+          {showDeleteDialog && (
+            <div className="mt-5 pt-5 border-t border-red-100 space-y-3">
+              <p className="text-sm text-slate-700 font-medium">
+                Type <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-xs">DELETE MY ACCOUNT</span> to confirm:
+              </p>
+              <input
+                type="text"
+                value={deleteConfirm}
+                onChange={e => setDeleteConfirm(e.target.value)}
+                placeholder="DELETE MY ACCOUNT"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
+              />
+              {deleteError && (
+                <p className="text-xs text-red-600">{deleteError}</p>
+              )}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setShowDeleteDialog(false); setDeleteConfirm(""); setDeleteError("") }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {deleting ? "Deleting…" : "Permanently delete my account"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

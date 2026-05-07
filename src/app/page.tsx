@@ -17,6 +17,7 @@ import {
   ArrowRight,
   CheckCircle,
 } from "lucide-react"
+import { CookieBanner } from "@/components/cookie-banner"
 
 export const dynamic = "force-dynamic"
 
@@ -138,6 +139,7 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen">
+      <CookieBanner />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

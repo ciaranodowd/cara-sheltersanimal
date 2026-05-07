@@ -403,8 +403,11 @@ model AdoptionApplication {
   rentOrOwn        String?           // "own" | "rent" | "other"
   landlordPermission Boolean?        // true if renting and landlord allows pets
   // GDPR
-  gdprConsent      Boolean           @default(false)
-  gdprConsentAt    DateTime?
+  gdprConsent            Boolean   @default(false)
+  gdprConsentAt          DateTime?
+  gdprConsentIp          String?
+  privacyPolicyConsent   Boolean   @default(false)
+  privacyPolicyConsentAt DateTime?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 

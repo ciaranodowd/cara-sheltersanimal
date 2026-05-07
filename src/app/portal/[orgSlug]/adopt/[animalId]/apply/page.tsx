@@ -36,6 +36,7 @@ export default function AdoptApplicationPage() {
     hasOtherPets: false, otherPetsDetails: "",
     experienceLevel: "", previousPets: "", whyAdopt: "", workingHours: "",
     gdprConsent: false,
+    privacyPolicyConsent: false,
   })
 
   useEffect(() => {
@@ -51,14 +52,15 @@ export default function AdoptApplicationPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.gdprConsent) { setError("Please accept the privacy policy to continue"); return }
+    if (!form.gdprConsent) { setError("Please consent to data processing to continue"); return }
+    if (!form.privacyPolicyConsent) { setError("Please confirm you have read the Privacy Policy"); return }
     setSubmitting(true)
     setError("")
     try {
       const res = await fetch(`/api/portal/${params.orgSlug}/apply`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, animalId: params.animalId }),
+        body: JSON.stringify({ ...form, animalId: params.animalId, privacyPolicyConsent: form.privacyPolicyConsent }),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? "Failed to submit application"); setSubmitting(false); return }
@@ -419,16 +421,42 @@ export default function AdoptApplicationPage() {
             </CardContent>
           </Card>
 
-          <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-xl">
-            <Checkbox
-              id="gdpr"
-              checked={form.gdprConsent}
-              onCheckedChange={v => setForm(f => ({ ...f, gdprConsent: v === true }))}
-            />
-            <label htmlFor="gdpr" className="text-sm text-muted-foreground cursor-pointer">
-              I consent to {org?.name} storing and processing my personal data to assess this
-              adoption application. My data will be handled in accordance with GDPR and will not
-              be shared with third parties.
+          <div className="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Consent required</p>
+            <label className="flex items-start gap-3 cursor-pointer">
+              <Checkbox
+                id="gdpr"
+                checked={form.gdprConsent}
+                onCheckedChange={v => setForm(f => ({ ...f, gdprConsent: v === true }))}
+                className="mt-0.5"
+              />
+              <span className="text-sm text-muted-foreground">
+                <span className="text-destructive font-semibold">*</span>{" "}
+                I consent to {org?.name ?? "this rescue"} storing and processing my personal data
+                to assess this application. My data will be handled in accordance with GDPR and
+                will not be shared with third parties.
+              </span>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer">
+              <Checkbox
+                id="privacy"
+                checked={form.privacyPolicyConsent}
+                onCheckedChange={v => setForm(f => ({ ...f, privacyPolicyConsent: v === true }))}
+                className="mt-0.5"
+              />
+              <span className="text-sm text-muted-foreground">
+                <span className="text-destructive font-semibold">*</span>{" "}
+                I confirm I have read and understood the{" "}
+                <a
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline text-foreground hover:text-primary"
+                >
+                  Privacy Policy
+                </a>
+                .
+              </span>
             </label>
           </div>
 

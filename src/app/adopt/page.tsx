@@ -5,6 +5,7 @@ import { SPECIES_LABELS, SPECIES_EMOJI } from "@/lib/constants"
 import { Suspense } from "react"
 import { AdoptFilters } from "./_components/adopt-filters"
 import { PublicNav } from "@/components/layout/public-nav"
+import { CookieBanner } from "@/components/cookie-banner"
 import type { Species, AnimalStatus } from "@prisma/client"
 
 export const dynamic = "force-dynamic"
@@ -102,6 +103,7 @@ export default async function AdoptPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
       />
 
+      <CookieBanner />
       <PublicNav navLinks={[{ label: "For shelters", href: "/" }]} />
 
       {/* Hero */}

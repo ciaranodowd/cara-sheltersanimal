@@ -39,7 +39,7 @@ export async function POST(
     householdType, rentOrOwn, landlordPermission,
     hasGarden, gardenFenced, hasChildren, childrenAges,
     hasOtherPets, otherPetsDetails, experienceLevel, previousPets,
-    whyAdopt, workingHours, applicationType, gdprConsent,
+    whyAdopt, workingHours, applicationType, gdprConsent, privacyPolicyConsent,
   } = body
 
   // Required field presence
@@ -47,9 +47,12 @@ export async function POST(
     return NextResponse.json({ error: "Required fields missing" }, { status: 400 })
   }
 
-  // GDPR consent is mandatory — enforce server-side, not just client-side
+  // Both consent fields are mandatory — enforce server-side
   if (gdprConsent !== true) {
     return NextResponse.json({ error: "GDPR consent is required to submit an application" }, { status: 400 })
+  }
+  if (privacyPolicyConsent !== true) {
+    return NextResponse.json({ error: "You must confirm you have read the Privacy Policy" }, { status: 400 })
   }
 
   // Input validation
@@ -118,6 +121,9 @@ export async function POST(
       applicationType: resolvedType,
       gdprConsent: true,
       gdprConsentAt: new Date(),
+      gdprConsentIp: ip,
+      privacyPolicyConsent: true,
+      privacyPolicyConsentAt: new Date(),
       status: "PENDING",
     },
   })
