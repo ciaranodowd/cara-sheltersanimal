@@ -16,34 +16,39 @@ export async function POST(req: NextRequest) {
 
   const userId = session.user.id
 
-  await prisma.$transaction([
-    // Detach from assigned applications (preserve applications for org records)
-    prisma.adoptionApplication.updateMany({
-      where: { assignedToId: userId },
-      data: { assignedToId: null },
-    }),
-    prisma.adoptionApplication.updateMany({
-      where: { homeCheckerId: userId },
-      data: { homeCheckerId: null },
-    }),
-    // Wipe message content, keep conversation structure intact
-    prisma.message.updateMany({
-      where: { senderId: userId },
-      data: { content: "[Message removed – user account deleted]" },
-    }),
-    // Remove audit trail entries referencing this user
-    prisma.activityLog.deleteMany({
-      where: { userId },
-    }),
-    // Remove all org memberships (revokes all dashboard access)
-    prisma.userOrganization.deleteMany({
-      where: { userId },
-    }),
-    // Delete user — Prisma onDelete: Cascade removes Account and Session rows
-    prisma.user.delete({
-      where: { id: userId },
-    }),
-  ])
+  try {
+    await prisma.$transaction([
+      // Detach from assigned applications (preserve applications for org records)
+      prisma.adoptionApplication.updateMany({
+        where: { assignedToId: userId },
+        data: { assignedToId: null },
+      }),
+      prisma.adoptionApplication.updateMany({
+        where: { homeCheckerId: userId },
+        data: { homeCheckerId: null },
+      }),
+      // Wipe message content, keep conversation structure intact
+      prisma.message.updateMany({
+        where: { senderId: userId },
+        data: { content: "[Message removed – user account deleted]" },
+      }),
+      // Remove audit trail entries referencing this user
+      prisma.activityLog.deleteMany({
+        where: { userId },
+      }),
+      // Remove all org memberships (revokes all dashboard access)
+      prisma.userOrganization.deleteMany({
+        where: { userId },
+      }),
+      // Delete user — Prisma onDelete: Cascade removes Account and Session rows
+      prisma.user.delete({
+        where: { id: userId },
+      }),
+    ])
+  } catch (err) {
+    console.error("[gdpr deletion]", err)
+    return NextResponse.json({ error: "Account deletion failed. Please contact support." }, { status: 500 })
+  }
 
   return NextResponse.json({ success: true })
 }

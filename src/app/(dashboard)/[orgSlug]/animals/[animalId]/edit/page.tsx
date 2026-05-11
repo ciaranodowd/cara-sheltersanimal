@@ -16,6 +16,11 @@ export default async function EditAnimalPage({ params }: { params: { orgSlug: st
   }).catch(() => null)
   if (!org) notFound()
 
+  const membership = await prisma.userOrganization.findUnique({
+    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
+  }).catch(() => null)
+  if (!membership) notFound()
+
   const animal = await prisma.animal.findFirst({
     where: { id: params.animalId, organizationId: org.id },
   }).catch(() => null)

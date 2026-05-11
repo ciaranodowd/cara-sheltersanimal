@@ -26,19 +26,25 @@ export async function POST(req: NextRequest, { params }: { params: { animalId: s
   })
   if (!membership) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const record = await prisma.medicalRecord.create({
-    data: {
-      animalId: params.animalId,
-      type,
-      description,
-      date: new Date(date),
-      vetName: vetName || null,
-      vetClinic: vetClinic || null,
-      cost: cost ? parseFloat(cost) : null,
-      notes: notes || null,
-      nextDueDate: nextDueDate ? new Date(nextDueDate) : null,
-    },
-  })
+  let record
+  try {
+    record = await prisma.medicalRecord.create({
+      data: {
+        animalId: params.animalId,
+        type,
+        description,
+        date: new Date(date),
+        vetName: vetName || null,
+        vetClinic: vetClinic || null,
+        cost: cost ? parseFloat(cost) : null,
+        notes: notes || null,
+        nextDueDate: nextDueDate ? new Date(nextDueDate) : null,
+      },
+    })
+  } catch (err) {
+    console.error("[medical POST]", err)
+    return NextResponse.json({ error: "Failed to create medical record" }, { status: 500 })
+  }
 
   return NextResponse.json(record, { status: 201 })
 }

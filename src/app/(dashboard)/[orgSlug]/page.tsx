@@ -44,6 +44,11 @@ export default async function DashboardPage({ params }: { params: { orgSlug: str
   }).catch(() => null)
   if (!org) notFound()
 
+  const membership = await prisma.userOrganization.findUnique({
+    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
+  }).catch(() => null)
+  if (!membership) notFound()
+
   let totalAnimals = 0, availableAnimals = 0, inFosterAnimals = 0, pendingApps = 0
   let monthDonations: { _sum: { amount: any } } = { _sum: { amount: null } }
   let recentAnimals: any[] = [], recentApps: any[] = []

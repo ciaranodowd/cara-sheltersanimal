@@ -21,28 +21,34 @@ export async function POST(req: NextRequest) {
   })
   if (!membership) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const animal = await prisma.animal.create({
-    data: {
-      organizationId,
-      name,
-      species,
-      breed: breed || null,
-      colour: colour || null,
-      sex: sex || "UNKNOWN",
-      size: size || null,
-      dobApprox: dobApprox || null,
-      intakeDate: new Date(intakeDate),
-      intakeType: intakeType || null,
-      microchipNumber: microchipNumber || null,
-      weightKg: weight ? parseFloat(weight) : null,
-      neutered: neutered ?? false,
-      vaccinated: vaccinated ?? false,
-      description: description || null,
-      notes: notes || null,
-      publicProfile: publicProfile ?? false,
-      status: publicProfile ? (status ?? "AVAILABLE") : "INTAKE",
-    },
-  })
+  let animal
+  try {
+    animal = await prisma.animal.create({
+      data: {
+        organizationId,
+        name,
+        species,
+        breed: breed || null,
+        colour: colour || null,
+        sex: sex || "UNKNOWN",
+        size: size || null,
+        dobApprox: dobApprox || null,
+        intakeDate: new Date(intakeDate),
+        intakeType: intakeType || null,
+        microchipNumber: microchipNumber || null,
+        weightKg: weight ? parseFloat(weight) : null,
+        neutered: neutered ?? false,
+        vaccinated: vaccinated ?? false,
+        description: description || null,
+        notes: notes || null,
+        publicProfile: publicProfile ?? false,
+        status: publicProfile ? (status ?? "AVAILABLE") : "INTAKE",
+      },
+    })
+  } catch (err) {
+    console.error("[animals POST]", err)
+    return NextResponse.json({ error: "Failed to create animal" }, { status: 500 })
+  }
 
   return NextResponse.json(animal, { status: 201 })
 }

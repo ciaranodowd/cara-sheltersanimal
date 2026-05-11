@@ -15,6 +15,11 @@ export default async function DonorDetailPage({ params }: { params: { orgSlug: s
   const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { id: true } })
   if (!org) notFound()
 
+  const membership = await prisma.userOrganization.findUnique({
+    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
+  }).catch(() => null)
+  if (!membership) notFound()
+
   const donor = await prisma.donor.findFirst({
     where: { id: params.donorId, organizationId: org.id },
     include: {

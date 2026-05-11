@@ -22,20 +22,26 @@ export async function POST(req: NextRequest) {
   })
   if (!membership) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const donation = await prisma.donation.create({
-    data: {
-      organizationId,
-      amount: parseFloat(amount),
-      currency: "EUR",
-      donorName: donorName || null,
-      donorEmail: donorEmail || null,
-      source: paymentMethod || "direct",
-      notes: notes || null,
-      status: "COMPLETED",
-      type: "ONE_OFF",
-      createdAt: donationDate ? new Date(donationDate) : new Date(),
-    },
-  })
+  let donation
+  try {
+    donation = await prisma.donation.create({
+      data: {
+        organizationId,
+        amount: parseFloat(amount),
+        currency: "EUR",
+        donorName: donorName || null,
+        donorEmail: donorEmail || null,
+        source: paymentMethod || "direct",
+        notes: notes || null,
+        status: "COMPLETED",
+        type: "ONE_OFF",
+        createdAt: donationDate ? new Date(donationDate) : new Date(),
+      },
+    })
+  } catch (err) {
+    console.error("[donations POST]", err)
+    return NextResponse.json({ error: "Failed to record donation" }, { status: 500 })
+  }
 
   return NextResponse.json(donation, { status: 201 })
 }

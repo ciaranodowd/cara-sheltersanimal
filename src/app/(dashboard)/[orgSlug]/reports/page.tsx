@@ -16,6 +16,11 @@ export default async function ReportsPage({ params }: { params: { orgSlug: strin
   const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { id: true } })
   if (!org) notFound()
 
+  const membership = await prisma.userOrganization.findUnique({
+    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
+  }).catch(() => null)
+  if (!membership) notFound()
+
   const now = new Date()
   const months = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1)

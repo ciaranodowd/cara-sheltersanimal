@@ -46,6 +46,9 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
 
   const { typedSignature } = await req.json()
   if (!typedSignature?.trim()) return NextResponse.json({ error: "Signature is required" }, { status: 400 })
+  if (typeof typedSignature !== "string" || typedSignature.trim().length > 200) {
+    return NextResponse.json({ error: "Signature must be under 200 characters" }, { status: 400 })
+  }
 
   // Get IP address
   const ip =

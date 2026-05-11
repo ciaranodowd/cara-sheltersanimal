@@ -21,6 +21,14 @@ export default function ProfilePage() {
   const [deleteError, setDeleteError] = useState("")
   const [exporting, setExporting] = useState(false)
 
+  // Change password state
+  const [cpCurrent, setCpCurrent] = useState("")
+  const [cpNew, setCpNew] = useState("")
+  const [cpConfirm, setCpConfirm] = useState("")
+  const [cpLoading, setCpLoading] = useState(false)
+  const [cpError, setCpError] = useState("")
+  const [cpSaved, setCpSaved] = useState(false)
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
@@ -40,6 +48,39 @@ export default function ProfilePage() {
       setError("Network error — please try again")
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault()
+    setCpError("")
+    setCpSaved(false)
+    if (cpNew !== cpConfirm) {
+      setCpError("New passwords do not match.")
+      return
+    }
+    if (cpNew.length < 8) {
+      setCpError("New password must be at least 8 characters.")
+      return
+    }
+    setCpLoading(true)
+    try {
+      const res = await fetch("/api/user/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword: cpCurrent, newPassword: cpNew }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setCpError(data.error ?? "Failed to change password."); return }
+      setCpSaved(true)
+      setCpCurrent("")
+      setCpNew("")
+      setCpConfirm("")
+      setTimeout(() => setCpSaved(false), 4000)
+    } catch {
+      setCpError("Network error — please try again.")
+    } finally {
+      setCpLoading(false)
     }
   }
 
@@ -133,6 +174,60 @@ export default function ProfilePage() {
             </Button>
           </div>
         </form>
+
+        {/* Change password */}
+        <div className="mt-8 bg-white rounded-xl border border-slate-100 p-6">
+          <h2 className="font-semibold text-slate-900 text-sm mb-4">Change password</h2>
+          <form onSubmit={handleChangePassword} className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="cp-current">Current password</Label>
+              <Input
+                id="cp-current"
+                type="password"
+                value={cpCurrent}
+                onChange={e => setCpCurrent(e.target.value)}
+                required
+                autoComplete="current-password"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cp-new">New password</Label>
+              <Input
+                id="cp-new"
+                type="password"
+                value={cpNew}
+                onChange={e => setCpNew(e.target.value)}
+                required
+                minLength={8}
+                autoComplete="new-password"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cp-confirm">Confirm new password</Label>
+              <Input
+                id="cp-confirm"
+                type="password"
+                value={cpConfirm}
+                onChange={e => setCpConfirm(e.target.value)}
+                required
+                autoComplete="new-password"
+              />
+            </div>
+            {cpError && (
+              <div className="rounded-lg bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">{cpError}</div>
+            )}
+            <div className="flex items-center justify-end gap-3 pt-1">
+              {cpSaved && (
+                <span className="flex items-center gap-1.5 text-sm text-green-600">
+                  <CheckCircle className="h-4 w-4" /> Password updated
+                </span>
+              )}
+              <Button type="submit" disabled={cpLoading} style={{ backgroundColor: "#1a3a2a" }}>
+                {cpLoading ? "Updating…" : "Update password"}
+              </Button>
+            </div>
+          </form>
+        </div>
 
         {/* Data export */}
         <div className="mt-8 bg-white rounded-xl border border-slate-100 p-6">

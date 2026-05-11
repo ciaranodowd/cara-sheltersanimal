@@ -30,6 +30,11 @@ export default async function AnimalPage({
   }).catch(() => null)
   if (!org) notFound()
 
+  const membership = await prisma.userOrganization.findUnique({
+    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
+  }).catch(() => null)
+  if (!membership) notFound()
+
   let animal
   try {
     animal = await prisma.animal.findFirst({

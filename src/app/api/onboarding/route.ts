@@ -11,9 +11,15 @@ export async function POST(req: NextRequest) {
   const { name, email, phone, address, city, county, country, website, chyNumber, description } = await req.json()
   if (!name || !email) return NextResponse.json({ error: "Name and email are required" }, { status: 400 })
 
+  const RESERVED_SLUGS = new Set([
+    "api", "portal", "admin", "login", "register", "onboarding",
+    "about", "adopt", "sign", "auth", "forgot-password", "reset-password",
+    "billing", "settings", "dashboard",
+  ])
+
   // Generate unique slug
   const baseSlug = slugify(name)
-  let slug = baseSlug
+  let slug = RESERVED_SLUGS.has(baseSlug) ? `${baseSlug}-shelter` : baseSlug
   let suffix = 1
   while (await prisma.organization.findUnique({ where: { slug } })) {
     slug = `${baseSlug}-${suffix++}`

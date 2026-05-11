@@ -308,32 +308,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── SOCIAL PROOF BAR ── */}
-      <section className="bg-white py-8 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
-            <span className="text-sm font-medium text-gray-400 whitespace-nowrap flex-shrink-0">
-              Trusted by shelters across Ireland
-            </span>
-            <div className="hidden sm:block w-px h-5 bg-gray-200" />
-            <div className="flex flex-wrap justify-center sm:justify-start items-center gap-x-8 gap-y-2">
-              {[
-                "Dublin SPCA",
-                "Cork Dog Action Welfare Group",
-                "Galway SPCA",
-                "Limerick Animal Welfare",
-                "Wexford Animal Shelter",
-                "Kerry Animal Foundation",
-              ].map((name) => (
-                <span key={name} className="text-sm text-gray-400 font-medium">
-                  {name}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ── FEATURES ── */}
       <section id="features" className="bg-gray-50 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

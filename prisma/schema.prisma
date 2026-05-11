@@ -124,14 +124,27 @@ model User {
   updatedAt     DateTime @updatedAt
 
   // Relations
-  accounts         Account[]
-  sessions         Session[]
-  organizations    UserOrganization[]
-  assignedApps     AdoptionApplication[] @relation("AssignedTo")
-  homeChecks       AdoptionApplication[] @relation("HomeChecker")
-  activityLog      ActivityLog[]
-  conversations    Conversation[]
-  sentMessages     Message[]
+  accounts              Account[]
+  sessions              Session[]
+  organizations         UserOrganization[]
+  assignedApps          AdoptionApplication[] @relation("AssignedTo")
+  homeChecks            AdoptionApplication[] @relation("HomeChecker")
+  activityLog           ActivityLog[]
+  conversations         Conversation[]
+  sentMessages          Message[]
+  passwordResetTokens   PasswordResetToken[]
+
+  @@schema("public")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@schema("public")
 }

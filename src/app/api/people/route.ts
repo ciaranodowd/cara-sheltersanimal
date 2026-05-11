@@ -28,28 +28,33 @@ export async function POST(req: NextRequest) {
     notes: notes || null,
   }
 
-  if (type === "adopter") {
-    const existing = await prisma.adopter.findUnique({ where: { email_organizationId: { email, organizationId } } })
-    if (existing) return NextResponse.json({ error: "An adopter with this email already exists" }, { status: 409 })
+  try {
+    if (type === "adopter") {
+      const existing = await prisma.adopter.findUnique({ where: { email_organizationId: { email, organizationId } } })
+      if (existing) return NextResponse.json({ error: "An adopter with this email already exists" }, { status: 409 })
 
-    const adopter = await prisma.adopter.create({ data: { ...common, address: address || null } })
-    return NextResponse.json(adopter, { status: 201 })
-  }
+      const adopter = await prisma.adopter.create({ data: { ...common, address: address || null } })
+      return NextResponse.json(adopter, { status: 201 })
+    }
 
-  if (type === "donor") {
-    const existing = await prisma.donor.findUnique({ where: { email_organizationId: { email, organizationId } } })
-    if (existing) return NextResponse.json({ error: "A donor with this email already exists" }, { status: 409 })
+    if (type === "donor") {
+      const existing = await prisma.donor.findUnique({ where: { email_organizationId: { email, organizationId } } })
+      if (existing) return NextResponse.json({ error: "A donor with this email already exists" }, { status: 409 })
 
-    const donor = await prisma.donor.create({ data: { ...common } })
-    return NextResponse.json(donor, { status: 201 })
-  }
+      const donor = await prisma.donor.create({ data: { ...common } })
+      return NextResponse.json(donor, { status: 201 })
+    }
 
-  if (type === "volunteer") {
-    const existing = await prisma.volunteer.findUnique({ where: { email_organizationId: { email, organizationId } } })
-    if (existing) return NextResponse.json({ error: "A volunteer with this email already exists" }, { status: 409 })
+    if (type === "volunteer") {
+      const existing = await prisma.volunteer.findUnique({ where: { email_organizationId: { email, organizationId } } })
+      if (existing) return NextResponse.json({ error: "A volunteer with this email already exists" }, { status: 409 })
 
-    const volunteer = await prisma.volunteer.create({ data: { ...common, skills: "[]" } })
-    return NextResponse.json(volunteer, { status: 201 })
+      const volunteer = await prisma.volunteer.create({ data: { ...common, skills: "[]" } })
+      return NextResponse.json(volunteer, { status: 201 })
+    }
+  } catch (err) {
+    console.error("[people POST]", err)
+    return NextResponse.json({ error: "Failed to create record" }, { status: 500 })
   }
 
   return NextResponse.json({ error: "Invalid person type" }, { status: 400 })

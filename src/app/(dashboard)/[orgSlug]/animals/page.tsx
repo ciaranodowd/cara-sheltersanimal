@@ -28,6 +28,11 @@ export default async function AnimalsPage({
   }).catch(() => null)
   if (!org) notFound()
 
+  const membership = await prisma.userOrganization.findUnique({
+    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
+  }).catch(() => null)
+  if (!membership) notFound()
+
   const where: any = { organizationId: org.id }
   if (searchParams.search) {
     where.OR = [
@@ -42,6 +47,7 @@ export default async function AnimalsPage({
   const animals = await prisma.animal.findMany({
     where,
     orderBy: { createdAt: "desc" },
+    take: 200,
     include: {
       photos: { take: 1, orderBy: { position: "asc" } },
       _count: { select: { adoptionApps: true } },

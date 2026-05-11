@@ -27,6 +27,11 @@ export default async function AdoptionsPage({ params }: { params: { orgSlug: str
   }).catch(() => null)
   if (!org) notFound()
 
+  const membership = await prisma.userOrganization.findUnique({
+    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
+  }).catch(() => null)
+  if (!membership) notFound()
+
   const applications = await prisma.adoptionApplication.findMany({
     where: {
       organizationId: org.id,

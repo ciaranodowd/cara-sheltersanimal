@@ -39,16 +39,22 @@ export async function PATCH(req: NextRequest, { params }: { params: { appId: str
 
   const { status, internalNotes, homeCheckDate, homeCheckNotes, homeCheckPassed } = await req.json()
 
-  const updated = await prisma.adoptionApplication.update({
-    where: { id: params.appId },
-    data: {
-      status: status ?? app.status,
-      internalNotes: internalNotes !== undefined ? internalNotes : app.internalNotes,
-      homeCheckDate: homeCheckDate !== undefined ? (homeCheckDate ? new Date(homeCheckDate) : null) : app.homeCheckDate,
-      homeCheckNotes: homeCheckNotes !== undefined ? homeCheckNotes : app.homeCheckNotes,
-      homeCheckPassed: homeCheckPassed !== undefined ? homeCheckPassed : app.homeCheckPassed,
-    },
-  })
+  let updated
+  try {
+    updated = await prisma.adoptionApplication.update({
+      where: { id: params.appId },
+      data: {
+        status: status ?? app.status,
+        internalNotes: internalNotes !== undefined ? internalNotes : app.internalNotes,
+        homeCheckDate: homeCheckDate !== undefined ? (homeCheckDate ? new Date(homeCheckDate) : null) : app.homeCheckDate,
+        homeCheckNotes: homeCheckNotes !== undefined ? homeCheckNotes : app.homeCheckNotes,
+        homeCheckPassed: homeCheckPassed !== undefined ? homeCheckPassed : app.homeCheckPassed,
+      },
+    })
+  } catch (err) {
+    console.error("[application PATCH]", err)
+    return NextResponse.json({ error: "Failed to update application" }, { status: 500 })
+  }
 
   return NextResponse.json(updated)
 }
