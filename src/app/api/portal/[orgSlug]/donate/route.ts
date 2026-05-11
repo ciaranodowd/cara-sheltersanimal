@@ -8,9 +8,16 @@ export async function POST(
 ) {
   const org = await prisma.organization.findUnique({
     where: { slug: params.orgSlug },
-    select: { id: true, name: true, slug: true },
+    select: { id: true, name: true, slug: true, stripeAccountId: true, stripeOnboarded: true },
   })
   if (!org) return NextResponse.json({ error: "Not found" }, { status: 404 })
+
+  if (!org.stripeOnboarded || !org.stripeAccountId) {
+    return NextResponse.json(
+      { error: "This shelter hasn't finished setting up donations yet. Please try again later." },
+      { status: 422 }
+    )
+  }
 
   const body = await req.json()
   const { amount, frequency, donorName, donorEmail } = body as {
@@ -49,6 +56,10 @@ export async function POST(
           quantity: 1,
         },
       ],
+      subscription_data: {
+        transfer_data: { destination: org.stripeAccountId },
+        metadata: { organizationId: org.id },
+      },
       success_url: successUrl,
       cancel_url: cancelUrl,
       customer_email: donorEmail ?? undefined,
@@ -75,6 +86,9 @@ export async function POST(
           quantity: 1,
         },
       ],
+      payment_intent_data: {
+        transfer_data: { destination: org.stripeAccountId },
+      },
       success_url: successUrl,
       cancel_url: cancelUrl,
       customer_email: donorEmail ?? undefined,

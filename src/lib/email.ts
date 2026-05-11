@@ -223,6 +223,60 @@ export async function sendInviteEmail({
   if (error) throw new Error(error.message)
 }
 
+export async function sendNewMessageEmail({
+  to,
+  participantName,
+  orgName,
+  orgSlug,
+  conversationId,
+  animalName,
+}: {
+  to: string
+  participantName: string | null
+  orgName: string
+  orgSlug: string
+  conversationId: string
+  animalName: string | null
+}) {
+  const baseUrl = (process.env.NEXTAUTH_URL ?? "http://localhost:3000").replace(/\/$/, "")
+  const portalUrl = `${baseUrl}/portal/${orgSlug}/conversations/${conversationId}`
+  const greeting = participantName ? `Hi ${participantName},` : "Hi,"
+  const about = animalName ? ` regarding <strong>${animalName}</strong>` : ""
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `New message from ${orgName}`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:sans-serif;color:#1a1a1a;max-width:600px;margin:0 auto;padding:32px 24px">
+  <div style="margin-bottom:32px">
+    <span style="display:inline-block;background:#1a3a2a;color:#4ade80;font-weight:700;font-size:18px;padding:6px 14px;border-radius:6px;letter-spacing:0.5px">cara</span>
+  </div>
+  <h1 style="font-size:22px;font-weight:700;margin:0 0 8px">You have a new message</h1>
+  <p style="color:#555;margin:0 0 24px">${greeting}</p>
+  <p style="color:#555;margin:0 0 24px">
+    <strong>${orgName}</strong> has sent you a message${about}. Click the button below to read and reply — no account needed.
+  </p>
+  <div style="text-align:center;margin:32px 0">
+    <a href="${portalUrl}" style="display:inline-block;background:#1a3a2a;color:#fff;text-decoration:none;font-weight:600;padding:14px 32px;border-radius:8px;font-size:15px">
+      Read message
+    </a>
+  </div>
+  <p style="color:#888;font-size:13px;margin:0 0 8px">Or copy this link into your browser:</p>
+  <p style="color:#888;font-size:13px;word-break:break-all;margin:0 0 32px">${portalUrl}</p>
+  <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
+  <p style="color:#aaa;font-size:12px;margin:0">
+    This message was sent by ${orgName} via Cara. If you weren&apos;t expecting this, you can safely ignore it.
+  </p>
+</body>
+</html>`,
+  })
+  if (error) throw new Error(error.message)
+}
+
 export async function sendMicrochipTransferEmail({
   to,
   adopterName,

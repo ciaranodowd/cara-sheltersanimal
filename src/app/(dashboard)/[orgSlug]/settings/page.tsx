@@ -8,6 +8,7 @@ import { TeamSettings } from "./_components/team-settings"
 import { GdprSettings } from "./_components/gdpr-settings"
 import { ContractTemplateSettings } from "./_components/contract-template-settings"
 import { BillingSettings } from "./_components/billing-settings"
+import { DonationsSettings } from "./_components/donations-settings"
 
 export const dynamic = 'force-dynamic'
 
@@ -52,6 +53,7 @@ export default async function SettingsPage({
           <TabsTrigger value="team">Team</TabsTrigger>
           <TabsTrigger value="contracts">Contracts</TabsTrigger>
           <TabsTrigger value="gdpr">GDPR</TabsTrigger>
+          <TabsTrigger value="donations">Donations</TabsTrigger>
           <TabsTrigger value="billing">Billing</TabsTrigger>
         </TabsList>
 
@@ -73,6 +75,15 @@ export default async function SettingsPage({
 
         <TabsContent value="gdpr" className="mt-4">
           <GdprSettings orgId={org.id} orgSlug={params.orgSlug} />
+        </TabsContent>
+
+        <TabsContent value="donations" className="mt-4">
+          <DonationsSettings
+            orgSlug={params.orgSlug}
+            stripeAccountId={org.stripeAccountId ?? null}
+            stripeOnboarded={org.stripeOnboarded}
+            isAdmin={membership.role === "ADMIN"}
+          />
         </TabsContent>
 
         <TabsContent value="billing" className="mt-4">

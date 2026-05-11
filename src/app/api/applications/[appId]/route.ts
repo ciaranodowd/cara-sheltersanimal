@@ -22,7 +22,24 @@ export async function GET(req: NextRequest, { params }: { params: { appId: strin
   })
   if (!membership) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  return NextResponse.json(app)
+  // Find the conversation linked to this application (no FK — look up by applicant email + animal)
+  let conversationId: string | null = null
+  if (app.animalId && app.applicantEmail) {
+    const participant = await prisma.user.findUnique({ where: { email: app.applicantEmail } })
+    if (participant) {
+      const conversation = await prisma.conversation.findFirst({
+        where: {
+          shelterOrganizationId: app.organizationId,
+          participantUserId: participant.id,
+          animalId: app.animalId,
+        },
+        select: { id: true },
+      })
+      conversationId = conversation?.id ?? null
+    }
+  }
+
+  return NextResponse.json({ ...app, conversationId })
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { appId: string } }) {

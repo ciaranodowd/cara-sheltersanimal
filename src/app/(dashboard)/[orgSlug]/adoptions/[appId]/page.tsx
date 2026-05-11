@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, Loader2, Send } from "lucide-react"
+import { ArrowLeft, Loader2, MessageSquare, Send } from "lucide-react"
 
 const STATUS_OPTIONS = [
   { value: "PENDING", label: "Pending" },
@@ -23,7 +23,7 @@ const STATUS_OPTIONS = [
 export default function ApplicationPage() {
   const params = useParams()
   const router = useRouter()
-  const [app, setApp] = useState<any>(null)
+  const [app, setApp] = useState<any & { conversationId?: string | null }>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [sending, setSending] = useState(false)
@@ -178,6 +178,22 @@ export default function ApplicationPage() {
               <Button className="w-full" onClick={saveStatus} disabled={saving}>
                 {saving ? "Saving…" : "Save changes"}
               </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="text-base">Messages</CardTitle></CardHeader>
+            <CardContent>
+              {app.conversationId ? (
+                <Button className="w-full gap-2" variant="outline" asChild>
+                  <Link href={`/${params.orgSlug}/messages/${app.conversationId}`}>
+                    <MessageSquare className="h-4 w-4" />
+                    Message applicant
+                  </Link>
+                </Button>
+              ) : (
+                <p className="text-sm text-muted-foreground">No conversation found for this application.</p>
+              )}
             </CardContent>
           </Card>
 

@@ -485,6 +485,7 @@ model Donation {
   type             DonationType   @default(ONE_OFF)
   status           DonationStatus @default(PENDING)
   stripePaymentId  String?
+  stripeSessionId  String?        @unique  // checkout session ID for webhook idempotency
   stripeSubscriptionId String?
   campaignId       String?
   source           String?        // "adoption_checkout", "campaign", "direct", "public_portal"

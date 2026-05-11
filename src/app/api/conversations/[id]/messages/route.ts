@@ -2,11 +2,19 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { sendNewMessageEmail } from "@/lib/email"
 
 async function resolveConversation(id: string, userId: string) {
   const conversation = await prisma.conversation.findUnique({
     where: { id },
-    select: { id: true, shelterOrganizationId: true, participantUserId: true },
+    select: {
+      id: true,
+      shelterOrganizationId: true,
+      participantUserId: true,
+      animal: { select: { name: true } },
+      participant: { select: { name: true, email: true } },
+      organization: { select: { name: true, slug: true } },
+    },
   })
   if (!conversation) return null
 
@@ -75,6 +83,18 @@ export async function POST(
       data: { updatedAt: new Date() },
     }),
   ])
+
+  // Send email notification to the adopter — fire and forget
+  if (conversation.participant.email) {
+    sendNewMessageEmail({
+      to: conversation.participant.email,
+      participantName: conversation.participant.name,
+      orgName: conversation.organization.name,
+      orgSlug: conversation.organization.slug,
+      conversationId: conversation.id,
+      animalName: conversation.animal?.name ?? null,
+    }).catch(err => console.error("[message email]", err))
+  }
 
   return NextResponse.json(
     {

@@ -68,6 +68,12 @@ export async function POST(req: NextRequest) {
           const organizationId = session.metadata?.organizationId
           if (!organizationId) break
 
+          // Idempotency: skip if this session was already recorded
+          const existing = await prisma.donation.findUnique({
+            where: { stripeSessionId: session.id },
+          })
+          if (existing) break
+
           const amountTotal = session.amount_total ?? 0
           const donorName = session.metadata?.donorName ?? null
           const donorEmail = session.customer_details?.email ?? session.metadata?.donorEmail ?? null
@@ -80,6 +86,7 @@ export async function POST(req: NextRequest) {
               type: "ONE_OFF",
               status: "COMPLETED",
               stripePaymentId: session.payment_intent as string | null,
+              stripeSessionId: session.id,
               donorName: donorName || null,
               donorEmail: donorEmail || null,
               source: "public_portal",
@@ -117,6 +124,15 @@ export async function POST(req: NextRequest) {
             subscriptionStatus: SubscriptionStatus.CANCELLED,
             stripeSubscriptionId: null,
           },
+        })
+        break
+      }
+
+      case "account.updated": {
+        const account = event.data.object as Stripe.Account
+        await prisma.organization.updateMany({
+          where: { stripeAccountId: account.id },
+          data: { stripeOnboarded: account.charges_enabled && account.payouts_enabled },
         })
         break
       }
