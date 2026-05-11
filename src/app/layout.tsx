@@ -23,7 +23,6 @@ export const metadata: Metadata = {
     "animal adoption ireland",
     "cara shelters",
   ],
-  icons: { icon: "/logo.svg" },
   openGraph: {
     type: "website",
     locale: "en_IE",
