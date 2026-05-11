@@ -130,6 +130,99 @@ export async function sendSignedContractEmails({
   await Promise.all(promises)
 }
 
+export async function sendPasswordResetEmail({
+  to,
+  token,
+}: {
+  to: string
+  token: string
+}) {
+  const baseUrl = (process.env.NEXTAUTH_URL ?? "http://localhost:3000").replace(/\/$/, "")
+  const resetUrl = `${baseUrl}/reset-password?token=${token}`
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to,
+    subject: "Reset your Cara password",
+    html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:sans-serif;color:#1a1a1a;max-width:600px;margin:0 auto;padding:32px 24px">
+  <div style="margin-bottom:32px">
+    <span style="display:inline-block;background:#1a3a2a;color:#4ade80;font-weight:700;font-size:18px;padding:6px 14px;border-radius:6px;letter-spacing:0.5px">cara</span>
+  </div>
+  <h1 style="font-size:22px;font-weight:700;margin:0 0 8px">Reset your password</h1>
+  <p style="color:#555;margin:0 0 24px">
+    We received a request to reset your Cara password. Click the button below to choose a new password.
+    This link expires in 1&nbsp;hour.
+  </p>
+  <div style="text-align:center;margin:32px 0">
+    <a href="${resetUrl}" style="display:inline-block;background:#1a3a2a;color:#fff;text-decoration:none;font-weight:600;padding:14px 32px;border-radius:8px;font-size:15px">
+      Reset password
+    </a>
+  </div>
+  <p style="color:#888;font-size:13px;margin:0 0 8px">Or copy this link into your browser:</p>
+  <p style="color:#888;font-size:13px;word-break:break-all;margin:0 0 32px">${resetUrl}</p>
+  <p style="color:#aaa;font-size:13px;margin:0 0 32px">
+    If you didn&apos;t request a password reset, you can safely ignore this email.
+  </p>
+  <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
+  <p style="color:#aaa;font-size:12px;margin:0">Cara &mdash; Animal Shelter Management</p>
+</body>
+</html>`,
+  })
+  if (error) throw new Error(error.message)
+}
+
+export async function sendInviteEmail({
+  to,
+  orgName,
+  token,
+}: {
+  to: string
+  orgName: string
+  token: string
+}) {
+  const baseUrl = (process.env.NEXTAUTH_URL ?? "http://localhost:3000").replace(/\/$/, "")
+  const setupUrl = `${baseUrl}/reset-password?token=${token}`
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `You've been invited to join ${orgName} on Cara`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:sans-serif;color:#1a1a1a;max-width:600px;margin:0 auto;padding:32px 24px">
+  <div style="margin-bottom:32px">
+    <span style="display:inline-block;background:#1a3a2a;color:#4ade80;font-weight:700;font-size:18px;padding:6px 14px;border-radius:6px;letter-spacing:0.5px">cara</span>
+  </div>
+  <h1 style="font-size:22px;font-weight:700;margin:0 0 8px">You&apos;ve been invited to Cara</h1>
+  <p style="color:#555;margin:0 0 24px">
+    <strong>${orgName}</strong> has invited you to join their shelter on Cara.
+    Click the button below to set your password and get started.
+    This link expires in <strong>1&nbsp;hour</strong>.
+  </p>
+  <div style="text-align:center;margin:32px 0">
+    <a href="${setupUrl}" style="display:inline-block;background:#1a3a2a;color:#fff;text-decoration:none;font-weight:600;padding:14px 32px;border-radius:8px;font-size:15px">
+      Set your password
+    </a>
+  </div>
+  <p style="color:#888;font-size:13px;margin:0 0 8px">Or copy this link into your browser:</p>
+  <p style="color:#888;font-size:13px;word-break:break-all;margin:0 0 32px">${setupUrl}</p>
+  <p style="color:#aaa;font-size:13px;margin:0 0 32px">
+    If you weren&apos;t expecting this invitation, you can safely ignore this email.
+  </p>
+  <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
+  <p style="color:#aaa;font-size:12px;margin:0">Cara &mdash; Animal Shelter Management</p>
+</body>
+</html>`,
+  })
+  if (error) throw new Error(error.message)
+}
+
 export async function sendMicrochipTransferEmail({
   to,
   adopterName,
