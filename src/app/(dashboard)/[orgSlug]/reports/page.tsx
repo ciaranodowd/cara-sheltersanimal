@@ -1,7 +1,7 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
+import { unstable_cache } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
+import { getSession, getOrgBySlug, getUserMembership } from "@/lib/data-access"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { SPECIES_LABELS, STATUS_LABELS } from "@/lib/constants"
@@ -9,17 +9,52 @@ import { formatCurrency } from "@/lib/utils"
 
 export const dynamic = 'force-dynamic'
 
+// Return values are pure numbers/strings — safe to cache across requests.
+// Historical report data rarely changes, so 60-second revalidation is appropriate.
+const getReportStats = unstable_cache(
+  async (orgId: string, months: { year: number; month: number; label: string }[]) => {
+    return Promise.all([
+      prisma.animal.groupBy({ by: ["species"], where: { organizationId: orgId }, _count: true }),
+      prisma.animal.groupBy({ by: ["status"], where: { organizationId: orgId }, _count: true }),
+      prisma.adoptionApplication.count({ where: { organizationId: orgId, status: "COMPLETED" } }),
+      Promise.all(months.map(m =>
+        prisma.donation.aggregate({
+          where: {
+            organizationId: orgId,
+            status: "COMPLETED",
+            createdAt: { gte: new Date(m.year, m.month, 1), lt: new Date(m.year, m.month + 1, 1) },
+          },
+          _sum: { amount: true },
+          _count: true,
+        }).then(r => ({ ...m, total: Number(r._sum.amount ?? 0), count: r._count }))
+      )),
+      Promise.all(months.map(m =>
+        prisma.animal.count({
+          where: {
+            organizationId: orgId,
+            intakeDate: { gte: new Date(m.year, m.month, 1), lt: new Date(m.year, m.month + 1, 1) },
+          },
+        }).then(count => ({ ...m, count }))
+      )),
+      Promise.all(months.map(m =>
+        prisma.adoptionApplication.count({
+          where: {
+            organizationId: orgId,
+            status: "COMPLETED",
+            updatedAt: { gte: new Date(m.year, m.month, 1), lt: new Date(m.year, m.month + 1, 1) },
+          },
+        }).then(count => ({ ...m, count }))
+      )),
+    ])
+  },
+  ["report-stats"],
+  { revalidate: 60 }
+)
+
 export default async function ReportsPage({ params }: { params: { orgSlug: string } }) {
-  const session = await getServerSession(authOptions)
+  const [session, org] = await Promise.all([getSession(), getOrgBySlug(params.orgSlug)])
   if (!session?.user?.id) redirect("/login")
-
-  const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { id: true } })
   if (!org) notFound()
-
-  const membership = await prisma.userOrganization.findUnique({
-    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
-  }).catch(() => null)
-  if (!membership) notFound()
 
   const now = new Date()
   const months = Array.from({ length: 6 }, (_, i) => {
@@ -27,55 +62,18 @@ export default async function ReportsPage({ params }: { params: { orgSlug: strin
     return { year: d.getFullYear(), month: d.getMonth(), label: d.toLocaleDateString("en-IE", { month: "short", year: "2-digit" }) }
   }).reverse()
 
-  const [
+  const [membership, [
     animalsBySpecies,
     animalsByStatus,
     completedApps,
     donationMonths,
     intakeByMonth,
     outcomeByMonth,
-  ] = await Promise.all([
-    prisma.animal.groupBy({ by: ["species"], where: { organizationId: org.id }, _count: true }),
-    prisma.animal.groupBy({ by: ["status"], where: { organizationId: org.id }, _count: true }),
-    prisma.adoptionApplication.count({ where: { organizationId: org.id, status: "COMPLETED" } }),
-    Promise.all(months.map(m =>
-      prisma.donation.aggregate({
-        where: {
-          organizationId: org.id,
-          status: "COMPLETED",
-          createdAt: {
-            gte: new Date(m.year, m.month, 1),
-            lt: new Date(m.year, m.month + 1, 1),
-          },
-        },
-        _sum: { amount: true },
-        _count: true,
-      }).then(r => ({ ...m, total: Number(r._sum.amount ?? 0), count: r._count }))
-    )),
-    Promise.all(months.map(m =>
-      prisma.animal.count({
-        where: {
-          organizationId: org.id,
-          intakeDate: {
-            gte: new Date(m.year, m.month, 1),
-            lt: new Date(m.year, m.month + 1, 1),
-          },
-        },
-      }).then(count => ({ ...m, count }))
-    )),
-    Promise.all(months.map(m =>
-      prisma.adoptionApplication.count({
-        where: {
-          organizationId: org.id,
-          status: "COMPLETED",
-          updatedAt: {
-            gte: new Date(m.year, m.month, 1),
-            lt: new Date(m.year, m.month + 1, 1),
-          },
-        },
-      }).then(count => ({ ...m, count }))
-    )),
+  ]] = await Promise.all([
+    getUserMembership(session.user.id, org.id),
+    getReportStats(org.id, months),
   ])
+  if (!membership) notFound()
 
   const maxDonation = Math.max(...donationMonths.map(m => m.total), 1)
   const maxIntake = Math.max(...intakeByMonth.map(m => m.count), 1)

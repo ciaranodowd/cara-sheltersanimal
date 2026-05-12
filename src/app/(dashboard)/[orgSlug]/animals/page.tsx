@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
+import { getSession, getOrgBySlug, getUserMembership } from "@/lib/data-access"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,19 +18,9 @@ export default async function AnimalsPage({
   params: { orgSlug: string }
   searchParams: { search?: string; status?: string; species?: string }
 }) {
-  const session = await getServerSession(authOptions)
+  const [session, org] = await Promise.all([getSession(), getOrgBySlug(params.orgSlug)])
   if (!session?.user?.id) redirect("/login")
-
-  const org = await prisma.organization.findUnique({
-    where: { slug: params.orgSlug },
-    select: { id: true },
-  }).catch(() => null)
   if (!org) notFound()
-
-  const membership = await prisma.userOrganization.findUnique({
-    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
-  }).catch(() => null)
-  if (!membership) notFound()
 
   const where: any = { organizationId: org.id }
   if (searchParams.search) {
@@ -44,15 +33,19 @@ export default async function AnimalsPage({
   if (searchParams.status && searchParams.status !== "all") where.status = searchParams.status as AnimalStatus
   if (searchParams.species && searchParams.species !== "all") where.species = searchParams.species as Species
 
-  const animals = await prisma.animal.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    take: 200,
-    include: {
-      photos: { take: 1, orderBy: { position: "asc" } },
-      _count: { select: { adoptionApps: true } },
-    },
-  }).catch(() => [])
+  const [membership, animals] = await Promise.all([
+    getUserMembership(session.user.id, org.id),
+    prisma.animal.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: 200,
+      include: {
+        photos: { take: 1, orderBy: { position: "asc" } },
+        _count: { select: { adoptionApps: true } },
+      },
+    }).catch(() => []),
+  ])
+  if (!membership) notFound()
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-5">

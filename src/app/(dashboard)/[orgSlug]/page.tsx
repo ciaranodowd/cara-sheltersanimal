@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
+import { getSession, getOrgBySlug, getUserMembership } from "@/lib/data-access"
 import { formatCurrency } from "@/lib/utils"
 import Link from "next/link"
 import {
@@ -35,63 +34,50 @@ function formatAge(ageYears?: number | null, ageMonths?: number | null): string 
 }
 
 export default async function DashboardPage({ params }: { params: { orgSlug: string } }) {
-  const session = await getServerSession(authOptions)
+  const [session, org] = await Promise.all([getSession(), getOrgBySlug(params.orgSlug)])
   if (!session?.user?.id) redirect("/login")
-
-  const org = await prisma.organization.findUnique({
-    where: { slug: params.orgSlug },
-    select: { id: true, name: true },
-  }).catch(() => null)
   if (!org) notFound()
-
-  const membership = await prisma.userOrganization.findUnique({
-    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
-  }).catch(() => null)
-  if (!membership) notFound()
 
   let totalAnimals = 0, availableAnimals = 0, inFosterAnimals = 0, pendingApps = 0
   let monthDonations: { _sum: { amount: any } } = { _sum: { amount: null } }
   let recentAnimals: any[] = [], recentApps: any[] = []
 
-  try {
-  ;[
-    totalAnimals,
-    availableAnimals,
-    inFosterAnimals,
-    pendingApps,
-    ,
-    monthDonations,
-    recentAnimals,
-    recentApps,
-  ] = await Promise.all([
-    prisma.animal.count({ where: { organizationId: org.id } }),
-    prisma.animal.count({ where: { organizationId: org.id, status: "AVAILABLE" } }),
-    prisma.animal.count({ where: { organizationId: org.id, status: "FOSTERED" } }),
-    prisma.adoptionApplication.count({ where: { organizationId: org.id, status: "PENDING" } }),
-    prisma.adopter.count({ where: { organizationId: org.id } }),
-    prisma.donation.aggregate({
-      where: {
-        organizationId: org.id,
-        status: "COMPLETED",
-        createdAt: { gte: new Date(new Date().setDate(1)) },
-      },
-      _sum: { amount: true },
-    }),
-    prisma.animal.findMany({
-      where: { organizationId: org.id },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: { id: true, name: true, species: true, status: true, breed: true, ageYears: true, ageMonths: true },
-    }),
-    prisma.adoptionApplication.findMany({
-      where: { organizationId: org.id, status: { in: ["PENDING", "HOME_CHECK_SCHEDULED"] } },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      include: { animal: { select: { name: true } } },
-    }),
+  // membership check and all page data run in parallel — layout already verified
+  // the user is a member, so the page data query is safe to start immediately
+  const [membership, statsResult] = await Promise.all([
+    getUserMembership(session.user.id, org.id),
+    Promise.all([
+      prisma.animal.count({ where: { organizationId: org.id } }),
+      prisma.animal.count({ where: { organizationId: org.id, status: "AVAILABLE" } }),
+      prisma.animal.count({ where: { organizationId: org.id, status: "FOSTERED" } }),
+      prisma.adoptionApplication.count({ where: { organizationId: org.id, status: "PENDING" } }),
+      prisma.adopter.count({ where: { organizationId: org.id } }),
+      prisma.donation.aggregate({
+        where: {
+          organizationId: org.id,
+          status: "COMPLETED",
+          createdAt: { gte: new Date(new Date().setDate(1)) },
+        },
+        _sum: { amount: true },
+      }),
+      prisma.animal.findMany({
+        where: { organizationId: org.id },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        select: { id: true, name: true, species: true, status: true, breed: true, ageYears: true, ageMonths: true },
+      }),
+      prisma.adoptionApplication.findMany({
+        where: { organizationId: org.id, status: { in: ["PENDING", "HOME_CHECK_SCHEDULED"] } },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        include: { animal: { select: { name: true } } },
+      }),
+    ]).catch(() => null),
   ])
-  } catch {
-    // Error boundary at [orgSlug] level will catch DB failures
+  if (!membership) notFound()
+
+  if (statsResult) {
+    ;[totalAnimals, availableAnimals, inFosterAnimals, pendingApps, , monthDonations, recentAnimals, recentApps] = statsResult
   }
 
   const stats = [

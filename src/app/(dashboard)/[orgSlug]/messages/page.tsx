@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
+import { getSession, getOrgBySlug, getUserMembership } from "@/lib/data-access"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { formatDistanceToNow } from "date-fns"
@@ -10,18 +9,11 @@ import { MessageSquare, PawPrint } from "lucide-react"
 export const dynamic = "force-dynamic"
 
 export default async function MessagesPage({ params }: { params: { orgSlug: string } }) {
-  const session = await getServerSession(authOptions)
+  const [session, org] = await Promise.all([getSession(), getOrgBySlug(params.orgSlug)])
   if (!session?.user?.id) redirect("/login")
-
-  const org = await prisma.organization.findUnique({
-    where: { slug: params.orgSlug },
-    select: { id: true, name: true },
-  })
   if (!org) notFound()
 
-  const membership = await prisma.userOrganization.findUnique({
-    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
-  })
+  const membership = await getUserMembership(session.user.id, org.id)
   if (!membership) notFound()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

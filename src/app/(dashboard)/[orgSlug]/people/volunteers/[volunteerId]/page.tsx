@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
+import { getSession, getOrgBySlug, getUserMembership } from "@/lib/data-access"
 import Link from "next/link"
 import { ArrowLeft, Mail, Phone, FileText, Clock } from "lucide-react"
 import { formatDate } from "@/lib/utils"
@@ -9,20 +8,17 @@ import { formatDate } from "@/lib/utils"
 export const dynamic = 'force-dynamic'
 
 export default async function VolunteerDetailPage({ params }: { params: { orgSlug: string; volunteerId: string } }) {
-  const session = await getServerSession(authOptions)
+  const [session, org] = await Promise.all([getSession(), getOrgBySlug(params.orgSlug)])
   if (!session?.user?.id) redirect("/login")
-
-  const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { id: true } })
   if (!org) notFound()
 
-  const membership = await prisma.userOrganization.findUnique({
-    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
-  }).catch(() => null)
+  const [membership, volunteer] = await Promise.all([
+    getUserMembership(session.user.id, org.id),
+    prisma.volunteer.findFirst({
+      where: { id: params.volunteerId, organizationId: org.id },
+    }).catch(() => null),
+  ])
   if (!membership) notFound()
-
-  const volunteer = await prisma.volunteer.findFirst({
-    where: { id: params.volunteerId, organizationId: org.id },
-  })
   if (!volunteer) notFound()
 
   const skills: string[] = (() => {

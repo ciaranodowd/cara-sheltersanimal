@@ -53,7 +53,10 @@
       "PowerShell(npx prisma generate 2>&1)",
       "PowerShell(head *)",
       "PowerShell($result = npx tsc --noEmit 2>&1; $result | Select-Object -First 60; Write-Host \"Exit: $LASTEXITCODE\")",
-      "Read(//mnt/c/Projects/cara/**)"
+      "Read(//mnt/c/Projects/cara/**)",
+      "Bash(Get-ChildItem -Recurse -Path \"C:\\\\Projects\\\\cara\\\\src\\\\app\\\\\\(dashboard\\)\" -Filter \"loading.tsx\")",
+      "Bash(Measure-Object)",
+      "Bash(Select-Object -ExpandProperty Count)"
     ]
   }
 }

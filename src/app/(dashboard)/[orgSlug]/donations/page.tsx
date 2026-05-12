@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
+import { getSession, getOrgBySlug, getUserMembership } from "@/lib/data-access"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,22 +10,16 @@ import { formatCurrency, formatDate } from "@/lib/utils"
 export const dynamic = 'force-dynamic'
 
 export default async function DonationsPage({ params }: { params: { orgSlug: string } }) {
-  const session = await getServerSession(authOptions)
+  const [session, org] = await Promise.all([getSession(), getOrgBySlug(params.orgSlug)])
   if (!session?.user?.id) redirect("/login")
-
-  const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { id: true } })
   if (!org) notFound()
-
-  const membership = await prisma.userOrganization.findUnique({
-    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
-  }).catch(() => null)
-  if (!membership) notFound()
 
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
   const startOfYear = new Date(now.getFullYear(), 0, 1)
 
-  const [donations, monthTotal, yearTotal, campaigns] = await Promise.all([
+  const [membership, donations, monthTotal, yearTotal, campaigns] = await Promise.all([
+    getUserMembership(session.user.id, org.id),
     prisma.donation.findMany({
       where: { organizationId: org.id },
       orderBy: { createdAt: "desc" },
@@ -48,6 +41,7 @@ export default async function DonationsPage({ params }: { params: { orgSlug: str
       take: 3,
     }),
   ])
+  if (!membership) notFound()
 
   const statusColors: Record<string, string> = {
     COMPLETED: "bg-green-100 text-green-700",

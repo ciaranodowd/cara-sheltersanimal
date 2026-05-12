@@ -1,22 +1,23 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
 import { MedicalRecordForm } from "./_components/medical-record-form"
+import { getSession, getOrgBySlug, getUserMembership } from "@/lib/data-access"
 
 export const dynamic = 'force-dynamic'
 
 export default async function NewMedicalRecordPage({ params }: { params: { orgSlug: string; animalId: string } }) {
-  const session = await getServerSession(authOptions)
+  const [session, org] = await Promise.all([getSession(), getOrgBySlug(params.orgSlug)])
   if (!session?.user?.id) redirect("/login")
-
-  const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { id: true } })
   if (!org) notFound()
 
-  const animal = await prisma.animal.findFirst({
-    where: { id: params.animalId, organizationId: org.id },
-    select: { id: true, name: true },
-  })
+  const [membership, animal] = await Promise.all([
+    getUserMembership(session.user.id, org.id),
+    prisma.animal.findFirst({
+      where: { id: params.animalId, organizationId: org.id },
+      select: { id: true, name: true },
+    }).catch(() => null),
+  ])
+  if (!membership) notFound()
   if (!animal) notFound()
 
   return (

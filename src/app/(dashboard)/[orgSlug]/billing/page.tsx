@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
+import { getSession, getOrgBySlug, getUserMembership } from "@/lib/data-access"
 import { BillingClient } from "./_components/billing-client"
 
 export const dynamic = "force-dynamic"
@@ -11,9 +10,14 @@ export default async function BillingPage({
 }: {
   params: { orgSlug: string }
 }) {
-  const session = await getServerSession(authOptions)
+  const [session, cachedOrg] = await Promise.all([
+    getSession(),
+    getOrgBySlug(params.orgSlug),
+  ])
   if (!session?.user?.id) redirect("/login")
+  if (!cachedOrg) notFound()
 
+  // Billing also needs planStatus — fetch it alongside the cached common fields
   type OrgRow = { id: string; name: string; slug: string; plan?: string; planStatus?: string; trialEndDate?: Date | null; trialEndsAt?: Date | null }
   let org: OrgRow | null = null
   try {
@@ -22,7 +26,6 @@ export default async function BillingPage({
       select: { id: true, name: true, slug: true, plan: true, planStatus: true, trialEndDate: true, trialEndsAt: true },
     })
   } catch {
-    // Fallback if SQL migration not yet run
     org = await prisma.organization.findUnique({
       where: { slug: params.orgSlug },
       select: { id: true, name: true, slug: true, trialEndsAt: true },
@@ -30,10 +33,7 @@ export default async function BillingPage({
   }
   if (!org) notFound()
 
-  const membership = await prisma.userOrganization.findUnique({
-    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
-    select: { role: true },
-  }).catch(() => null)
+  const membership = await getUserMembership(session.user.id, org.id)
   if (!membership) notFound()
 
   const effectiveTrialEnd = org.trialEndDate ?? org.trialEndsAt

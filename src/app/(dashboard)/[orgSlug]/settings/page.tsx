@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
+import { getSession, getOrgBySlug } from "@/lib/data-access"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { OrgSettingsForm } from "./_components/org-settings-form"
 import { TeamSettings } from "./_components/team-settings"
@@ -19,9 +18,10 @@ export default async function SettingsPage({
   params: { orgSlug: string }
   searchParams: { tab?: string }
 }) {
-  const session = await getServerSession(authOptions)
+  const [session] = await Promise.all([getSession(), getOrgBySlug(params.orgSlug)])
   if (!session?.user?.id) redirect("/login")
 
+  // Settings needs the full org with users — use its own query alongside the cached lookup
   let org
   try {
     org = await prisma.organization.findUnique({

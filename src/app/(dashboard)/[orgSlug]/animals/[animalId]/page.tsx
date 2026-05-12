@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
+import { getSession, getOrgBySlug, getUserMembership } from "@/lib/data-access"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -21,23 +20,13 @@ export default async function AnimalPage({
 }: {
   params: { orgSlug: string; animalId: string }
 }) {
-  const session = await getServerSession(authOptions)
+  const [session, org] = await Promise.all([getSession(), getOrgBySlug(params.orgSlug)])
   if (!session?.user?.id) redirect("/login")
-
-  const org = await prisma.organization.findUnique({
-    where: { slug: params.orgSlug },
-    select: { id: true },
-  }).catch(() => null)
   if (!org) notFound()
 
-  const membership = await prisma.userOrganization.findUnique({
-    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
-  }).catch(() => null)
-  if (!membership) notFound()
-
-  let animal
-  try {
-    animal = await prisma.animal.findFirst({
+  const [membership, animal] = await Promise.all([
+    getUserMembership(session.user.id, org.id),
+    prisma.animal.findFirst({
       where: { id: params.animalId, organizationId: org.id },
       include: {
         photos: { orderBy: { position: "asc" } },
@@ -48,10 +37,9 @@ export default async function AnimalPage({
           select: { id: true, applicantName: true, applicantEmail: true, status: true, createdAt: true },
         },
       },
-    })
-  } catch {
-    notFound()
-  }
+    }).catch(() => null),
+  ])
+  if (!membership) notFound()
   if (!animal) notFound()
 
   const statusColors: Record<string, string> = {

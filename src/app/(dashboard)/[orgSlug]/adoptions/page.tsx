@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
+import { getSession, getOrgBySlug, getUserMembership } from "@/lib/data-access"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { formatDate } from "@/lib/utils"
@@ -18,30 +17,24 @@ const PIPELINE_STAGES = [
 export const dynamic = 'force-dynamic'
 
 export default async function AdoptionsPage({ params }: { params: { orgSlug: string } }) {
-  const session = await getServerSession(authOptions)
+  const [session, org] = await Promise.all([getSession(), getOrgBySlug(params.orgSlug)])
   if (!session?.user?.id) redirect("/login")
-
-  const org = await prisma.organization.findUnique({
-    where: { slug: params.orgSlug },
-    select: { id: true },
-  }).catch(() => null)
   if (!org) notFound()
 
-  const membership = await prisma.userOrganization.findUnique({
-    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
-  }).catch(() => null)
+  const [membership, applications] = await Promise.all([
+    getUserMembership(session.user.id, org.id),
+    prisma.adoptionApplication.findMany({
+      where: {
+        organizationId: org.id,
+        status: { notIn: ["REJECTED", "WITHDRAWN", "UNDER_REVIEW", "HOME_CHECK_SCHEDULED", "HOME_CHECK_DONE"] },
+      },
+      orderBy: { updatedAt: "desc" },
+      include: {
+        animal: { select: { name: true, species: true } },
+      },
+    }).catch(() => []),
+  ])
   if (!membership) notFound()
-
-  const applications = await prisma.adoptionApplication.findMany({
-    where: {
-      organizationId: org.id,
-      status: { notIn: ["REJECTED", "WITHDRAWN", "UNDER_REVIEW", "HOME_CHECK_SCHEDULED", "HOME_CHECK_DONE"] },
-    },
-    orderBy: { updatedAt: "desc" },
-    include: {
-      animal: { select: { name: true, species: true } },
-    },
-  }).catch(() => [])
 
   const byStatus = Object.fromEntries(
     PIPELINE_STAGES.map(s => [s.key, applications.filter(a => a.status === s.key)])

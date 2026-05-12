@@ -1,8 +1,6 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
 import { PersonForm } from "./_components/person-form"
+import { getSession, getOrgBySlug, getUserMembership } from "@/lib/data-access"
 
 export const dynamic = 'force-dynamic'
 
@@ -13,11 +11,12 @@ export default async function NewPersonPage({
   params: { orgSlug: string }
   searchParams: { type?: string }
 }) {
-  const session = await getServerSession(authOptions)
+  const [session, org] = await Promise.all([getSession(), getOrgBySlug(params.orgSlug)])
   if (!session?.user?.id) redirect("/login")
-
-  const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { id: true } })
   if (!org) notFound()
+
+  const membership = await getUserMembership(session.user.id, org.id)
+  if (!membership) notFound()
 
   return (
     <div className="min-h-screen bg-slate-50">

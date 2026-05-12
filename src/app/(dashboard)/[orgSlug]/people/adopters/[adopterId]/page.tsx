@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
+import { getSession, getOrgBySlug, getUserMembership } from "@/lib/data-access"
 import Link from "next/link"
 import { ArrowLeft, Mail, Phone, MapPin, FileText } from "lucide-react"
 import { formatDate } from "@/lib/utils"
@@ -10,26 +9,23 @@ import { APP_STATUS_LABELS, SPECIES_EMOJI } from "@/lib/constants"
 export const dynamic = 'force-dynamic'
 
 export default async function AdopterDetailPage({ params }: { params: { orgSlug: string; adopterId: string } }) {
-  const session = await getServerSession(authOptions)
+  const [session, org] = await Promise.all([getSession(), getOrgBySlug(params.orgSlug)])
   if (!session?.user?.id) redirect("/login")
-
-  const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { id: true } })
   if (!org) notFound()
 
-  const membership = await prisma.userOrganization.findUnique({
-    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
-  }).catch(() => null)
-  if (!membership) notFound()
-
-  const adopter = await prisma.adopter.findFirst({
-    where: { id: params.adopterId, organizationId: org.id },
-    include: {
-      adoptionApps: {
-        orderBy: { createdAt: "desc" },
-        include: { animal: { select: { name: true, species: true } } },
+  const [membership, adopter] = await Promise.all([
+    getUserMembership(session.user.id, org.id),
+    prisma.adopter.findFirst({
+      where: { id: params.adopterId, organizationId: org.id },
+      include: {
+        adoptionApps: {
+          orderBy: { createdAt: "desc" },
+          include: { animal: { select: { name: true, species: true } } },
+        },
       },
-    },
-  })
+    }).catch(() => null),
+  ])
+  if (!membership) notFound()
   if (!adopter) notFound()
 
   const appStatusColors: Record<string, string> = {

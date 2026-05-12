@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
+import { getSession, getOrgBySlug, getUserMembership } from "@/lib/data-access"
 import Link from "next/link"
 import { ArrowLeft, Mail, Phone, FileText, DollarSign } from "lucide-react"
 import { formatDate, formatCurrency } from "@/lib/utils"
@@ -9,26 +8,23 @@ import { formatDate, formatCurrency } from "@/lib/utils"
 export const dynamic = 'force-dynamic'
 
 export default async function DonorDetailPage({ params }: { params: { orgSlug: string; donorId: string } }) {
-  const session = await getServerSession(authOptions)
+  const [session, org] = await Promise.all([getSession(), getOrgBySlug(params.orgSlug)])
   if (!session?.user?.id) redirect("/login")
-
-  const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { id: true } })
   if (!org) notFound()
 
-  const membership = await prisma.userOrganization.findUnique({
-    where: { userId_organizationId: { userId: session.user.id, organizationId: org.id } },
-  }).catch(() => null)
-  if (!membership) notFound()
-
-  const donor = await prisma.donor.findFirst({
-    where: { id: params.donorId, organizationId: org.id },
-    include: {
-      donations: {
-        orderBy: { createdAt: "desc" },
-        take: 20,
+  const [membership, donor] = await Promise.all([
+    getUserMembership(session.user.id, org.id),
+    prisma.donor.findFirst({
+      where: { id: params.donorId, organizationId: org.id },
+      include: {
+        donations: {
+          orderBy: { createdAt: "desc" },
+          take: 20,
+        },
       },
-    },
-  })
+    }).catch(() => null),
+  ])
+  if (!membership) notFound()
   if (!donor) notFound()
 
   const totalDonated = donor.donations
