@@ -16,7 +16,7 @@ export default function AnimalDetailError({
       <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center text-2xl">⚠️</div>
       <h2 className="text-xl font-bold">Failed to load animal</h2>
       <p className="text-sm text-muted-foreground max-w-sm">
-        Something went wrong fetching this animal's details. Try refreshing, or contact support if it keeps happening.
+        Something went wrong fetching this animal&apos;s details. Try refreshing, or contact support if it keeps happening.
       </p>
       {error.digest && (
         <p className="text-xs text-muted-foreground font-mono">ID: {error.digest}</p>
