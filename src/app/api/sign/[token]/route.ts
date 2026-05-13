@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
+import { createHash } from "crypto"
 import { prisma } from "@/lib/prisma"
 import { generateSignedContractPdf } from "@/lib/pdf"
 import { sendSignedContractEmails, sendMicrochipTransferEmail } from "@/lib/email"
 import { supabaseAdmin } from "@/lib/supabase"
+import { rateLimiters, checkRateLimit } from "@/lib/ratelimit"
 
 const CONTRACTS_BUCKET = "signed-contracts"
 
@@ -17,6 +19,9 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
   })
 
   if (!contract) return NextResponse.json({ error: "Not found" }, { status: 404 })
+  if (contract.tokenExpiresAt && contract.tokenExpiresAt < new Date()) {
+    return NextResponse.json({ error: "This signing link has expired. Please contact the rescue for a new link." }, { status: 410 })
+  }
 
   return NextResponse.json({
     id: contract.id,
@@ -32,6 +37,14 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
 }
 
 export async function POST(req: NextRequest, { params }: { params: { token: string } }) {
+  // Rate limit by token — each unique signing link gets its own counter
+  try {
+    const limited = await checkRateLimit(rateLimiters.contractSigning, params.token)
+    if (limited) return limited
+  } catch (err) {
+    console.error("Rate limit check failed:", err)
+  }
+
   const contract = await prisma.adoptionContract.findUnique({
     where: { signingToken: params.token },
     include: {
@@ -43,6 +56,9 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
 
   if (!contract) return NextResponse.json({ error: "Not found" }, { status: 404 })
   if (contract.signedAt) return NextResponse.json({ error: "Already signed" }, { status: 409 })
+  if (contract.tokenExpiresAt && contract.tokenExpiresAt < new Date()) {
+    return NextResponse.json({ error: "This signing link has expired. Please contact the rescue for a new link." }, { status: 410 })
+  }
 
   const { typedSignature } = await req.json()
   if (!typedSignature?.trim()) return NextResponse.json({ error: "Signature is required" }, { status: 400 })
@@ -57,6 +73,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     "unknown"
 
   const signedAt = new Date()
+  const contractHash = createHash("sha256").update(contract.contractText).digest("hex")
 
   // Generate signed PDF
   const pdfBytes = await generateSignedContractPdf({
@@ -67,6 +84,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     typedSignature: typedSignature.trim(),
     signedAt,
     signerIp: ip,
+    contractHash,
   })
 
   // Upload PDF to Supabase Storage
@@ -98,6 +116,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
       signerIp: ip,
       signedPdfPath,
       completedAt: signedAt,
+      contractHash,
     },
   })
 

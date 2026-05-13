@@ -7,42 +7,71 @@ import { CheckCircle } from "lucide-react"
 
 const DEFAULT_TEMPLATE = `ADOPTION AGREEMENT
 
-This agreement is entered into between {{org_name}} (hereinafter "the Rescue") and {{adopter_name}} (hereinafter "the Adopter").
+This Adoption Agreement ("Agreement") is entered into between {{org_name}} ("the Rescue") and {{adopter_name}} of {{adopter_address}} (email: {{adopter_email}}) ("the Adopter").
 
-Animal: {{animal_name}}
-Date: {{date}}
-Adoption fee: {{adoption_fee}}
+ANIMAL DETAILS
+Name:           {{animal_name}}
+Species / Type: {{animal_species}}
+Microchip No.:  {{animal_microchip}}
+Date:           {{date}}
+Adoption Fee:   {{adoption_fee}}
 
 TERMS AND CONDITIONS
 
 1. CARE COMMITMENT
-The Adopter agrees to provide {{animal_name}} with a safe, loving, and permanent home, including adequate food, clean water, appropriate shelter, and all necessary veterinary care.
+The Adopter agrees to provide {{animal_name}} with a safe, loving, and permanent home, including adequate food, clean water, appropriate shelter, regular exercise, and all necessary veterinary care. The Adopter confirms they are aware of the responsibilities involved in caring for {{animal_name}} and accept full duty of care as required under the Animal Health and Welfare Act 2013.
 
 2. VETERINARY CARE
-The Adopter agrees to ensure {{animal_name}} receives all required vaccinations, parasite prevention, and veterinary treatment as recommended by a licensed veterinarian.
+The Adopter agrees to ensure {{animal_name}} receives all required vaccinations, parasite prevention, and veterinary treatment as recommended by a licensed veterinarian. The Adopter acknowledges the current health and vaccination status of {{animal_name}} as represented by the Rescue at the time of adoption.
 
-3. SUPERVISION
-The Adopter agrees not to allow {{animal_name}} to roam unsupervised and to take all reasonable steps to ensure their safety.
+3. SPAY / NEUTER
+If {{animal_name}} has not already been spayed or neutered, the Adopter agrees to have this procedure carried out by a licensed veterinarian within a reasonable time period as agreed with the Rescue.
 
-4. NON-TRANSFER
-The Adopter agrees not to sell, give away, or otherwise transfer ownership of {{animal_name}} without the prior written consent of the Rescue.
+4. NO BREEDING
+The Adopter agrees that {{animal_name}} will not be used for breeding, stud, or any commercial reproductive purpose.
 
-5. RIGHT OF RETURN
-Should the Adopter be unable to keep {{animal_name}} at any time, they agree to contact the Rescue immediately and return {{animal_name}} if requested.
+5. SUPERVISION AND SECURE ENVIRONMENT
+The Adopter agrees not to allow {{animal_name}} to roam unsupervised and to take all reasonable steps to ensure their safety. Dogs must be kept within a securely fenced property or on a lead in public at all times, in accordance with the Control of Dogs Act 1986. The Adopter agrees to keep {{animal_name}} in an environment appropriate to their species and welfare needs.
 
-6. RIGHT OF RECLAIM
-The Rescue reserves the right to reclaim {{animal_name}} if the conditions of this agreement are not met.
+6. NON-TRANSFER
+The Adopter agrees not to sell, give away, transfer ownership of, surrender to a laboratory or research facility, or otherwise rehome {{animal_name}} without the prior written consent of the Rescue. This Agreement is personal to the Adopter and is not assignable.
 
-By signing below, the Adopter confirms they have read, understood, and agreed to the terms of this adoption agreement.`
+7. RIGHT OF RETURN
+Should the Adopter be unable to keep {{animal_name}} at any time, they agree to contact the Rescue immediately and return {{animal_name}} to the Rescue. The Adopter agrees not to surrender {{animal_name}} to any third party, pound, or shelter without first contacting the Rescue.
+
+8. RIGHT OF INSPECTION
+The Rescue reserves the right to carry out a home visit or welfare check on {{animal_name}} at any reasonable time, with advance notice. The Adopter agrees to cooperate with any such inspection.
+
+9. RIGHT OF RECLAIM
+The Rescue reserves the right to reclaim {{animal_name}} if, in the Rescue's reasonable opinion, the conditions of this Agreement are not being met. The Rescue will give reasonable notice and an opportunity to remedy any breach, except where the welfare of {{animal_name}} requires immediate action.
+
+10. MICROCHIP TRANSFER
+The Adopter agrees to transfer the microchip registration for {{animal_name}} (microchip no. {{animal_microchip}}) into their name within 30 days of this Agreement. This is a legal requirement under the Microchipping of Dogs Regulations 2015 (S.I. No. 63 of 2015).
+
+11. LIMITATION OF LIABILITY
+The Rescue shall not be liable for any injury, loss, damage, or expense suffered by the Adopter or any third party arising from the behaviour of {{animal_name}} following adoption. The Adopter accepts full responsibility for {{animal_name}} from the date of this Agreement.
+
+12. GOVERNING LAW
+This Agreement shall be governed by and construed in accordance with the laws of Ireland. Any dispute arising under this Agreement shall be subject to the exclusive jurisdiction of the Irish courts.
+
+13. ENTIRE AGREEMENT
+This Agreement constitutes the entire agreement between the parties in respect of the adoption of {{animal_name}} and supersedes all prior discussions, representations, and agreements.
+
+14. SEVERABILITY
+If any provision of this Agreement is found to be invalid or unenforceable, the remaining provisions shall continue in full force and effect.
+
+By signing below, the Adopter confirms they have read, understood, and agreed to all terms of this Adoption Agreement.`
 
 const PLACEHOLDERS = [
   { key: "{{adopter_name}}", desc: "Full name of the adopter" },
+  { key: "{{adopter_email}}", desc: "Adopter's email address" },
+  { key: "{{adopter_address}}", desc: "Adopter's home address" },
   { key: "{{animal_name}}", desc: "Name of the animal being adopted" },
+  { key: "{{animal_species}}", desc: "Species of the animal (e.g. Dog, Cat)" },
+  { key: "{{animal_microchip}}", desc: "Animal's microchip number (or 'Not microchipped')" },
   { key: "{{org_name}}", desc: "Your shelter / rescue name" },
   { key: "{{date}}", desc: "Date of the contract" },
   { key: "{{adoption_fee}}", desc: "Adoption fee (e.g. €150.00)" },
-  { key: "{{adopter_email}}", desc: "Adopter's email address" },
-  { key: "{{adopter_address}}", desc: "Adopter's address" },
 ]
 
 export function ContractTemplateSettings({ orgSlug, initialTemplate, isAdmin }: {

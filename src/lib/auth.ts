@@ -4,7 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
-import { rateLimit } from "@/lib/rate-limit"
+import { rateLimiters, checkRateLimit } from "@/lib/ratelimit"
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as any,
@@ -26,10 +26,14 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
 
-        // Rate limit: 10 failed attempts per email per 15 minutes
-        const key = `login:${credentials.email.toLowerCase()}`
-        const rl = rateLimit(key, { limit: 10, windowMs: 15 * 60 * 1000 })
-        if (!rl.ok) return null
+        // Per-email rate limit — guards against account-targeted brute force.
+        // IP-based limiting is also applied upstream in middleware.
+        try {
+          const limited = await checkRateLimit(rateLimiters.login, credentials.email.toLowerCase())
+          if (limited) return null
+        } catch (err) {
+          console.error("Rate limit check failed:", err)
+        }
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email.toLowerCase() },

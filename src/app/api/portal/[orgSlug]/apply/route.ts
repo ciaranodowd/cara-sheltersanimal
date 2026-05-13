@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { rateLimit } from "@/lib/rate-limit"
+import { rateLimiters, getIP, checkRateLimit } from "@/lib/ratelimit"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const VALID_APPLICATION_TYPES = new Set(["ADOPT", "FOSTER"])
@@ -17,14 +17,12 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { orgSlug: string } }
 ) {
-  // Rate limit public-facing endpoint: 5 applications per IP per hour
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown"
-  const rl = rateLimit(`apply:${ip}`, { limit: 5, windowMs: 60 * 60 * 1000 })
-  if (!rl.ok) {
-    return NextResponse.json(
-      { error: "Too many requests. Please try again later." },
-      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
-    )
+  const ip = getIP(req)
+  try {
+    const limited = await checkRateLimit(rateLimiters.adoptionApplication, ip)
+    if (limited) return limited
+  } catch (err) {
+    console.error("Rate limit check failed:", err)
   }
 
   const org = await prisma.organization.findUnique({

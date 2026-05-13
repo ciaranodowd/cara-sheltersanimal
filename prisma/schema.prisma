@@ -452,6 +452,8 @@ model AdoptionContract {
   signerIp        String?             // IP at time of signing (eIDAS audit)
   signedPdfPath   String?             // Supabase Storage path for signed PDF
   sentAt          DateTime?           // when signing email was sent
+  tokenExpiresAt  DateTime?           // signing link expires after this
+  contractHash    String?             // SHA-256 of contractText at signing time
   adoptionFee     Decimal?
   currency        String    @default("EUR")
   stripePaymentId String?

@@ -10,7 +10,7 @@ export async function GET(req: NextRequest, { params }: { params: { appId: strin
   const app = await prisma.adoptionApplication.findUnique({
     where: { id: params.appId },
     include: {
-      animal: { select: { name: true, species: true } },
+      animal: { select: { name: true, species: true, microchipNumber: true, breed: true } },
       organization: { select: { name: true, email: true, contractTemplate: true } },
       contract: true,
     },

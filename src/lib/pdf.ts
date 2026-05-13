@@ -40,6 +40,7 @@ export async function generateSignedContractPdf({
   typedSignature,
   signedAt,
   signerIp,
+  contractHash,
 }: {
   orgName: string
   adopterName: string
@@ -48,6 +49,7 @@ export async function generateSignedContractPdf({
   typedSignature: string
   signedAt: Date
   signerIp: string
+  contractHash: string
 }): Promise<Uint8Array> {
   const doc = await PDFDocument.create()
   const fontRegular = await doc.embedFont(StandardFonts.Helvetica)
@@ -140,10 +142,11 @@ export async function generateSignedContractPdf({
   drawBlank(0.5)
   drawLine(`Signed at:  ${signedAt.toISOString()}`, { size: 9, color: grey, indent: 8 })
   drawLine(`IP address: ${signerIp}`, { size: 9, color: grey, indent: 8 })
+  drawLine(`Doc SHA-256: ${contractHash}`, { size: 8, color: grey, indent: 8 })
   drawBlank(0.5)
   drawLine("This document was signed electronically. By typing their name above, the signatory", { size: 8, color: grey, indent: 8 })
   drawLine("agreed these details constitute a valid electronic signature under eIDAS Regulation", { size: 8, color: grey, indent: 8 })
-  drawLine("(EU) No 910/2014.", { size: 8, color: grey, indent: 8 })
+  drawLine("(EU) No 910/2014. The SHA-256 hash above identifies the exact document text that was signed.", { size: 8, color: grey, indent: 8 })
 
   const bytes = await doc.save()
   return bytes

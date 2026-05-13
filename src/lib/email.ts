@@ -130,6 +130,47 @@ export async function sendSignedContractEmails({
   await Promise.all(promises)
 }
 
+export async function sendDeclineNotificationEmail({
+  orgEmail,
+  adopterName,
+  adopterEmail,
+  animalName,
+  message,
+}: {
+  orgEmail: string
+  adopterName: string
+  adopterEmail: string
+  animalName: string
+  message: string
+}) {
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to: orgEmail,
+    replyTo: adopterEmail,
+    subject: `Contract query / declined — ${adopterName} & ${animalName}`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:sans-serif;color:#1a1a1a;max-width:600px;margin:0 auto;padding:32px 24px">
+  <div style="margin-bottom:32px">
+    <span style="display:inline-block;background:#1a3a2a;color:#4ade80;font-weight:700;font-size:18px;padding:6px 14px;border-radius:6px;letter-spacing:0.5px">cara</span>
+  </div>
+  <div style="background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:16px 20px;margin-bottom:24px">
+    <strong style="color:#854d0e">Adoption contract — question or decline</strong>
+  </div>
+  <p style="color:#555;margin:0 0 8px"><strong>${adopterName}</strong> (${adopterEmail}) has a query or has declined to sign the contract for <strong>${animalName}</strong>.</p>
+  <p style="color:#555;margin:0 0 8px">Their message:</p>
+  <blockquote style="border-left:3px solid #d4d4d4;margin:0 0 24px;padding:12px 16px;color:#444;background:#f9f9f9;border-radius:0 6px 6px 0">${message.replace(/\n/g, "<br>")}</blockquote>
+  <p style="color:#555;margin:0 0 24px">You can reply directly to this email to respond to ${adopterName}.</p>
+  <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
+  <p style="color:#aaa;font-size:12px;margin:0">Cara — Animal Shelter Management</p>
+</body>
+</html>`,
+  })
+  if (error) throw new Error(error.message)
+}
+
 export async function sendPasswordResetEmail({
   to,
   token,

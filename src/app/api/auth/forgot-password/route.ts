@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { randomBytes } from "crypto"
 import { prisma } from "@/lib/prisma"
-import { rateLimit } from "@/lib/rate-limit"
+import { rateLimiters, getIP, checkRateLimit } from "@/lib/ratelimit"
 import { sendPasswordResetEmail } from "@/lib/email"
 
 // Always return the same response regardless of whether the email exists to
@@ -9,9 +9,13 @@ import { sendPasswordResetEmail } from "@/lib/email"
 const OK = NextResponse.json({ ok: true })
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown"
-  const rl = rateLimit(`forgot-password:${ip}`, { limit: 3, windowMs: 15 * 60 * 1000 })
-  if (!rl.ok) return OK
+  const ip = getIP(req)
+  try {
+    const limited = await checkRateLimit(rateLimiters.passwordReset, ip)
+    if (limited) return OK // Still return OK — prevents email enumeration via timing
+  } catch (err) {
+    console.error("Rate limit check failed:", err)
+  }
 
   let email: string | undefined
   try {

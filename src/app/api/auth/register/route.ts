@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
-import { rateLimit } from "@/lib/rate-limit"
+import { rateLimiters, getIP, checkRateLimit } from "@/lib/ratelimit"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function POST(req: NextRequest) {
-  // 5 registration attempts per IP per 15 minutes
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown"
-  const rl = rateLimit(`register:${ip}`, { limit: 5, windowMs: 15 * 60 * 1000 })
-  if (!rl.ok) {
-    return NextResponse.json(
-      { error: "Too many requests. Please try again later." },
-      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
-    )
+  const ip = getIP(req)
+  try {
+    const limited = await checkRateLimit(rateLimiters.register, ip)
+    if (limited) return limited
+  } catch (err) {
+    console.error("Rate limit check failed:", err)
   }
 
   try {

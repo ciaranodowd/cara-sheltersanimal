@@ -26,13 +26,14 @@ export async function POST(req: NextRequest, { params }: { params: { appId: stri
   if (!app.contract) return NextResponse.json({ error: "Save the contract first before sending" }, { status: 400 })
   if (app.contract.signedAt) return NextResponse.json({ error: "Contract already signed" }, { status: 400 })
 
-  // Generate a fresh token (allow re-sending)
+  // Generate a fresh token (allow re-sending); expires in 60 days
   const signingToken = crypto.randomUUID()
   const sentAt = new Date()
+  const tokenExpiresAt = new Date(sentAt.getTime() + 60 * 24 * 60 * 60 * 1000)
 
   await prisma.adoptionContract.update({
     where: { applicationId: params.appId },
-    data: { signingToken, sentAt },
+    data: { signingToken, sentAt, tokenExpiresAt },
   })
 
   await prisma.adoptionApplication.update({
