@@ -1,3 +1,4 @@
+﻿import { LoadingPaws } from "@/components/ui/loading-paws"
 export default function CampaignsLoading() {
   return (
     <div className="min-h-screen bg-slate-50">
@@ -28,6 +29,7 @@ export default function CampaignsLoading() {
           </div>
         </div>
       </div>
+      <LoadingPaws />
     </div>
   )
 }

@@ -1,3 +1,4 @@
+﻿import { LoadingPaws } from "@/components/ui/loading-paws"
 export default function NewDonationLoading() {
   return (
     <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
@@ -11,6 +12,7 @@ export default function NewDonationLoading() {
         ))}
         <div className="h-9 w-32 bg-slate-200 rounded animate-pulse mt-4" />
       </div>
+      <LoadingPaws />
     </div>
   )
 }

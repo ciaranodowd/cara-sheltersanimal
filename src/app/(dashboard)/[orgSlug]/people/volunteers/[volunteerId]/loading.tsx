@@ -1,3 +1,4 @@
+﻿import { LoadingPaws } from "@/components/ui/loading-paws"
 export default function VolunteerDetailLoading() {
   return (
     <div className="min-h-screen bg-slate-50">
@@ -32,6 +33,7 @@ export default function VolunteerDetailLoading() {
           ))}
         </div>
       </div>
+      <LoadingPaws />
     </div>
   )
 }

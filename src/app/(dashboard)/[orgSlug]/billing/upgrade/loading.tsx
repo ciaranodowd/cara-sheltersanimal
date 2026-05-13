@@ -1,3 +1,4 @@
+﻿import { LoadingPaws } from "@/components/ui/loading-paws"
 export default function UpgradeLoading() {
   return (
     <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
@@ -18,6 +19,7 @@ export default function UpgradeLoading() {
         </div>
         <div className="h-10 w-full bg-slate-200 rounded animate-pulse" />
       </div>
+      <LoadingPaws />
     </div>
   )
 }

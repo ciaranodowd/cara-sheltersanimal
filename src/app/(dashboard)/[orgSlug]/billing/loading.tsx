@@ -1,3 +1,4 @@
+﻿import { LoadingPaws } from "@/components/ui/loading-paws"
 export default function BillingLoading() {
   return (
     <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
@@ -22,6 +23,7 @@ export default function BillingLoading() {
         </div>
         <div className="h-9 w-36 bg-slate-200 rounded animate-pulse" />
       </div>
+      <LoadingPaws />
     </div>
   )
 }

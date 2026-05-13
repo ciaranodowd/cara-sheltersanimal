@@ -1,3 +1,4 @@
+﻿import { LoadingPaws } from "@/components/ui/loading-paws"
 export default function ChatLoading() {
   return (
     <div className="flex flex-col h-screen">
@@ -18,6 +19,7 @@ export default function ChatLoading() {
       <div className="border-t bg-white px-4 py-3 shrink-0">
         <div className="h-10 w-full bg-slate-200 rounded animate-pulse" />
       </div>
+      <LoadingPaws />
     </div>
   )
 }

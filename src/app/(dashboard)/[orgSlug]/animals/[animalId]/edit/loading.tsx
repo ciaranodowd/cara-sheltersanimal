@@ -1,3 +1,4 @@
+﻿import { LoadingPaws } from "@/components/ui/loading-paws"
 export default function EditAnimalLoading() {
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6">
@@ -14,6 +15,7 @@ export default function EditAnimalLoading() {
           <div className="h-9 w-20 bg-slate-200 rounded animate-pulse" />
         </div>
       </div>
+      <LoadingPaws />
     </div>
   )
 }

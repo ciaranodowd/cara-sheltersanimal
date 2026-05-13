@@ -1,3 +1,4 @@
+﻿import { LoadingPaws } from "@/components/ui/loading-paws"
 export default function AdoptionsLoading() {
   return (
     <div className="p-4 sm:p-6 max-w-full space-y-5">
@@ -33,6 +34,7 @@ export default function AdoptionsLoading() {
           </div>
         ))}
       </div>
+      <LoadingPaws />
     </div>
   )
 }

@@ -1,3 +1,4 @@
+﻿import { LoadingPaws } from "@/components/ui/loading-paws"
 export default function SettingsLoading() {
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6">
@@ -21,6 +22,7 @@ export default function SettingsLoading() {
         ))}
         <div className="h-9 w-28 bg-slate-200 rounded animate-pulse mt-2" />
       </div>
+      <LoadingPaws />
     </div>
   )
 }
