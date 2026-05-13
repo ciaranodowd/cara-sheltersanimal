@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DonateWidget } from "@/components/portal/donate-widget"
 import { ArrowLeft, Loader2, CheckCircle, Clock, Home, PartyPopper, Mail } from "lucide-react"
+import { PawLoader } from "@/components/ui/paw-loader"
 import { COUNTIES } from "@/lib/constants"
 
 
@@ -76,7 +77,9 @@ export default function AdoptApplicationPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <div style={{ width: "min(90vw, 420px)" }}>
+          <PawLoader />
+        </div>
       </div>
     )
   }

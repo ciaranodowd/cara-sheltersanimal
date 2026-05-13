@@ -1,7 +1,8 @@
 "use client"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
-import { Loader2, CheckCircle, FileText, AlertCircle, HelpCircle } from "lucide-react"
+import { CheckCircle, FileText, AlertCircle, HelpCircle, Loader2 } from "lucide-react"
+import { PawLoader } from "@/components/ui/paw-loader"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -109,7 +110,9 @@ export default function SignContractPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-300" />
+        <div style={{ width: "min(90vw, 420px)" }}>
+          <PawLoader />
+        </div>
       </div>
     )
   }

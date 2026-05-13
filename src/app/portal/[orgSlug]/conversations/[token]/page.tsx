@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ArrowLeft, Send, RefreshCw, Loader2 } from "lucide-react"
+import { PawLoader } from "@/components/ui/paw-loader"
 import { formatDistanceToNow } from "date-fns"
 import { cn } from "@/lib/utils"
 
@@ -112,7 +113,9 @@ export default function PortalConversationPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <div style={{ width: "min(90vw, 420px)" }}>
+          <PawLoader />
+        </div>
       </div>
     )
   }

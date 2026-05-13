@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ArrowLeft, Loader2, FileText, CheckCircle, Send, Clock, Copy, Check } from "lucide-react"
+import { PawLoader } from "@/components/ui/paw-loader"
 
 const DEFAULT_TEMPLATE = `ADOPTION AGREEMENT
 
@@ -203,7 +204,9 @@ export default function ContractPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+        <div style={{ width: "min(90vw, 420px)" }}>
+          <PawLoader />
+        </div>
       </div>
     )
   }
