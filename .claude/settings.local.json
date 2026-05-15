@@ -66,7 +66,12 @@
       "Bash(Get-ChildItem -Path \"C:\\\\Projects\\\\cara\\\\src\\\\app\\\\\\(dashboard\\)\\\\[orgSlug]\" -Filter \"*.tsx\" -Recurse)",
       "PowerShell(git add *)",
       "PowerShell(git reset *)",
-      "PowerShell(git push *)"
+      "PowerShell(git push *)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\senan\\\\cara-sheltersanimal\" -Recurse -Directory | Select-Object -First 20 | ForEach-Object { $_.FullName })",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\senan\\\\cara-sheltersanimal\" -Recurse -Filter \"package.json\" -File | ForEach-Object { $_.FullName })",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\senan\\\\cara-sheltersanimal\\\\src\\\\app\\\\\\(dashboard\\)\\\\[orgSlug]\\\\adoptions\" -Recurse -File | ForEach-Object { $_.FullName })",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(GIT_EDITOR=true git rebase --continue)"
     ]
   }
 }
