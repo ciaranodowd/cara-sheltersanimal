@@ -95,119 +95,66 @@ export default async function AdoptionsPage({ params }: { params: { orgSlug: str
         </Button>
       </div>
 
-      {/* Mobile: vertical grouped list */}
-      <div className="md:hidden space-y-6">
-        {applications.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center mb-3">
-              <div className="w-2 h-2 rounded-full bg-gray-300" />
-            </div>
-            <p className="text-sm font-medium text-gray-400">No active applications</p>
-            <p className="text-xs text-gray-300 mt-1">New applications will appear here.</p>
-          </div>
-        )}
+      {/* Pipeline grid — responsive, no horizontal scrolling */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {PIPELINE_STAGES.map(stage => {
-          const stageApps = byStatus[stage.key] ?? []
-          if (stageApps.length === 0) return null
+          const cards = byStatus[stage.key] ?? []
           return (
-            <div key={stage.key}>
-              <div className="flex items-center gap-2 mb-2 px-1">
-                <h3 className="font-semibold text-sm text-gray-700">{stage.label}</h3>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${stage.badge}`}>
-                  {stageApps.length}
-                </span>
-              </div>
-              <div className="space-y-2">
-                {stageApps.map(app => {
-                  const type = typeLabel(app.applicationType)
-                  return (
-                    <Link key={app.id} href={`/${params.orgSlug}/adoptions/${app.id}`} className="block">
-                      <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm active:bg-gray-50 transition-colors">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="font-semibold text-sm text-gray-900 truncate">{app.applicantName}</p>
-                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${type.cls}`}>
-                            {type.text}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          {speciesEmoji(app.animal.species)} {app.animal.name}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">{formatDate(app.createdAt)}</p>
+            <div key={stage.key} className="flex flex-col">
+              <div className="h-full rounded-xl border border-gray-200 bg-gray-50 shadow-sm overflow-hidden flex flex-col min-h-[180px]">
+                {/* Colour accent bar */}
+                <div className={`h-[3px] w-full ${stage.accentBar}`} />
+
+                {/* Column header */}
+                <div className="flex items-center justify-between px-3 py-2.5">
+                  <h3 className="text-sm font-semibold text-gray-700">{stage.label}</h3>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium tabular-nums ${stage.badge}`}>
+                    {cards.length}
+                  </span>
+                </div>
+
+                {/* Cards area */}
+                <div className="px-2 pb-2 flex flex-col gap-2 flex-1">
+                  {cards.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center flex-1 text-center py-6 px-3">
+                      <div className="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-2 shadow-sm">
+                        <div className="w-1.5 h-1.5 rounded-full bg-gray-200" />
                       </div>
-                    </Link>
-                  )
-                })}
+                      <p className="text-xs font-medium text-gray-400">No applications</p>
+                    </div>
+                  ) : (
+                    cards.map(app => {
+                      const type = typeLabel(app.applicationType)
+                      return (
+                        <Link
+                          key={app.id}
+                          href={`/${params.orgSlug}/adoptions/${app.id}`}
+                          className="block"
+                        >
+                          <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 cursor-pointer">
+                            <p className="font-semibold text-sm text-gray-900 leading-snug">
+                              {app.applicantName}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                              <span aria-hidden>{speciesEmoji(app.animal.species)}</span>
+                              <span>{app.animal.name}</span>
+                            </p>
+                            <div className="flex items-center justify-between mt-2">
+                              <p className="text-[11px] text-gray-400">{formatDate(app.createdAt)}</p>
+                              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${type.cls}`}>
+                                {type.text}
+                              </span>
+                            </div>
+                          </div>
+                        </Link>
+                      )
+                    })
+                  )}
+                </div>
               </div>
             </div>
           )
         })}
-      </div>
-
-      {/* Desktop: horizontal kanban */}
-      <div className="hidden md:block overflow-x-auto pb-3 [scrollbar-width:thin] [scrollbar-color:#e2e8f0_transparent] [&::-webkit-scrollbar]:h-[5px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full">
-        <div className="flex gap-4 min-w-max">
-          {PIPELINE_STAGES.map(stage => {
-            const cards = byStatus[stage.key] ?? []
-            return (
-              <div key={stage.key} className="w-[252px]">
-                <div className="rounded-xl border border-gray-200 bg-gray-50 shadow-sm overflow-hidden flex flex-col min-h-[320px]">
-                  {/* Colour accent bar */}
-                  <div className={`h-[3px] w-full ${stage.accentBar}`} />
-
-                  {/* Column header */}
-                  <div className="flex items-center justify-between px-3 py-2.5">
-                    <h3 className="text-sm font-semibold text-gray-700">{stage.label}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium tabular-nums ${stage.badge}`}>
-                      {cards.length}
-                    </span>
-                  </div>
-
-                  {/* Cards area */}
-                  <div className="px-2 pb-2 flex flex-col gap-2 flex-1">
-                    {cards.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center flex-1 text-center py-8 px-3 min-h-[200px]">
-                        <div className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-3 shadow-sm">
-                          <div className="w-2 h-2 rounded-full bg-gray-200" />
-                        </div>
-                        <p className="text-sm font-medium text-gray-400">No applications</p>
-                        <p className="text-xs text-gray-300 mt-1 leading-snug">
-                          New applications will appear here.
-                        </p>
-                      </div>
-                    ) : (
-                      cards.map(app => {
-                        const type = typeLabel(app.applicationType)
-                        return (
-                          <Link
-                            key={app.id}
-                            href={`/${params.orgSlug}/adoptions/${app.id}`}
-                            className="block"
-                          >
-                            <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 cursor-pointer">
-                              <p className="font-semibold text-sm text-gray-900 leading-snug">
-                                {app.applicantName}
-                              </p>
-                              <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-                                <span aria-hidden>{speciesEmoji(app.animal.species)}</span>
-                                <span>{app.animal.name}</span>
-                              </p>
-                              <div className="flex items-center justify-between mt-2">
-                                <p className="text-[11px] text-gray-400">{formatDate(app.createdAt)}</p>
-                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${type.cls}`}>
-                                  {type.text}
-                                </span>
-                              </div>
-                            </div>
-                          </Link>
-                        )
-                      })
-                    )}
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
       </div>
     </div>
   )
