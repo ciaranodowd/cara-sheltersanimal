@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { randomBytes } from "crypto"
+import { randomBytes, createHash } from "crypto"
 import { getServerSession } from "next-auth"
 import { OrgRole } from "@prisma/client"
 import { authOptions } from "@/lib/auth"
@@ -56,15 +56,16 @@ export async function POST(req: NextRequest, { params }: { params: { orgSlug: st
     data: { userId: newUser.id, organizationId: org.id, role: role ?? "STAFF" },
   })
 
-  const token = randomBytes(32).toString("hex")
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+  const rawToken = randomBytes(32).toString("hex")
+  const tokenHash = createHash("sha256").update(rawToken).digest("hex")
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
 
   await prisma.passwordResetToken.create({
-    data: { userId: newUser.id, token, expiresAt },
+    data: { userId: newUser.id, token: tokenHash, expiresAt },
   })
 
   try {
-    await sendInviteEmail({ to: email, orgName: org.name, token })
+    await sendInviteEmail({ to: email, orgName: org.name, token: rawToken })
   } catch (emailErr) {
     console.error("[invite] Failed to send invite email:", emailErr)
     // Roll back: delete the token, membership, and placeholder user

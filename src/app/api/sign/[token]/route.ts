@@ -75,7 +75,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   const signedAt = new Date()
   const contractHash = createHash("sha256").update(contract.contractText).digest("hex")
 
-  // Generate signed PDF
+  // Generate signed PDF before the transaction — expensive operation kept outside DB
   const pdfBytes = await generateSignedContractPdf({
     orgName: contract.organization.name,
     adopterName: contract.application.applicantName,
@@ -107,30 +107,43 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     // Non-fatal — we still send the email with attachment
   }
 
-  // Mark as signed
-  await prisma.adoptionContract.update({
-    where: { id: contract.id },
-    data: {
-      signedAt,
-      signatureData: typedSignature.trim(),
-      signerIp: ip,
-      signedPdfPath,
-      completedAt: signedAt,
-      contractHash,
-    },
-  })
+  // Atomically mark the contract as signed, update application status, and mark the
+  // animal as adopted. The updateMany with signedAt: null is the concurrency guard —
+  // if two requests race past the early check above, only one will match and the other
+  // will see count === 0 and receive a 409 rather than silently overwriting.
+  try {
+    await prisma.$transaction(async (tx) => {
+      const result = await tx.adoptionContract.updateMany({
+        where: { id: contract.id, signedAt: null },
+        data: {
+          signedAt,
+          signatureData: typedSignature.trim(),
+          signerIp: ip,
+          signedPdfPath,
+          completedAt: signedAt,
+          contractHash,
+        },
+      })
 
-  // Update application status to COMPLETED
-  await prisma.adoptionApplication.update({
-    where: { id: contract.application.id },
-    data: { status: "COMPLETED" },
-  })
+      if (result.count === 0) throw new Error("ALREADY_SIGNED")
 
-  // Remove animal from public portal immediately — signed contract means adopted
-  await prisma.animal.update({
-    where: { id: contract.animalId },
-    data: { status: "ADOPTED", publicProfile: false },
-  })
+      await tx.adoptionApplication.update({
+        where: { id: contract.application.id },
+        data: { status: "COMPLETED" },
+      })
+
+      // Remove animal from public portal immediately — signed contract means adopted
+      await tx.animal.update({
+        where: { id: contract.animalId },
+        data: { status: "ADOPTED", publicProfile: false },
+      })
+    })
+  } catch (err) {
+    if (err instanceof Error && err.message === "ALREADY_SIGNED") {
+      return NextResponse.json({ error: "Already signed" }, { status: 409 })
+    }
+    throw err
+  }
 
   // Send signed PDFs via email
   try {

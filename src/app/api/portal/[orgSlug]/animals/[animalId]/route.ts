@@ -12,7 +12,7 @@ export async function GET(
   if (!org) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
   const animal = await prisma.animal.findFirst({
-    where: { id: params.animalId, organizationId: org.id, status: "AVAILABLE" },
+    where: { id: params.animalId, organizationId: org.id, status: "AVAILABLE", publicProfile: true },
     include: { photos: { take: 3, orderBy: { position: "asc" } } },
   })
   if (!animal) return NextResponse.json({ error: "Not found" }, { status: 404 })

@@ -22,6 +22,7 @@ export const rateLimiters = {
   passwordReset: makeLimiter(Ratelimit.slidingWindow(3, "15 m"), "cara:password-reset"),
   adoptionApplication: makeLimiter(Ratelimit.slidingWindow(5, "1 h"), "cara:adoption-apply"),
   contractSigning: makeLimiter(Ratelimit.slidingWindow(10, "1 h"), "cara:contract-sign"),
+  portalMessage: makeLimiter(Ratelimit.slidingWindow(30, "1 h"), "cara:portal-msg"),
   api: makeLimiter(Ratelimit.slidingWindow(60, "1 m"), "cara:api"),
 }
 

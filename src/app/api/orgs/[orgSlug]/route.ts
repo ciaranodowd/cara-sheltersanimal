@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export async function PATCH(req: NextRequest, { params }: { params: { orgSlug: string } }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -17,11 +19,40 @@ export async function PATCH(req: NextRequest, { params }: { params: { orgSlug: s
 
   const { name, email, phone, address, city, county, country, website, chyNumber, description, vetName, vetPhone, coordinatorPhone } = await req.json()
 
+  if (name !== undefined) {
+    if (typeof name !== "string" || name.trim().length < 1 || name.trim().length > 200) {
+      return NextResponse.json({ error: "Organisation name must be between 1 and 200 characters" }, { status: 400 })
+    }
+  }
+  if (email !== undefined && email !== null && email !== "") {
+    if (typeof email !== "string" || !EMAIL_RE.test(email) || email.length > 254) {
+      return NextResponse.json({ error: "Invalid email address" }, { status: 400 })
+    }
+  }
+  if (phone !== undefined && phone !== null && phone !== "") {
+    if (typeof phone !== "string" || phone.length > 30) {
+      return NextResponse.json({ error: "Phone number is too long" }, { status: 400 })
+    }
+  }
+  if (website !== undefined && website !== null && website !== "") {
+    if (typeof website !== "string" || website.length > 500) {
+      return NextResponse.json({ error: "Website URL is too long" }, { status: 400 })
+    }
+    if (!/^https?:\/\//i.test(website)) {
+      return NextResponse.json({ error: "Website must start with http:// or https://" }, { status: 400 })
+    }
+  }
+  if (address !== undefined && address !== null && address !== "") {
+    if (typeof address !== "string" || address.length > 500) {
+      return NextResponse.json({ error: "Address is too long" }, { status: 400 })
+    }
+  }
+
   const updated = await prisma.organization.update({
     where: { id: org.id },
     data: {
-      name: name ?? org.name,
-      email: email !== undefined ? email : org.email,
+      name: name !== undefined ? name.trim() : org.name,
+      email: email !== undefined ? (email || null) : org.email,
       phone: phone !== undefined ? (phone || null) : org.phone,
       address: address !== undefined ? (address || null) : org.address,
       city: city !== undefined ? (city || null) : org.city,

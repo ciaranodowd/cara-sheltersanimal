@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { createHash } from "crypto"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { rateLimiters, getIP, checkRateLimit } from "@/lib/ratelimit"
@@ -12,6 +13,7 @@ export async function POST(req: NextRequest) {
     } catch (err) {
       console.error("Rate limit check failed:", err)
     }
+
     const body = await req.json()
     const { token, password } = body
 
@@ -25,8 +27,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Hash the incoming raw token to look up the stored hash.
+    // Tokens are never stored in plain text — only their SHA-256 digest is persisted.
+    const tokenHash = createHash("sha256").update(token).digest("hex")
+
     const resetToken = await prisma.passwordResetToken.findUnique({
-      where: { token },
+      where: { token: tokenHash },
       select: { id: true, userId: true, expiresAt: true, usedAt: true },
     })
 

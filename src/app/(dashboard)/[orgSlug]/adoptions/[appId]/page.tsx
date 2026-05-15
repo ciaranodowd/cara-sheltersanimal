@@ -12,8 +12,8 @@ import { ArrowLeft, Loader2, MessageSquare, Send } from "lucide-react"
 
 const STATUS_OPTIONS = [
   { value: "PENDING", label: "Pending" },
-  { value: "REVIEWING", label: "Reviewing" },
-  { value: "HOME_CHECK", label: "Home check" },
+  { value: "UNDER_REVIEW", label: "Reviewing" },
+  { value: "HOME_CHECK_SCHEDULED", label: "Home check" },
   { value: "APPROVED", label: "Approved" },
   { value: "CONTRACT_SENT", label: "Contract sent" },
   { value: "COMPLETED", label: "Completed" },

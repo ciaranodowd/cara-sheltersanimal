@@ -143,6 +143,13 @@ export async function sendDeclineNotificationEmail({
   animalName: string
   message: string
 }) {
+  // Escape HTML in the user-supplied message before interpolating into the email body
+  const safeMessage = message
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\n/g, "<br>")
+
   const { error } = await resend.emails.send({
     from: FROM,
     to: orgEmail,
@@ -161,7 +168,7 @@ export async function sendDeclineNotificationEmail({
   </div>
   <p style="color:#555;margin:0 0 8px"><strong>${adopterName}</strong> (${adopterEmail}) has a query or has declined to sign the contract for <strong>${animalName}</strong>.</p>
   <p style="color:#555;margin:0 0 8px">Their message:</p>
-  <blockquote style="border-left:3px solid #d4d4d4;margin:0 0 24px;padding:12px 16px;color:#444;background:#f9f9f9;border-radius:0 6px 6px 0">${message.replace(/\n/g, "<br>")}</blockquote>
+  <blockquote style="border-left:3px solid #d4d4d4;margin:0 0 24px;padding:12px 16px;color:#444;background:#f9f9f9;border-radius:0 6px 6px 0">${safeMessage}</blockquote>
   <p style="color:#555;margin:0 0 24px">You can reply directly to this email to respond to ${adopterName}.</p>
   <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
   <p style="color:#aaa;font-size:12px;margin:0">Cara — Animal Shelter Management</p>
@@ -331,7 +338,7 @@ export async function sendMicrochipTransferEmail({
   microchipNumber: string
   orgName: string
 }) {
-  await resend.emails.send({
+  const { error: microchipError } = await resend.emails.send({
     from: FROM,
     to,
     subject: `Action required: Transfer ${animalName}'s microchip into your name`,
@@ -381,4 +388,5 @@ export async function sendMicrochipTransferEmail({
 </body>
 </html>`,
   })
+  if (microchipError) throw new Error(microchipError.message)
 }

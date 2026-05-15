@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { randomBytes } from "crypto"
+import { randomBytes, createHash } from "crypto"
 import { prisma } from "@/lib/prisma"
 import { rateLimiters, getIP, checkRateLimit } from "@/lib/ratelimit"
 import { sendPasswordResetEmail } from "@/lib/email"
@@ -34,7 +34,11 @@ export async function POST(req: NextRequest) {
     })
 
     if (user?.password) {
-      const token = randomBytes(32).toString("hex")
+      // Generate a cryptographically random token to send in the email.
+      // Only a SHA-256 hash of the token is stored in the database — if the DB
+      // is ever breached, the raw tokens cannot be recovered or used directly.
+      const rawToken = randomBytes(32).toString("hex")
+      const tokenHash = createHash("sha256").update(rawToken).digest("hex")
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
 
       // Delete any existing unused tokens for this user before creating a new one
@@ -43,13 +47,15 @@ export async function POST(req: NextRequest) {
       })
 
       await prisma.passwordResetToken.create({
-        data: { userId: user.id, token, expiresAt },
+        data: { userId: user.id, token: tokenHash, expiresAt },
       })
 
       try {
-        await sendPasswordResetEmail({ to: user.email, token })
+        await sendPasswordResetEmail({ to: user.email, token: rawToken })
       } catch (emailErr) {
-        console.error("[forgot-password] Failed to send reset email:", emailErr)
+        // Log clearly so on-call can act, but don't surface to the client —
+        // returning an error here would confirm that the email address exists.
+        console.error("[forgot-password] Resend delivery failed for", user.email, emailErr)
       }
     }
   } catch (err) {

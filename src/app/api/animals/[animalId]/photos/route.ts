@@ -76,18 +76,19 @@ export async function POST(
     .from(ANIMAL_PHOTOS_BUCKET)
     .getPublicUrl(storagePath)
 
-  // First photo becomes the primary automatically
-  const count = await prisma.animalPhoto.count({ where: { animalId: params.animalId } })
-  const isPrimary = count === 0
-
-  const photo = await prisma.animalPhoto.create({
-    data: {
-      animalId: params.animalId,
-      url: publicUrl,
-      key: storagePath,
-      isPrimary,
-      position: count,
-    },
+  // Wrap the count + create in a transaction so concurrent uploads can't both
+  // read count === 0 and both set isPrimary: true for the same animal.
+  const photo = await prisma.$transaction(async (tx) => {
+    const count = await tx.animalPhoto.count({ where: { animalId: params.animalId } })
+    return tx.animalPhoto.create({
+      data: {
+        animalId: params.animalId,
+        url: publicUrl,
+        key: storagePath,
+        isPrimary: count === 0,
+        position: count,
+      },
+    })
   })
 
   return NextResponse.json(photo, { status: 201 })

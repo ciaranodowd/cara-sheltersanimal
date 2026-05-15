@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { rateLimit } from "@/lib/rate-limit"
+import { rateLimiters, getIP, checkRateLimit } from "@/lib/ratelimit"
 
 async function resolveConversation(orgSlug: string, token: string) {
   const org = await prisma.organization.findUnique({
@@ -55,13 +55,12 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { orgSlug: string; token: string } }
 ) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown"
-  const rl = rateLimit(`msg:${ip}:${params.token}`, { limit: 30, windowMs: 60 * 60 * 1000 })
-  if (!rl.ok) {
-    return NextResponse.json(
-      { error: "Too many requests. Please try again later." },
-      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
-    )
+  const ip = getIP(req)
+  try {
+    const limited = await checkRateLimit(rateLimiters.portalMessage, `${ip}:${params.token}`)
+    if (limited) return limited
+  } catch (err) {
+    console.error("Rate limit check failed:", err)
   }
 
   const resolved = await resolveConversation(params.orgSlug, params.token)

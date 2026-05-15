@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { sendDeclineNotificationEmail } from "@/lib/email"
+import { rateLimiters, checkRateLimit } from "@/lib/ratelimit"
 
 export async function POST(req: NextRequest, { params }: { params: { token: string } }) {
+  try {
+    const limited = await checkRateLimit(rateLimiters.contractSigning, params.token)
+    if (limited) return limited
+  } catch (err) {
+    console.error("Rate limit check failed:", err)
+  }
+
   const contract = await prisma.adoptionContract.findUnique({
     where: { signingToken: params.token },
     include: {

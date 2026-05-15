@@ -47,6 +47,7 @@ export default withAuth(
           pathname.startsWith("/register") ||
           pathname.startsWith("/onboarding") ||
           pathname.startsWith("/forgot-password") ||
+          pathname.startsWith("/reset-password") ||
           pathname.startsWith("/api/auth") ||
           pathname.startsWith("/sign") ||
           pathname.startsWith("/api/sign")
