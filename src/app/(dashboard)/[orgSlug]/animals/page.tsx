@@ -54,45 +54,52 @@ export default async function AnimalsPage({
           <h1 className="text-2xl font-bold">Animals</h1>
           <p className="text-muted-foreground text-sm">{animals.length} total</p>
         </div>
-        <Button asChild>
+        {/* Desktop button — hidden on mobile (FAB used instead) */}
+        <Button asChild className="hidden sm:flex">
           <Link href={`/${params.orgSlug}/animals/new`}>
             <Plus className="h-4 w-4 mr-1.5" /> Add animal
           </Link>
         </Button>
       </div>
 
-      {/* Filters */}
-      <form className="flex flex-wrap gap-2">
+      {/* Filters — stack to 2 rows on mobile */}
+      <form className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1 min-w-0">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input name="search" placeholder="Search name, breed, microchip…" defaultValue={searchParams.search}
-            className="pl-8" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            name="search"
+            placeholder="Search name, breed, microchip…"
+            defaultValue={searchParams.search}
+            className="pl-9 h-11 sm:h-10"
+          />
         </div>
-        <Select name="species" defaultValue={searchParams.species ?? "all"}>
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="Species" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All species</SelectItem>
-            {Object.entries(SPECIES_LABELS).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select name="status" defaultValue={searchParams.status ?? "all"}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            {Object.entries(STATUS_LABELS)
-              .filter(([k]) => k !== "IN_FOSTER")
-              .map(([k, v]) => (
+        <div className="flex gap-2">
+          <Select name="species" defaultValue={searchParams.species ?? "all"}>
+            <SelectTrigger className="flex-1 sm:w-36 h-11 sm:h-10">
+              <SelectValue placeholder="Species" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All species</SelectItem>
+              {Object.entries(SPECIES_LABELS).map(([k, v]) => (
                 <SelectItem key={k} value={k}>{v}</SelectItem>
               ))}
-          </SelectContent>
-        </Select>
-        <Button type="submit" variant="outline">Filter</Button>
+            </SelectContent>
+          </Select>
+          <Select name="status" defaultValue={searchParams.status ?? "all"}>
+            <SelectTrigger className="flex-1 sm:w-40 h-11 sm:h-10">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              {Object.entries(STATUS_LABELS)
+                .filter(([k]) => k !== "IN_FOSTER")
+                .map(([k, v]) => (
+                  <SelectItem key={k} value={k}>{v}</SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+          <Button type="submit" variant="outline" className="shrink-0 h-11 sm:h-10">Filter</Button>
+        </div>
       </form>
 
       {/* Grid */}
@@ -104,10 +111,10 @@ export default async function AnimalsPage({
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
           {animals.map(animal => (
             <Link key={animal.id} href={`/${params.orgSlug}/animals/${animal.id}`}
-              className="group rounded-2xl border bg-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+              className="group rounded-2xl border bg-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200">
               <div className="aspect-[4/3] bg-slate-100 relative overflow-hidden">
                 {animal.photos[0] ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -141,6 +148,16 @@ export default async function AnimalsPage({
           ))}
         </div>
       )}
+
+      {/* Mobile FAB — fixed above bottom nav bar */}
+      <Link
+        href={`/${params.orgSlug}/animals/new`}
+        aria-label="Add animal"
+        className="sm:hidden fixed bottom-[72px] right-4 z-30 h-14 w-14 rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+        style={{ backgroundColor: "#1a3a2a" }}
+      >
+        <Plus className="h-6 w-6 text-white" />
+      </Link>
     </div>
   )
 }

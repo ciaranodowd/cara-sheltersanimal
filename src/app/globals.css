@@ -32,5 +32,21 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    line-height: 1.6;
+  }
+
+  /* Remove 300ms tap delay on interactive elements */
+  button, a, input, select, textarea, [role="button"], label {
+    touch-action: manipulation;
+  }
+}
+
+@layer utilities {
+  /* Safe-area bottom padding for fixed bottom elements on notched phones */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom, 0px);
   }
 }

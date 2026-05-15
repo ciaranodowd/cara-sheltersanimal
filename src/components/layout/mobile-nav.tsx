@@ -6,9 +6,10 @@ import { LayoutDashboard, PawPrint, Users, Heart, MessageSquare } from "lucide-r
 
 interface MobileNavProps {
   orgSlug: string
+  isAdmin?: boolean
 }
 
-export function MobileNav({ orgSlug }: MobileNavProps) {
+export function MobileNav({ orgSlug, isAdmin: _isAdmin }: MobileNavProps) {
   const pathname = usePathname()
 
   const items = [
@@ -20,7 +21,7 @@ export function MobileNav({ orgSlug }: MobileNavProps) {
   ]
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-white z-40">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-white z-40 pb-safe">
       <div className="flex">
         {items.map(item => {
           const active = item.exact
@@ -31,12 +32,13 @@ export function MobileNav({ orgSlug }: MobileNavProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex-1 flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors",
+                "flex-1 flex flex-col items-center justify-center gap-0.5 pt-2 pb-1 min-h-[56px]",
+                "text-[10px] font-medium transition-colors active:opacity-60",
                 active ? "text-primary" : "text-slate-400"
               )}
             >
-              <item.icon className={cn("h-5 w-5", active && "stroke-[2.5px]")} />
-              {item.label}
+              <item.icon className={cn("h-[22px] w-[22px]", active && "stroke-[2.5px]")} />
+              <span>{item.label}</span>
             </Link>
           )
         })}

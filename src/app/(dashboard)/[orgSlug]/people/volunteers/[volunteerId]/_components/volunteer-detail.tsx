@@ -114,7 +114,7 @@ export function VolunteerDetail({ volunteer: initial, orgSlug }: { volunteer: Vo
   if (mode === "edit") {
     return (
       <div className="min-h-screen bg-slate-50">
-        <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6">
+        <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6 pb-28 sm:pb-6">
           <div>
             <button onClick={cancelEdit} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 mb-4 transition-colors">
               <ArrowLeft className="h-4 w-4" /> Cancel
@@ -122,34 +122,34 @@ export function VolunteerDetail({ volunteer: initial, orgSlug }: { volunteer: Vo
             <h1 className="text-2xl font-bold text-slate-900">Edit volunteer</h1>
           </div>
 
-          <form onSubmit={handleSave}>
+          <form id="volunteer-edit-form" onSubmit={handleSave}>
             <div className="bg-white rounded-xl border border-slate-100 divide-y divide-slate-50">
 
               <div className="p-6 space-y-4">
                 <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Personal details</h2>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="firstName">First name <span className="text-red-500">*</span></Label>
-                    <Input id="firstName" value={form.firstName} onChange={field("firstName")} required />
+                    <Input id="firstName" value={form.firstName} onChange={field("firstName")} required className="h-11 sm:h-10" />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="lastName">Last name <span className="text-red-500">*</span></Label>
-                    <Input id="lastName" value={form.lastName} onChange={field("lastName")} required />
+                    <Input id="lastName" value={form.lastName} onChange={field("lastName")} required className="h-11 sm:h-10" />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
-                    <Input id="email" type="email" value={form.email} onChange={field("email")} required />
+                    <Input id="email" type="email" value={form.email} onChange={field("email")} required className="h-11 sm:h-10" />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="phone">Phone</Label>
-                    <Input id="phone" type="tel" value={form.phone ?? ""} onChange={field("phone")} />
+                    <Input id="phone" type="tel" value={form.phone ?? ""} onChange={field("phone")} className="h-11 sm:h-10" />
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="county">County</Label>
-                  <Input id="county" placeholder="e.g. Dublin" value={form.county ?? ""} onChange={field("county")} />
+                  <Input id="county" placeholder="e.g. Dublin" value={form.county ?? ""} onChange={field("county")} className="h-11 sm:h-10" />
                 </div>
               </div>
 
@@ -206,13 +206,22 @@ export function VolunteerDetail({ volunteer: initial, orgSlug }: { volunteer: Vo
               <div className="mt-4 rounded-lg bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">{error}</div>
             )}
 
-            <div className="mt-6 flex items-center justify-end gap-3">
+            {/* Desktop submit buttons */}
+            <div className="hidden sm:flex items-center justify-end gap-3 mt-6">
               <Button type="button" variant="outline" onClick={cancelEdit}>Cancel</Button>
               <Button type="submit" disabled={saving} style={{ backgroundColor: "#1a3a2a" }}>
                 {saving ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Saving…</> : "Save changes"}
               </Button>
             </div>
           </form>
+
+          {/* Mobile submit bar — fixed above bottom nav */}
+          <div className="sm:hidden fixed bottom-[56px] left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-t px-4 py-3 flex gap-3">
+            <Button type="submit" form="volunteer-edit-form" disabled={saving} className="flex-1 h-11" style={{ backgroundColor: "#1a3a2a" }}>
+              {saving ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Saving…</> : "Save changes"}
+            </Button>
+            <Button type="button" variant="outline" className="h-11 px-5" onClick={cancelEdit}>Cancel</Button>
+          </div>
         </div>
       </div>
     )

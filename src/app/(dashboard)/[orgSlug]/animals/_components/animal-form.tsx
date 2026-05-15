@@ -66,7 +66,6 @@ export function AnimalForm({ orgSlug, orgId, animal }: AnimalFormProps) {
     if (form.dobApprox) body.dobApprox = new Date(form.dobApprox).toISOString()
     if (form.weight) body.weight = parseFloat(form.weight)
     else delete body.weight
-    // New animals start as INTAKE unless being published
     if (!animal && !form.publicProfile) delete body.status
 
     const url = animal ? `/api/animals/${animal.id}` : "/api/animals"
@@ -89,18 +88,20 @@ export function AnimalForm({ orgSlug, orgId, animal }: AnimalFormProps) {
   return (
     <Card>
       <CardContent className="pt-6">
-        <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Extra bottom padding on mobile so fixed submit bar doesn't cover content */}
+        <form id="animal-form" onSubmit={handleSubmit} className="space-y-5 pb-28 sm:pb-0">
           {error && <div className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">{error}</div>}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 space-y-1.5">
+          {/* 1-col on mobile, 2-col on sm+ */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2 space-y-1.5">
               <Label>Name <span className="text-destructive">*</span></Label>
-              <Input placeholder="Buddy" value={form.name} onChange={set("name")} required />
+              <Input placeholder="Buddy" value={form.name} onChange={set("name")} required className="h-11 sm:h-10" />
             </div>
             <div className="space-y-1.5">
               <Label>Species <span className="text-destructive">*</span></Label>
               <Select value={form.species} onValueChange={setSelect("species")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-11 sm:h-10"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(SPECIES_LABELS).map(([k, v]) => (
                     <SelectItem key={k} value={k}>{v}</SelectItem>
@@ -111,7 +112,7 @@ export function AnimalForm({ orgSlug, orgId, animal }: AnimalFormProps) {
             <div className="space-y-1.5">
               <Label>Sex</Label>
               <Select value={form.sex} onValueChange={setSelect("sex")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-11 sm:h-10"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="MALE">Male</SelectItem>
                   <SelectItem value="FEMALE">Female</SelectItem>
@@ -121,16 +122,16 @@ export function AnimalForm({ orgSlug, orgId, animal }: AnimalFormProps) {
             </div>
             <div className="space-y-1.5">
               <Label>Breed</Label>
-              <Input placeholder="Labrador Mix" value={form.breed} onChange={set("breed")} />
+              <Input placeholder="Labrador Mix" value={form.breed} onChange={set("breed")} className="h-11 sm:h-10" />
             </div>
             <div className="space-y-1.5">
               <Label>Colour</Label>
-              <Input placeholder="Black & white" value={form.colour} onChange={set("colour")} />
+              <Input placeholder="Black & white" value={form.colour} onChange={set("colour")} className="h-11 sm:h-10" />
             </div>
             <div className="space-y-1.5">
               <Label>Size</Label>
               <Select value={form.size} onValueChange={setSelect("size")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-11 sm:h-10"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(SIZE_LABELS).map(([k, v]) => (
                     <SelectItem key={k} value={k}>{v}</SelectItem>
@@ -140,16 +141,16 @@ export function AnimalForm({ orgSlug, orgId, animal }: AnimalFormProps) {
             </div>
             <div className="space-y-1.5">
               <Label>Date of birth (approx)</Label>
-              <Input type="date" value={form.dobApprox} onChange={set("dobApprox")} />
+              <Input type="date" value={form.dobApprox} onChange={set("dobApprox")} className="h-11 sm:h-10" />
             </div>
             <div className="space-y-1.5">
               <Label>Intake date <span className="text-destructive">*</span></Label>
-              <Input type="date" value={form.intakeDate} onChange={set("intakeDate")} required />
+              <Input type="date" value={form.intakeDate} onChange={set("intakeDate")} required className="h-11 sm:h-10" />
             </div>
             <div className="space-y-1.5">
               <Label>Intake type</Label>
               <Select value={form.intakeType} onValueChange={setSelect("intakeType")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-11 sm:h-10"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="STRAY">Stray</SelectItem>
                   <SelectItem value="SURRENDER">Owner surrender</SelectItem>
@@ -161,12 +162,12 @@ export function AnimalForm({ orgSlug, orgId, animal }: AnimalFormProps) {
             </div>
             <div className="space-y-1.5">
               <Label>Microchip number</Label>
-              <Input placeholder="981000000000000" value={form.microchipNumber} onChange={set("microchipNumber")} />
+              <Input placeholder="981000000000000" value={form.microchipNumber} onChange={set("microchipNumber")} className="h-11 sm:h-10" />
               <MicrochipRegistryButton chipNumber={form.microchipNumber} />
             </div>
             <div className="space-y-1.5">
               <Label>Weight (kg)</Label>
-              <Input type="number" step="0.1" min="0" placeholder="12.5" value={form.weight} onChange={set("weight")} />
+              <Input type="number" step="0.1" min="0" placeholder="12.5" value={form.weight} onChange={set("weight")} className="h-11 sm:h-10" />
             </div>
           </div>
 
@@ -174,7 +175,7 @@ export function AnimalForm({ orgSlug, orgId, animal }: AnimalFormProps) {
             <div className="space-y-1.5">
               <Label>Status</Label>
               <Select value={form.status} onValueChange={setStatusSelect}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-11 sm:h-10"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="INTAKE">Intake</SelectItem>
                   <SelectItem value="ASSESSMENT">Assessment</SelectItem>
@@ -192,17 +193,18 @@ export function AnimalForm({ orgSlug, orgId, animal }: AnimalFormProps) {
             </div>
           )}
 
-          <div className="flex flex-wrap gap-6">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" className="rounded" checked={form.neutered} onChange={setCheck("neutered")} />
-              <span className="text-sm">Neutered / spayed</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" className="rounded" checked={form.vaccinated} onChange={setCheck("vaccinated")} />
-              <span className="text-sm">Vaccinated</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" className="rounded" checked={form.publicProfile} onChange={setPublicProfile} />
+          <div className="flex flex-wrap gap-y-4 gap-x-6">
+            {[
+              { field: "neutered",      label: "Neutered / spayed" },
+              { field: "vaccinated",    label: "Vaccinated" },
+            ].map(({ field, label }) => (
+              <label key={field} className="flex items-center gap-2.5 cursor-pointer min-h-[44px]">
+                <input type="checkbox" className="h-4 w-4 rounded accent-primary" checked={(form as any)[field]} onChange={setCheck(field)} />
+                <span className="text-sm">{label}</span>
+              </label>
+            ))}
+            <label className="flex items-center gap-2.5 cursor-pointer min-h-[44px]">
+              <input type="checkbox" className="h-4 w-4 rounded accent-primary" checked={form.publicProfile} onChange={setPublicProfile} />
               <span className="text-sm">Publish to public portal</span>
             </label>
           </div>
@@ -218,13 +220,22 @@ export function AnimalForm({ orgSlug, orgId, animal }: AnimalFormProps) {
             <Textarea placeholder="Notes for staff only…" value={form.notes} onChange={set("notes")} rows={2} />
           </div>
 
-          <div className="flex gap-3 pt-2">
+          {/* Desktop submit buttons — inline */}
+          <div className="hidden sm:flex gap-3 pt-2">
             <Button type="submit" disabled={loading}>
               {loading ? "Saving…" : animal ? "Save changes" : "Add animal"}
             </Button>
             <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
           </div>
         </form>
+
+        {/* Mobile submit bar — fixed above bottom nav */}
+        <div className="sm:hidden fixed bottom-[56px] left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-t px-4 py-3 flex gap-3">
+          <Button type="submit" form="animal-form" disabled={loading} className="flex-1 h-11">
+            {loading ? "Saving…" : animal ? "Save changes" : "Add animal"}
+          </Button>
+          <Button type="button" variant="outline" className="h-11 px-5" onClick={() => router.back()}>Cancel</Button>
+        </div>
       </CardContent>
     </Card>
   )

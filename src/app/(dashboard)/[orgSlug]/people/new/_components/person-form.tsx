@@ -121,15 +121,16 @@ export function PersonForm({ orgSlug, orgId, defaultType }: PersonFormProps) {
   return (
     <>
       <div className="mb-6">
-        <Link href={`/${orgSlug}/people`} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 mb-4 transition-colors">
+        <Link href={`/${orgSlug}/people`} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 mb-4 transition-colors min-h-[44px]">
           <ArrowLeft className="h-4 w-4" /> Back to people
         </Link>
         <h1 className="text-2xl font-bold text-slate-900">Add person</h1>
         <p className="text-sm text-slate-500 mt-0.5">Add a new contact to your organisation</p>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="bg-white rounded-xl border border-slate-100 divide-y divide-slate-50">
+      {/* pb-28 sm:pb-0 reserves space for the mobile fixed submit bar */}
+      <form id="person-form" onSubmit={handleSubmit}>
+        <div className="bg-white rounded-xl border border-slate-100 divide-y divide-slate-50 pb-28 sm:pb-0">
 
           <div className="p-6 space-y-4">
             <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Person type</h2>
@@ -142,7 +143,7 @@ export function PersonForm({ orgSlug, orgId, defaultType }: PersonFormProps) {
                   if (v !== "volunteer") setInviteToDashboard(false)
                 }}
               >
-                <SelectTrigger id="type">
+                <SelectTrigger id="type" className="h-11 sm:h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -156,23 +157,24 @@ export function PersonForm({ orgSlug, orgId, defaultType }: PersonFormProps) {
 
           <div className="p-6 space-y-4">
             <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Personal details</h2>
-            <div className="grid grid-cols-2 gap-4">
+            {/* Stack name fields on mobile */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="firstName">First name <span className="text-red-500">*</span></Label>
-                <Input id="firstName" placeholder="Jane" value={form.firstName} onChange={set("firstName")} required />
+                <Input id="firstName" placeholder="Jane" value={form.firstName} onChange={set("firstName")} required className="h-11 sm:h-10" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="lastName">Last name <span className="text-red-500">*</span></Label>
-                <Input id="lastName" placeholder="Smith" value={form.lastName} onChange={set("lastName")} required />
+                <Input id="lastName" placeholder="Smith" value={form.lastName} onChange={set("lastName")} required className="h-11 sm:h-10" />
               </div>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
-              <Input id="email" type="email" placeholder="jane@example.com" value={form.email} onChange={set("email")} required />
+              <Input id="email" type="email" placeholder="jane@example.com" value={form.email} onChange={set("email")} required className="h-11 sm:h-10" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="phone">Phone number</Label>
-              <Input id="phone" type="tel" placeholder="+353 87 123 4567" value={form.phone} onChange={set("phone")} />
+              <Input id="phone" type="tel" placeholder="+353 87 123 4567" value={form.phone} onChange={set("phone")} className="h-11 sm:h-10" />
             </div>
           </div>
 
@@ -181,7 +183,7 @@ export function PersonForm({ orgSlug, orgId, defaultType }: PersonFormProps) {
               <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Address</h2>
               <div className="space-y-1.5">
                 <Label htmlFor="address">Address</Label>
-                <Input id="address" placeholder="123 Main St, Dublin" value={form.address} onChange={set("address")} />
+                <Input id="address" placeholder="123 Main St, Dublin" value={form.address} onChange={set("address")} className="h-11 sm:h-10" />
               </div>
             </div>
           )}
@@ -189,7 +191,7 @@ export function PersonForm({ orgSlug, orgId, defaultType }: PersonFormProps) {
           {form.type === "volunteer" && (
             <div className="p-6 space-y-4">
               <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Dashboard access</h2>
-              <label className="flex items-start gap-3 cursor-pointer group">
+              <label className="flex items-start gap-3 cursor-pointer group min-h-[44px]">
                 <input
                   type="checkbox"
                   className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-[#1a3a2a] cursor-pointer"
@@ -222,13 +224,22 @@ export function PersonForm({ orgSlug, orgId, defaultType }: PersonFormProps) {
           <div className="mt-4 rounded-lg bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">{error}</div>
         )}
 
-        <div className="mt-6 flex items-center justify-end gap-3">
+        {/* Desktop submit buttons — inline */}
+        <div className="hidden sm:flex items-center justify-end gap-3 mt-6">
           <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
           <Button type="submit" disabled={loading} style={{ backgroundColor: "#1a3a2a" }}>
             {loading ? "Saving…" : `Add ${TYPE_LABELS[form.type] ?? "person"}`}
           </Button>
         </div>
       </form>
+
+      {/* Mobile submit bar — fixed above bottom nav */}
+      <div className="sm:hidden fixed bottom-[56px] left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-t px-4 py-3 flex gap-3">
+        <Button type="submit" form="person-form" disabled={loading} className="flex-1 h-11" style={{ backgroundColor: "#1a3a2a" }}>
+          {loading ? "Saving…" : `Add ${TYPE_LABELS[form.type] ?? "person"}`}
+        </Button>
+        <Button type="button" variant="outline" className="h-11 px-5" onClick={() => router.back()}>Cancel</Button>
+      </div>
     </>
   )
 }
