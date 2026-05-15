@@ -1,4 +1,5 @@
 import { withAuth } from "next-auth/middleware"
+import { getToken } from "next-auth/jwt"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { rateLimiters, getIP, checkRateLimit } from "@/lib/ratelimit"
@@ -6,6 +7,15 @@ import { rateLimiters, getIP, checkRateLimit } from "@/lib/ratelimit"
 export default withAuth(
   async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl
+
+    // Redirect already-authenticated users away from /login and /register
+    // so they can't land back on the marketing/auth pages after signing in.
+    if (pathname === "/login" || pathname === "/register") {
+      const token = await getToken({ req })
+      if (token) {
+        return NextResponse.redirect(new URL("/dashboard", req.url))
+      }
+    }
 
     try {
       const ip = getIP(req)

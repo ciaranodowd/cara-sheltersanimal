@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,8 +15,15 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   Default: "Something went wrong. Please try again",
 }
 
+/** Only follow same-origin relative paths; reject "/" and "/login" to prevent loops. */
+function getSafeRedirect(callbackUrl: string | null): string {
+  if (!callbackUrl) return "/dashboard"
+  if (!callbackUrl.startsWith("/")) return "/dashboard"        // reject external URLs
+  if (callbackUrl === "/" || callbackUrl.startsWith("/login")) return "/dashboard"
+  return callbackUrl
+}
+
 export function LoginForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl")
   const authError = searchParams.get("error")
@@ -40,7 +47,11 @@ export function LoginForm() {
       if (result?.error) {
         setError("Invalid email or password")
       } else {
-        router.push(callbackUrl ?? "/")
+        // Use window.location.href (full navigation) so the browser sends a fresh
+        // request with the new session cookie — bypasses the Next.js router cache
+        // which can serve a pre-login cached response and cause the intermittent
+        // redirect-to-marketing-page bug.
+        window.location.href = getSafeRedirect(callbackUrl)
       }
     } catch {
       setError("Something went wrong. Please try again.")
@@ -50,7 +61,7 @@ export function LoginForm() {
   }
 
   async function handleGoogle() {
-    await signIn("google", { callbackUrl: callbackUrl ?? "/" })
+    await signIn("google", { callbackUrl: getSafeRedirect(callbackUrl) })
   }
 
   return (
