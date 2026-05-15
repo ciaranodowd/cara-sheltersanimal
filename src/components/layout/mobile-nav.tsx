@@ -9,7 +9,7 @@ interface MobileNavProps {
   isAdmin?: boolean
 }
 
-export function MobileNav({ orgSlug, isAdmin: _isAdmin }: MobileNavProps) {
+export function MobileNav({ orgSlug }: MobileNavProps) {
   const pathname = usePathname()
 
   const items = [
