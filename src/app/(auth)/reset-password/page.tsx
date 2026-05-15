@@ -17,6 +17,7 @@ import {
 function ResetPasswordForm() {
   const searchParams = useSearchParams()
   const token = searchParams.get("token") ?? ""
+  const isSetup = searchParams.get("setup") === "true"
 
   const [password, setPassword] = useState("")
   const [confirm, setConfirm] = useState("")
@@ -44,9 +45,11 @@ function ResetPasswordForm() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Password updated</CardTitle>
+          <CardTitle>{isSetup ? "Account ready" : "Password updated"}</CardTitle>
           <CardDescription>
-            Your password has been reset successfully. You can now sign in with your new password.
+            {isSetup
+              ? "Your account is set up. You can now sign in to access your dashboard."
+              : "Your password has been reset successfully. You can now sign in with your new password."}
           </CardDescription>
         </CardHeader>
         <CardFooter className="justify-center">
@@ -92,13 +95,15 @@ function ResetPasswordForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Choose a new password</CardTitle>
-        <CardDescription>Enter a new password for your account</CardDescription>
+        <CardTitle>{isSetup ? "Set up your account" : "Choose a new password"}</CardTitle>
+        <CardDescription>
+          {isSetup ? "Create a password to access your Cara dashboard." : "Enter a new password for your account"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="password">New password</Label>
+            <Label htmlFor="password">{isSetup ? "Password" : "New password"}</Label>
             <Input
               id="password"
               type="password"
@@ -110,7 +115,7 @@ function ResetPasswordForm() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="confirm">Confirm new password</Label>
+            <Label htmlFor="confirm">{isSetup ? "Confirm password" : "Confirm new password"}</Label>
             <Input
               id="confirm"
               type="password"
@@ -122,7 +127,7 @@ function ResetPasswordForm() {
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Resetting…" : "Reset password"}
+            {loading ? (isSetup ? "Setting up…" : "Resetting…") : (isSetup ? "Create password" : "Reset password")}
           </Button>
         </form>
       </CardContent>

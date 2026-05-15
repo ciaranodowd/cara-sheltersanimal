@@ -233,7 +233,7 @@ export async function sendInviteEmail({
   token: string
 }) {
   const baseUrl = (process.env.NEXTAUTH_URL ?? "http://localhost:3000").replace(/\/$/, "")
-  const setupUrl = `${baseUrl}/reset-password?token=${token}`
+  const setupUrl = `${baseUrl}/reset-password?token=${token}&setup=true`
 
   const { error } = await resend.emails.send({
     from: FROM,
