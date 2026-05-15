@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, CheckCircle } from "lucide-react"
+import { ArrowLeft, CheckCircle, Mail, UserCheck } from "lucide-react"
 import Link from "next/link"
 
 interface PersonFormProps {
@@ -21,11 +21,18 @@ const TYPE_LABELS: Record<string, string> = {
   donor: "Donor",
 }
 
+type SuccessMeta = {
+  inviteSent?: boolean
+  alreadyHasAccess?: boolean
+  inviteError?: boolean
+  email: string
+}
+
 export function PersonForm({ orgSlug, orgId, defaultType }: PersonFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [success, setSuccess] = useState(false)
+  const [successMeta, setSuccessMeta] = useState<SuccessMeta | null>(null)
 
   const validDefault = ["adopter", "volunteer", "donor"].includes(defaultType) ? defaultType : "adopter"
 
@@ -38,6 +45,7 @@ export function PersonForm({ orgSlug, orgId, defaultType }: PersonFormProps) {
     address: "",
     notes: "",
   })
+  const [inviteToDashboard, setInviteToDashboard] = useState(false)
 
   function set(field: string) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -52,17 +60,25 @@ export function PersonForm({ orgSlug, orgId, defaultType }: PersonFormProps) {
       const res = await fetch("/api/people", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, organizationId: orgId }),
+        body: JSON.stringify({
+          ...form,
+          organizationId: orgId,
+          inviteToDashboard: form.type === "volunteer" ? inviteToDashboard : false,
+        }),
       })
       const data = await res.json()
       if (!res.ok) {
         setError(data.error ?? "Something went wrong")
         return
       }
-      setSuccess(true)
-      // Redirect to the appropriate tab on the people list
+      setSuccessMeta({
+        inviteSent: data.inviteSent,
+        alreadyHasAccess: data.alreadyHasAccess,
+        inviteError: data.inviteError,
+        email: form.email,
+      })
       const tabMap: Record<string, string> = { adopter: "adopters", volunteer: "volunteers", donor: "donors" }
-      setTimeout(() => router.push(`/${orgSlug}/people?tab=${tabMap[form.type] ?? "adopters"}`), 1500)
+      setTimeout(() => router.push(`/${orgSlug}/people?tab=${tabMap[form.type] ?? "adopters"}`), 2500)
     } catch {
       setError("Network error — please try again")
     } finally {
@@ -70,13 +86,33 @@ export function PersonForm({ orgSlug, orgId, defaultType }: PersonFormProps) {
     }
   }
 
-  if (success) {
+  if (successMeta) {
+    const isVolunteer = form.type === "volunteer"
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="bg-white rounded-xl border border-slate-100 p-10 text-center max-w-sm w-full">
-          <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-          <h2 className="text-lg font-semibold text-slate-900 mb-1">{TYPE_LABELS[form.type]} added</h2>
-          <p className="text-sm text-slate-500">Redirecting to people…</p>
+        <div className="bg-white rounded-xl border border-slate-100 p-10 text-center max-w-sm w-full space-y-3">
+          <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+          <h2 className="text-lg font-semibold text-slate-900">{TYPE_LABELS[form.type]} added</h2>
+
+          {isVolunteer && inviteToDashboard && (
+            <div className={`rounded-lg px-4 py-3 text-sm flex items-start gap-2 text-left ${
+              successMeta.inviteSent
+                ? "bg-green-50 border border-green-100 text-green-700"
+                : successMeta.alreadyHasAccess
+                ? "bg-blue-50 border border-blue-100 text-blue-700"
+                : "bg-amber-50 border border-amber-100 text-amber-700"
+            }`}>
+              {successMeta.inviteSent ? (
+                <><Mail className="h-4 w-4 shrink-0 mt-0.5" /><span>Invite sent to <strong>{successMeta.email}</strong></span></>
+              ) : successMeta.alreadyHasAccess ? (
+                <><UserCheck className="h-4 w-4 shrink-0 mt-0.5" /><span>Already has dashboard access</span></>
+              ) : (
+                <><Mail className="h-4 w-4 shrink-0 mt-0.5" /><span>Volunteer added, but the invite email failed to send. You can invite them from <strong>Settings → Team</strong>.</span></>
+              )}
+            </div>
+          )}
+
+          <p className="text-sm text-slate-500">Redirecting…</p>
         </div>
       </div>
     )
@@ -99,7 +135,13 @@ export function PersonForm({ orgSlug, orgId, defaultType }: PersonFormProps) {
             <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Person type</h2>
             <div className="space-y-1.5">
               <Label htmlFor="type">Type <span className="text-red-500">*</span></Label>
-              <Select value={form.type} onValueChange={v => setForm(f => ({ ...f, type: v }))}>
+              <Select
+                value={form.type}
+                onValueChange={v => {
+                  setForm(f => ({ ...f, type: v }))
+                  if (v !== "volunteer") setInviteToDashboard(false)
+                }}
+              >
                 <SelectTrigger id="type">
                   <SelectValue />
                 </SelectTrigger>
@@ -141,6 +183,28 @@ export function PersonForm({ orgSlug, orgId, defaultType }: PersonFormProps) {
                 <Label htmlFor="address">Address</Label>
                 <Input id="address" placeholder="123 Main St, Dublin" value={form.address} onChange={set("address")} />
               </div>
+            </div>
+          )}
+
+          {form.type === "volunteer" && (
+            <div className="p-6 space-y-4">
+              <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Dashboard access</h2>
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-[#1a3a2a] cursor-pointer"
+                  checked={inviteToDashboard}
+                  onChange={e => setInviteToDashboard(e.target.checked)}
+                />
+                <div>
+                  <p className="text-sm font-medium text-slate-900 group-hover:text-slate-700">
+                    Invite to dashboard
+                  </p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Sends a password setup email so this volunteer can log in and access the shelter dashboard.
+                  </p>
+                </div>
+              </label>
             </div>
           )}
 
