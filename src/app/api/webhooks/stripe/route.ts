@@ -8,12 +8,9 @@ export const dynamic = "force-dynamic"
 
 function mapStripeStatus(status: Stripe.Subscription.Status): SubscriptionStatus {
   switch (status) {
-    case "active":
-      return SubscriptionStatus.ACTIVE
-    case "trialing":
-      return SubscriptionStatus.TRIALING
-    case "past_due":
-      return SubscriptionStatus.PAST_DUE
+    case "active":    return SubscriptionStatus.ACTIVE
+    case "trialing":  return SubscriptionStatus.TRIALING
+    case "past_due":  return SubscriptionStatus.PAST_DUE
     case "canceled":
     case "unpaid":
     case "incomplete_expired":
@@ -21,6 +18,15 @@ function mapStripeStatus(status: Stripe.Subscription.Status): SubscriptionStatus
     default:
       return SubscriptionStatus.INACTIVE
   }
+}
+
+/** "pro" for any paid/grace state; "trial" when cancelled or inactive. */
+function mapPlan(status: SubscriptionStatus): string {
+  return status === SubscriptionStatus.ACTIVE ||
+         status === SubscriptionStatus.TRIALING ||
+         status === SubscriptionStatus.PAST_DUE
+    ? "pro"
+    : "trial"
 }
 
 export async function POST(req: NextRequest) {
@@ -34,111 +40,221 @@ export async function POST(req: NextRequest) {
   let event: Stripe.Event
   try {
     event = getStripe().webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
-  } catch {
+  } catch (err) {
+    console.error("[webhook] signature verification failed:", err)
     return NextResponse.json({ error: "Invalid webhook signature" }, { status: 400 })
   }
 
+  console.log(`[webhook] received event type=${event.type} id=${event.id}`)
+
   try {
     switch (event.type) {
+
       case "checkout.session.completed": {
-        const session = event.data.object as Stripe.Checkout.Session
+        const cs = event.data.object as Stripe.Checkout.Session
 
-        if (session.mode === "subscription") {
-          const organizationId = session.metadata?.organizationId
-          if (!organizationId) break
+        console.log("[webhook] checkout.session.completed", {
+          sessionId:              cs.id,
+          mode:                   cs.mode,
+          customer:               cs.customer,
+          subscription:           cs.subscription,
+          metadataOrganizationId: cs.metadata?.organizationId ?? "(missing)",
+          paymentStatus:          cs.payment_status,
+        })
 
-          const subscription = await getStripe().subscriptions.retrieve(
-            session.subscription as string
-          )
+        if (cs.mode === "subscription") {
+          // Primary lookup: organizationId from session metadata.
+          // Fallback: look up by the Stripe customer ID already stored in the DB
+          // (handles sessions created without metadata, e.g. via Stripe dashboard).
+          let organizationId = cs.metadata?.organizationId ?? null
 
-          await prisma.organization.update({
+          if (!organizationId && cs.customer) {
+            const byCustomer = await prisma.organization.findUnique({
+              where: { stripeCustomerId: cs.customer as string },
+              select: { id: true },
+            })
+            if (byCustomer) {
+              console.warn(
+                `[webhook] checkout.session.completed: organizationId missing from metadata; ` +
+                `resolved org ${byCustomer.id} via customer ${cs.customer}`
+              )
+              organizationId = byCustomer.id
+            }
+          }
+
+          if (!organizationId) {
+            console.error(
+              `[webhook] checkout.session.completed: cannot resolve organizationId — ` +
+              `sessionId=${cs.id} customer=${cs.customer ?? "(none)"} — no update made`
+            )
+            break
+          }
+
+          const subscriptionId = cs.subscription as string
+          const subscription = await getStripe().subscriptions.retrieve(subscriptionId)
+
+          console.log("[webhook] subscription retrieved", {
+            subscriptionId:         subscription.id,
+            status:                 subscription.status,
+            trialEnd:               subscription.trial_end,
+            metadataOrganizationId: subscription.metadata?.organizationId ?? "(missing)",
+          })
+
+          const mappedStatus = mapStripeStatus(subscription.status)
+          const mappedPlan   = mapPlan(mappedStatus)
+
+          const updated = await prisma.organization.update({
             where: { id: organizationId },
             data: {
-              stripeCustomerId: session.customer as string,
+              stripeCustomerId:     cs.customer as string,
               stripeSubscriptionId: subscription.id,
-              subscriptionStatus: mapStripeStatus(subscription.status),
+              subscriptionStatus:   mappedStatus,
+              plan:                 mappedPlan,
+              planStatus:           "active",
               trialEndsAt: subscription.trial_end
                 ? new Date(subscription.trial_end * 1000)
                 : null,
             },
+            select: {
+              id:                  true,
+              plan:                true,
+              planStatus:          true,
+              subscriptionStatus:  true,
+              stripeCustomerId:    true,
+              stripeSubscriptionId: true,
+            },
           })
+
+          console.log("[webhook] organization updated", updated)
         }
 
-        if (session.mode === "payment") {
-          const organizationId = session.metadata?.organizationId
-          if (!organizationId) break
+        if (cs.mode === "payment") {
+          const organizationId = cs.metadata?.organizationId
+          if (!organizationId) {
+            console.warn(
+              `[webhook] checkout.session.completed (payment): no organizationId in metadata — sessionId=${cs.id}`
+            )
+            break
+          }
 
-          // Idempotency: skip if this session was already recorded
           const existing = await prisma.donation.findUnique({
-            where: { stripeSessionId: session.id },
+            where: { stripeSessionId: cs.id },
           })
-          if (existing) break
+          if (existing) {
+            console.log(`[webhook] donation already recorded for sessionId=${cs.id}, skipping`)
+            break
+          }
 
-          const amountTotal = session.amount_total ?? 0
-          const donorName = session.metadata?.donorName ?? null
-          const donorEmail = session.customer_details?.email ?? session.metadata?.donorEmail ?? null
+          const amountTotal = cs.amount_total ?? 0
+          const donorName   = cs.metadata?.donorName ?? null
+          const donorEmail  = cs.customer_details?.email ?? cs.metadata?.donorEmail ?? null
 
           await prisma.donation.create({
             data: {
               organizationId,
-              amount: amountTotal / 100,
-              currency: (session.currency ?? "eur").toUpperCase(),
-              type: "ONE_OFF",
-              status: "COMPLETED",
-              stripePaymentId: session.payment_intent as string | null,
-              stripeSessionId: session.id,
-              donorName: donorName || null,
-              donorEmail: donorEmail || null,
-              source: "public_portal",
+              amount:           amountTotal / 100,
+              currency:         (cs.currency ?? "eur").toUpperCase(),
+              type:             "ONE_OFF",
+              status:           "COMPLETED",
+              stripePaymentId:  cs.payment_intent as string | null,
+              stripeSessionId:  cs.id,
+              donorName:        donorName || null,
+              donorEmail:       donorEmail || null,
+              source:           "public_portal",
             },
           })
+          console.log(`[webhook] donation created for org=${organizationId} amount=${amountTotal / 100}`)
         }
+
         break
       }
 
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription
-        const organizationId = subscription.metadata?.organizationId
-        if (!organizationId) break
 
-        await prisma.organization.update({
+        console.log("[webhook] customer.subscription.updated", {
+          subscriptionId:         subscription.id,
+          status:                 subscription.status,
+          customer:               subscription.customer,
+          metadataOrganizationId: subscription.metadata?.organizationId ?? "(missing)",
+        })
+
+        const organizationId = subscription.metadata?.organizationId
+        if (!organizationId) {
+          console.warn(
+            `[webhook] customer.subscription.updated: no organizationId in metadata — ` +
+            `subscriptionId=${subscription.id}`
+          )
+          break
+        }
+
+        const mappedStatus = mapStripeStatus(subscription.status)
+        const mappedPlan   = mapPlan(mappedStatus)
+
+        const updated = await prisma.organization.update({
           where: { id: organizationId },
           data: {
-            subscriptionStatus: mapStripeStatus(subscription.status),
+            subscriptionStatus: mappedStatus,
+            plan:               mappedPlan,
             trialEndsAt: subscription.trial_end
               ? new Date(subscription.trial_end * 1000)
               : null,
           },
+          select: { id: true, plan: true, subscriptionStatus: true },
         })
+
+        console.log("[webhook] organization updated", updated)
         break
       }
 
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription
-        const organizationId = subscription.metadata?.organizationId
-        if (!organizationId) break
 
-        await prisma.organization.update({
+        console.log("[webhook] customer.subscription.deleted", {
+          subscriptionId:         subscription.id,
+          customer:               subscription.customer,
+          metadataOrganizationId: subscription.metadata?.organizationId ?? "(missing)",
+        })
+
+        const organizationId = subscription.metadata?.organizationId
+        if (!organizationId) {
+          console.warn(
+            `[webhook] customer.subscription.deleted: no organizationId in metadata — ` +
+            `subscriptionId=${subscription.id}`
+          )
+          break
+        }
+
+        const updated = await prisma.organization.update({
           where: { id: organizationId },
           data: {
-            subscriptionStatus: SubscriptionStatus.CANCELLED,
+            subscriptionStatus:   SubscriptionStatus.CANCELLED,
             stripeSubscriptionId: null,
+            plan:                 "trial",
           },
+          select: { id: true, plan: true, subscriptionStatus: true },
         })
+
+        console.log("[webhook] organization updated", updated)
         break
       }
 
       case "account.updated": {
         const account = event.data.object as Stripe.Account
+        console.log("[webhook] account.updated", { accountId: account.id, chargesEnabled: account.charges_enabled, payoutsEnabled: account.payouts_enabled })
+
         await prisma.organization.updateMany({
           where: { stripeAccountId: account.id },
           data: { stripeOnboarded: account.charges_enabled && account.payouts_enabled },
         })
         break
       }
+
+      default:
+        console.log(`[webhook] unhandled event type=${event.type} — ignored`)
     }
   } catch (err) {
-    console.error("Webhook handler error:", err)
+    console.error(`[webhook] handler error for event type=${event.type} id=${event.id}:`, err)
     return NextResponse.json({ error: "Handler failed" }, { status: 500 })
   }
 
