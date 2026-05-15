@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from "next/server"
+import { createHmac, timingSafeEqual } from "crypto"
 import { prisma } from "@/lib/prisma"
 import { rateLimiters, getIP, checkRateLimit } from "@/lib/ratelimit"
+
+function verifyConversationSecret(conversationId: string, provided: string | null): boolean {
+  if (!provided || provided.length !== 64) return false
+  try {
+    const expected = createHmac("sha256", process.env.NEXTAUTH_SECRET!)
+      .update(conversationId)
+      .digest()
+    const providedBuf = Buffer.from(provided, "hex")
+    if (providedBuf.length !== expected.length) return false
+    return timingSafeEqual(expected, providedBuf)
+  } catch {
+    return false
+  }
+}
 
 async function resolveConversation(orgSlug: string, token: string) {
   const org = await prisma.organization.findUnique({
@@ -25,6 +40,11 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { orgSlug: string; token: string } }
 ) {
+  const secret = req.headers.get("x-conversation-secret")
+  if (!verifyConversationSecret(params.token, secret)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   const resolved = await resolveConversation(params.orgSlug, params.token)
   if (!resolved) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
@@ -55,6 +75,11 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { orgSlug: string; token: string } }
 ) {
+  const secret = req.headers.get("x-conversation-secret")
+  if (!verifyConversationSecret(params.token, secret)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   const ip = getIP(req)
   try {
     const limited = await checkRateLimit(rateLimiters.portalMessage, `${ip}:${params.token}`)

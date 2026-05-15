@@ -25,6 +25,7 @@ export default function AdoptApplicationPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [conversationToken, setConversationToken] = useState<string | null>(null)
+  const [conversationSecret, setConversationSecret] = useState<string | null>(null)
   const [error, setError] = useState("")
 
   const [form, setForm] = useState({
@@ -66,6 +67,7 @@ export default function AdoptApplicationPage() {
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? "Failed to submit application"); setSubmitting(false); return }
       setConversationToken(data.conversationToken ?? null)
+      setConversationSecret(data.conversationSecret ?? null)
       setSubmitted(true)
       window.scrollTo({ top: 0, behavior: "smooth" })
     } catch {
@@ -163,7 +165,7 @@ export default function AdoptApplicationPage() {
                 </p>
               </div>
               <Link
-                href={`/portal/${params.orgSlug}/conversations/${conversationToken}`}
+                href={`/portal/${params.orgSlug}/conversations/${conversationToken}${conversationSecret ? `?s=${conversationSecret}` : ""}`}
                 className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
                 style={{ backgroundColor: "#1a3a2a" }}
               >

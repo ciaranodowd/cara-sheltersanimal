@@ -62,6 +62,37 @@ export async function POST(req: NextRequest) {
           paymentStatus:          cs.payment_status,
         })
 
+        // Monthly donor subscription — record a Donation row; do NOT touch org subscription data.
+        if (cs.mode === "subscription" && cs.metadata?.type === "donation_monthly") {
+          const organizationId = cs.metadata.organizationId
+          if (!organizationId) {
+            console.warn(`[webhook] donation_monthly: no organizationId in metadata — sessionId=${cs.id}`)
+            break
+          }
+          const existing = await prisma.donation.findUnique({ where: { stripeSessionId: cs.id } })
+          if (existing) {
+            console.log(`[webhook] monthly donation already recorded for sessionId=${cs.id}, skipping`)
+            break
+          }
+          await prisma.donation.create({
+            data: {
+              organizationId,
+              amount:              (cs.amount_total ?? 0) / 100,
+              currency:            (cs.currency ?? "eur").toUpperCase(),
+              type:                "RECURRING_MONTHLY",
+              status:              "COMPLETED",
+              stripeSessionId:     cs.id,
+              stripeSubscriptionId: cs.subscription as string | null,
+              donorName:           cs.metadata.donorName || null,
+              donorEmail:          cs.customer_details?.email ?? cs.metadata.donorEmail ?? null,
+              message:             cs.metadata.donorMessage || null,
+              source:              "public_portal",
+            },
+          })
+          console.log(`[webhook] monthly donation recorded for org=${organizationId} amount=${(cs.amount_total ?? 0) / 100}`)
+          break
+        }
+
         if (cs.mode === "subscription") {
           // Primary lookup: organizationId from session metadata.
           // Fallback: look up by the Stripe customer ID already stored in the DB

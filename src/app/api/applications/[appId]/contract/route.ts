@@ -114,6 +114,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { appId: str
   const app = await getAppAndVerify(params.appId, session.user.id)
   if (!app) return NextResponse.json({ error: "Not found or forbidden" }, { status: 404 })
   if (!app.contract) return NextResponse.json({ error: "No contract found" }, { status: 404 })
+  if (app.contract.signedAt) {
+    return NextResponse.json({ error: "Cannot edit a contract that has already been signed" }, { status: 409 })
+  }
 
   const { adoptionFee, contractText } = await req.json()
 

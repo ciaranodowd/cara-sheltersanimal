@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, useRef, useCallback } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -32,8 +32,10 @@ type OrgInfo = {
 
 export default function PortalConversationPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const orgSlug = params.orgSlug as string
   const token = params.token as string
+  const secret = searchParams.get("s")
 
   const [conversation, setConversation] = useState<ConversationInfo | null>(null)
   const [org, setOrg] = useState<OrgInfo | null>(null)
@@ -47,12 +49,14 @@ export default function PortalConversationPage() {
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
+  const authHeader = secret ? { "X-Conversation-Secret": secret } : {}
+
   const fetchData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
     else setRefreshing(true)
     try {
-      const res = await fetch(`/api/portal/${orgSlug}/conversations/${token}`)
-      if (res.status === 404) { setNotFound(true); return }
+      const res = await fetch(`/api/portal/${orgSlug}/conversations/${token}`, { headers: authHeader })
+      if (res.status === 404 || res.status === 401) { setNotFound(true); return }
       if (!res.ok) return
       const data = await res.json()
       setConversation(data.conversation)
@@ -62,7 +66,7 @@ export default function PortalConversationPage() {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [orgSlug, token])
+  }, [orgSlug, token, secret]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchData()
@@ -86,7 +90,7 @@ export default function PortalConversationPage() {
     try {
       const res = await fetch(`/api/portal/${orgSlug}/conversations/${token}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeader },
         body: JSON.stringify({ content: text }),
       })
       if (!res.ok) {

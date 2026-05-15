@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { createHmac } from "crypto"
 import { prisma } from "@/lib/prisma"
 import { rateLimiters, getIP, checkRateLimit } from "@/lib/ratelimit"
 
@@ -143,5 +144,12 @@ export async function POST(
     select: { id: true },
   })
 
-  return NextResponse.json({ id: application.id, conversationToken: conversation.id }, { status: 201 })
+  const conversationSecret = createHmac("sha256", process.env.NEXTAUTH_SECRET!)
+    .update(conversation.id)
+    .digest("hex")
+
+  return NextResponse.json(
+    { id: application.id, conversationToken: conversation.id, conversationSecret },
+    { status: 201 }
+  )
 }
