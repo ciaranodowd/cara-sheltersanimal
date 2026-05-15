@@ -6,15 +6,45 @@ import { Button } from "@/components/ui/button"
 import { formatDate } from "@/lib/utils"
 
 const PIPELINE_STAGES = [
-  { key: "PENDING",       label: "Pending",       color: "bg-yellow-50 border-yellow-200", badge: "bg-yellow-100 text-yellow-700" },
-  { key: "REVIEWING",     label: "Reviewing",     color: "bg-blue-50 border-blue-200",     badge: "bg-blue-100 text-blue-700" },
-  { key: "HOME_CHECK",    label: "Home check",    color: "bg-purple-50 border-purple-200", badge: "bg-purple-100 text-purple-700" },
-  { key: "APPROVED",      label: "Approved",      color: "bg-green-50 border-green-200",   badge: "bg-green-100 text-green-700" },
-  { key: "CONTRACT_SENT", label: "Contract sent", color: "bg-teal-50 border-teal-200",     badge: "bg-teal-100 text-teal-700" },
-  { key: "COMPLETED",     label: "Adopted",       color: "bg-slate-50 border-slate-200",   badge: "bg-slate-100 text-slate-700" },
+  {
+    key: "PENDING",
+    label: "Pending",
+    accentBar: "bg-amber-400",
+    badge: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
+  },
+  {
+    key: "REVIEWING",
+    label: "Reviewing",
+    accentBar: "bg-sky-400",
+    badge: "bg-sky-50 text-sky-700 ring-1 ring-sky-200",
+  },
+  {
+    key: "HOME_CHECK",
+    label: "Home check",
+    accentBar: "bg-violet-400",
+    badge: "bg-violet-50 text-violet-700 ring-1 ring-violet-200",
+  },
+  {
+    key: "APPROVED",
+    label: "Approved",
+    accentBar: "bg-emerald-400",
+    badge: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+  },
+  {
+    key: "CONTRACT_SENT",
+    label: "Contract sent",
+    accentBar: "bg-teal-400",
+    badge: "bg-teal-50 text-teal-700 ring-1 ring-teal-200",
+  },
+  {
+    key: "COMPLETED",
+    label: "Adopted",
+    accentBar: "bg-slate-400",
+    badge: "bg-slate-50 text-slate-600 ring-1 ring-slate-200",
+  },
 ]
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
 
 export default async function AdoptionsPage({ params }: { params: { orgSlug: string } }) {
   const [session, org] = await Promise.all([getSession(), getOrgBySlug(params.orgSlug)])
@@ -42,54 +72,67 @@ export default async function AdoptionsPage({ params }: { params: { orgSlug: str
 
   const speciesEmoji = (s: string) => s === "DOG" ? "🐕" : s === "CAT" ? "🐈" : "🐾"
   const typeLabel = (t: string | null) => t === "FOSTER"
-    ? { text: "Foster", cls: "bg-blue-100 text-blue-700" }
-    : { text: "Adopt",  cls: "bg-green-100 text-green-700" }
+    ? { text: "Foster", cls: "bg-blue-50 text-blue-600 ring-1 ring-blue-100" }
+    : { text: "Adopt",  cls: "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100" }
 
   return (
-    <div className="p-4 sm:p-6 max-w-full space-y-5">
-      <div className="flex items-center justify-between">
+    <div className="px-4 sm:px-6 py-6 max-w-[1400px] mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Adoptions</h1>
-          <p className="text-muted-foreground text-sm">{applications.length} active applications</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Adoptions</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {applications.length} active application{applications.length !== 1 ? "s" : ""}
+          </p>
         </div>
-        <Button variant="outline" asChild>
-          <Link href={`/${params.orgSlug}/adoptions/rejected`}>Rejected</Link>
+        <Button
+          variant="outline"
+          size="sm"
+          asChild
+          className="shrink-0 text-muted-foreground hover:text-foreground"
+        >
+          <Link href={`/${params.orgSlug}/adoptions/rejected`}>Rejected applications</Link>
         </Button>
       </div>
 
-      {/* ── Mobile: vertical grouped list ────────────────────────────── */}
+      {/* Mobile: vertical grouped list */}
       <div className="md:hidden space-y-6">
         {applications.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-10">No active applications</p>
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center mb-3">
+              <div className="w-2 h-2 rounded-full bg-gray-300" />
+            </div>
+            <p className="text-sm font-medium text-gray-400">No active applications</p>
+            <p className="text-xs text-gray-300 mt-1">New applications will appear here.</p>
+          </div>
         )}
         {PIPELINE_STAGES.map(stage => {
           const stageApps = byStatus[stage.key] ?? []
           if (stageApps.length === 0) return null
-          const tl = typeLabel
           return (
             <div key={stage.key}>
               <div className="flex items-center gap-2 mb-2 px-1">
-                <h3 className="font-semibold text-sm text-slate-700">{stage.label}</h3>
+                <h3 className="font-semibold text-sm text-gray-700">{stage.label}</h3>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${stage.badge}`}>
                   {stageApps.length}
                 </span>
               </div>
               <div className="space-y-2">
                 {stageApps.map(app => {
-                  const type = tl(app.applicationType)
+                  const type = typeLabel(app.applicationType)
                   return (
-                    <Link key={app.id} href={`/${params.orgSlug}/adoptions/${app.id}`}>
-                      <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm active:bg-slate-50 transition-colors">
+                    <Link key={app.id} href={`/${params.orgSlug}/adoptions/${app.id}`} className="block">
+                      <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm active:bg-gray-50 transition-colors">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="font-semibold text-sm truncate">{app.applicantName}</p>
-                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0 ${type.cls}`}>
+                          <p className="font-semibold text-sm text-gray-900 truncate">{app.applicantName}</p>
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${type.cls}`}>
                             {type.text}
                           </span>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-0.5">
+                        <p className="text-xs text-gray-400 mt-0.5">
                           {speciesEmoji(app.animal.species)} {app.animal.name}
                         </p>
-                        <p className="text-xs text-slate-400 mt-1">{formatDate(app.createdAt)}</p>
+                        <p className="text-xs text-gray-400 mt-1">{formatDate(app.createdAt)}</p>
                       </div>
                     </Link>
                   )
@@ -100,46 +143,71 @@ export default async function AdoptionsPage({ params }: { params: { orgSlug: str
         })}
       </div>
 
-      {/* ── Desktop: horizontal kanban ────────────────────────────────── */}
-      <div className="hidden md:flex gap-4 overflow-x-auto pb-4">
-        {PIPELINE_STAGES.map(stage => (
-          <div key={stage.key} className="shrink-0 w-64">
-            <div className={`rounded-xl border-2 ${stage.color} p-3`}>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-sm">{stage.label}</h3>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${stage.badge}`}>
-                  {byStatus[stage.key]?.length ?? 0}
-                </span>
-              </div>
-              <div className="space-y-2">
-                {(byStatus[stage.key] ?? []).map(app => {
-                  const type = typeLabel(app.applicationType)
-                  return (
-                    <Link key={app.id} href={`/${params.orgSlug}/adoptions/${app.id}`}>
-                      <div className="bg-white rounded-lg p-3 shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
-                        <p className="font-medium text-sm">{app.applicantName}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {speciesEmoji(app.animal.species)} {app.animal.name}
-                        </p>
-                        <div className="flex items-center justify-between mt-1.5">
-                          <p className="text-xs text-muted-foreground">{formatDate(app.createdAt)}</p>
-                          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${type.cls}`}>
-                            {type.text}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  )
-                })}
-                {(byStatus[stage.key] ?? []).length === 0 && (
-                  <div className="text-xs text-muted-foreground text-center py-4 border-2 border-dashed rounded-lg">
-                    Empty
+      {/* Desktop: horizontal kanban */}
+      <div className="hidden md:block overflow-x-auto pb-3 [scrollbar-width:thin] [scrollbar-color:#e2e8f0_transparent] [&::-webkit-scrollbar]:h-[5px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full">
+        <div className="flex gap-4 min-w-max">
+          {PIPELINE_STAGES.map(stage => {
+            const cards = byStatus[stage.key] ?? []
+            return (
+              <div key={stage.key} className="w-[252px]">
+                <div className="rounded-xl border border-gray-200 bg-gray-50 shadow-sm overflow-hidden flex flex-col min-h-[320px]">
+                  {/* Colour accent bar */}
+                  <div className={`h-[3px] w-full ${stage.accentBar}`} />
+
+                  {/* Column header */}
+                  <div className="flex items-center justify-between px-3 py-2.5">
+                    <h3 className="text-sm font-semibold text-gray-700">{stage.label}</h3>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium tabular-nums ${stage.badge}`}>
+                      {cards.length}
+                    </span>
                   </div>
-                )}
+
+                  {/* Cards area */}
+                  <div className="px-2 pb-2 flex flex-col gap-2 flex-1">
+                    {cards.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center flex-1 text-center py-8 px-3 min-h-[200px]">
+                        <div className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-3 shadow-sm">
+                          <div className="w-2 h-2 rounded-full bg-gray-200" />
+                        </div>
+                        <p className="text-sm font-medium text-gray-400">No applications</p>
+                        <p className="text-xs text-gray-300 mt-1 leading-snug">
+                          New applications will appear here.
+                        </p>
+                      </div>
+                    ) : (
+                      cards.map(app => {
+                        const type = typeLabel(app.applicationType)
+                        return (
+                          <Link
+                            key={app.id}
+                            href={`/${params.orgSlug}/adoptions/${app.id}`}
+                            className="block"
+                          >
+                            <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 cursor-pointer">
+                              <p className="font-semibold text-sm text-gray-900 leading-snug">
+                                {app.applicantName}
+                              </p>
+                              <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                                <span aria-hidden>{speciesEmoji(app.animal.species)}</span>
+                                <span>{app.animal.name}</span>
+                              </p>
+                              <div className="flex items-center justify-between mt-2">
+                                <p className="text-[11px] text-gray-400">{formatDate(app.createdAt)}</p>
+                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${type.cls}`}>
+                                  {type.text}
+                                </span>
+                              </div>
+                            </div>
+                          </Link>
+                        )
+                      })
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        ))}
+            )
+          })}
+        </div>
       </div>
     </div>
   )
