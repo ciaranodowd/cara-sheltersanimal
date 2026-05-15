@@ -1,10 +1,12 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { CheckCircle, AlertTriangle } from "lucide-react"
 
 interface DonationsSettingsProps {
   orgSlug: string
@@ -43,10 +45,17 @@ export function DonationsSettings({
   donationsEnabled: initialEnabled,
   isAdmin,
 }: DonationsSettingsProps) {
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
   const [toggleLoading, setToggleLoading] = useState(false)
   const [error, setError] = useState("")
   const [enabled, setEnabled] = useState(initialEnabled)
+  const [banner, setBanner] = useState<"reconnect" | null>(null)
+
+  // Show a notice if Stripe redirected back with ?reconnect=1 (expired link)
+  useEffect(() => {
+    if (searchParams.get("reconnect") === "1") setBanner("reconnect")
+  }, [searchParams])
 
   const { label, variant, description } = connectStatus(stripeAccountId, stripeOnboarded)
 
@@ -64,6 +73,24 @@ export function DonationsSettings({
       }
     } catch {
       setError("Something went wrong")
+      setLoading(false)
+    }
+  }
+
+  async function handleManage() {
+    setLoading(true)
+    setError("")
+    try {
+      const res = await fetch(`/api/orgs/${orgSlug}/stripe/connect/login-link`, { method: "POST" })
+      const data = await res.json()
+      if (res.ok && data.url) {
+        window.open(data.url, "_blank", "noopener,noreferrer")
+      } else {
+        setError(data.error ?? "Something went wrong")
+      }
+    } catch {
+      setError("Something went wrong")
+    } finally {
       setLoading(false)
     }
   }
@@ -99,6 +126,14 @@ export function DonationsSettings({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Reconnect notice */}
+        {banner === "reconnect" && (
+          <div className="flex items-start gap-2 text-sm bg-amber-50 border border-amber-200 text-amber-800 rounded-md px-3 py-2">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+            <span>Your Stripe onboarding link expired. Click <strong>Continue onboarding</strong> below to get a fresh link.</span>
+          </div>
+        )}
+
         {error && (
           <div className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">{error}</div>
         )}
@@ -109,9 +144,16 @@ export function DonationsSettings({
             <p className="text-sm font-medium">Bank account status</p>
             <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
           </div>
-          <Badge variant={variant} className="shrink-0">{label}</Badge>
+          <Badge
+            variant={variant}
+            className={stripeOnboarded ? "bg-green-600 text-white shrink-0" : "shrink-0"}
+          >
+            {stripeOnboarded && <CheckCircle className="h-3 w-3 mr-1" />}
+            {label}
+          </Badge>
         </div>
 
+        {/* Connect / continue onboarding button */}
         {isAdmin && !stripeOnboarded && (
           <Button onClick={handleConnect} disabled={loading}>
             {loading
@@ -144,15 +186,21 @@ export function DonationsSettings({
           </div>
         )}
 
-        {stripeOnboarded && (
-          <div className="text-xs text-muted-foreground space-y-1">
-            <p>Donations are processed by Stripe and transferred directly to your bank account.</p>
-            <p>Cara charges no platform fee on donations.</p>
-            {isAdmin && (
-              <Button variant="link" className="h-auto p-0 text-xs" onClick={handleConnect} disabled={loading}>
-                Manage Stripe account →
-              </Button>
-            )}
+        {/* Manage Stripe account */}
+        {stripeOnboarded && isAdmin && (
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">
+              Donations are processed by Stripe and transferred directly to your bank account.
+              Cara charges no platform fee.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleManage}
+              disabled={loading}
+            >
+              {loading ? "Loading…" : "Manage Stripe account →"}
+            </Button>
           </div>
         )}
       </CardContent>
