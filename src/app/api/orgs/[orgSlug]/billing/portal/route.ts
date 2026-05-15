@@ -26,12 +26,40 @@ export async function POST(
   }
 
   if (!org.stripeCustomerId) {
-    return NextResponse.json({ error: "No Stripe customer found" }, { status: 400 })
+    return NextResponse.json({ error: "No billing account found. Please subscribe first." }, { status: 400 })
+  }
+
+  const stripe = getStripe()
+
+  // Verify the customer exists in the current Stripe mode before creating a portal
+  // session. A live-mode ID used with a test-mode key (or vice versa) would fail
+  // with resource_missing — return a clear error rather than a 500.
+  try {
+    const existing = await stripe.customers.retrieve(org.stripeCustomerId)
+    if ((existing as { deleted?: boolean }).deleted) {
+      console.warn(`[billing-portal] Stripe customer ${org.stripeCustomerId} is deleted. org=${org.id}`)
+      return NextResponse.json(
+        { error: "Billing account not found. Please contact support." },
+        { status: 400 }
+      )
+    }
+  } catch (err: any) {
+    if (err?.code === "resource_missing") {
+      console.warn(
+        `[billing-portal] Stale Stripe customer ${org.stripeCustomerId} detected — ` +
+        `does not exist in the current Stripe mode (live/test mismatch?). org=${org.id}`
+      )
+      return NextResponse.json(
+        { error: "Billing account not available. Please re-subscribe to continue." },
+        { status: 400 }
+      )
+    }
+    throw err
   }
 
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000"
 
-  const portalSession = await getStripe().billingPortal.sessions.create({
+  const portalSession = await stripe.billingPortal.sessions.create({
     customer: org.stripeCustomerId,
     return_url: `${baseUrl}/${params.orgSlug}/billing`,
   })

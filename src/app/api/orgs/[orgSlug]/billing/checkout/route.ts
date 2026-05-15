@@ -26,7 +26,31 @@ export async function POST(
   const stripe = getStripe()
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000"
 
-  let customerId = org.stripeCustomerId
+  let customerId = org.stripeCustomerId ?? null
+
+  // If we have a stored customer ID, verify it exists in the current Stripe mode.
+  // A live-mode customer ID used with a test-mode key (or vice versa) throws
+  // resource_missing — detect and replace it with a fresh customer rather than crash.
+  if (customerId) {
+    try {
+      const existing = await stripe.customers.retrieve(customerId)
+      if ((existing as { deleted?: boolean }).deleted) {
+        console.warn(`[checkout] Stripe customer ${customerId} is deleted — creating a new one. org=${org.id}`)
+        customerId = null
+      }
+    } catch (err: any) {
+      if (err?.code === "resource_missing") {
+        console.warn(
+          `[checkout] Replacing stale Stripe customer ${customerId} — ` +
+          `it does not exist in the current Stripe mode (live/test mismatch?). org=${org.id}`
+        )
+        customerId = null
+      } else {
+        throw err
+      }
+    }
+  }
+
   if (!customerId) {
     const customer = await stripe.customers.create({
       name: org.name,
@@ -38,6 +62,7 @@ export async function POST(
       where: { id: org.id },
       data: { stripeCustomerId: customerId },
     })
+    console.info(`[checkout] Created new Stripe customer ${customerId}. org=${org.id}`)
   }
 
   const checkoutSession = await stripe.checkout.sessions.create({
