@@ -49,7 +49,7 @@ export default function PortalConversationPage() {
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const authHeader = secret ? { "X-Conversation-Secret": secret } : {}
+  const authHeader: HeadersInit = secret ? { "X-Conversation-Secret": secret } : {}
 
   const fetchData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
