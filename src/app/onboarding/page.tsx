@@ -1,6 +1,5 @@
 "use client"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { COUNTIES } from "@/lib/constants"
 
 export default function OnboardingPage() {
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [form, setForm] = useState({
@@ -44,17 +42,7 @@ export default function OnboardingPage() {
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? "Something went wrong"); setLoading(false); return }
 
-      // Redirect to Stripe Checkout for subscription
-      const checkoutRes = await fetch(`/api/orgs/${data.slug}/billing/checkout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      })
-      const checkoutData = await checkoutRes.json()
-      if (checkoutRes.ok && checkoutData.url) {
-        window.location.href = checkoutData.url
-      } else {
-        router.push(`/${data.slug}`)
-      }
+      window.location.href = `/${data.slug}`
     } catch {
       setError("Something went wrong. Please try again.")
       setLoading(false)
