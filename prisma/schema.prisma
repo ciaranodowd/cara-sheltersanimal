@@ -89,6 +89,7 @@ model Organization {
   cancelAt             DateTime? // effective date subscription will cancel (cancel_at or period end)
   cancelAtPeriodEnd    Boolean   @default(false)
   canceledAt           DateTime? // timestamp when Stripe actually cancelled the subscription
+  donationsEnabled     Boolean   @default(false) // admin toggle — requires stripeOnboarded
   contractTemplate String?  // Adoption contract template with {{placeholders}}
   vetName          String?  // Emergency vet name shown in foster portal
   vetPhone         String?  // Emergency vet phone shown in foster portal
@@ -489,6 +490,7 @@ model Donation {
   currency         String         @default("EUR")
   type             DonationType   @default(ONE_OFF)
   status           DonationStatus @default(PENDING)
+  message          String?        // optional donor message
   stripePaymentId  String?
   stripeSessionId  String?        @unique  // checkout session ID for webhook idempotency
   stripeSubscriptionId String?

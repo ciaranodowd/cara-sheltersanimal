@@ -29,6 +29,7 @@ export default async function PublicPortalPage({ params }: { params: { orgSlug: 
       id: true, name: true, description: true,
       email: true, phone: true, website: true,
       city: true, county: true, logo: true,
+      donationsEnabled: true,
     },
   })
   if (!org) notFound()
@@ -112,13 +113,15 @@ export default async function PublicPortalPage({ params }: { params: { orgSlug: 
                 <Heart className="h-4 w-4" />
                 Meet the animals
               </a>
-              <Link
-                href={`/portal/${params.orgSlug}/donate`}
-                className="inline-flex items-center gap-2 border border-white/30 text-white font-semibold px-5 py-3 rounded-xl hover:bg-white/10 transition-colors text-sm"
-              >
-                <HandHeart className="h-4 w-4" />
-                Donate
-              </Link>
+              {org.donationsEnabled && (
+                <Link
+                  href={`/portal/${params.orgSlug}/donate`}
+                  className="inline-flex items-center gap-2 border border-white/30 text-white font-semibold px-5 py-3 rounded-xl hover:bg-white/10 transition-colors text-sm"
+                >
+                  <HandHeart className="h-4 w-4" />
+                  Donate
+                </Link>
+              )}
               {animals.length > 0 && (
                 <p className="text-[#a7c4b5] text-sm">
                   <span className="text-white font-bold text-2xl mr-1.5">{animals.length}</span>
@@ -236,29 +239,31 @@ export default async function PublicPortalPage({ params }: { params: { orgSlug: 
       </main>
 
       {/* ── DONATION SECTION ── */}
-      <section style={{ backgroundColor: "#1a3a2a" }} className="py-16 sm:py-20">
-        <div className="max-w-lg mx-auto px-4 sm:px-6">
-          <div className="text-center mb-8">
-            <p className="text-xs font-semibold tracking-widest uppercase text-[#4ade80]/60 mb-4">
-              Support our work
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight tracking-tight mb-3">
-              {animals.length > 0
-                ? "Every animal you just met needs you."
-                : "They're waiting. You can help."}
-            </h2>
-            <p className="text-[#a7c4b5] text-base leading-relaxed max-w-sm mx-auto">
-              100% of donations go directly to the animals in our care.
-            </p>
+      {org.donationsEnabled && (
+        <section style={{ backgroundColor: "#1a3a2a" }} className="py-16 sm:py-20">
+          <div className="max-w-lg mx-auto px-4 sm:px-6">
+            <div className="text-center mb-8">
+              <p className="text-xs font-semibold tracking-widest uppercase text-[#4ade80]/60 mb-4">
+                Support our work
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight tracking-tight mb-3">
+                {animals.length > 0
+                  ? "Every animal you just met needs you."
+                  : "They're waiting. You can help."}
+              </h2>
+              <p className="text-[#a7c4b5] text-base leading-relaxed max-w-sm mx-auto">
+                100% of donations go directly to the animals in our care.
+              </p>
+            </div>
+            <PortalDonatePanel
+              orgSlug={params.orgSlug}
+              orgName={org.name}
+              animalName={animals[0]?.name ?? null}
+              monthDonationCount={monthDonationCount}
+            />
           </div>
-          <PortalDonatePanel
-            orgSlug={params.orgSlug}
-            orgName={org.name}
-            animalName={animals[0]?.name ?? null}
-            monthDonationCount={monthDonationCount}
-          />
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── FOOTER ── */}
       <footer className="bg-[#1a3a2a] mt-0">

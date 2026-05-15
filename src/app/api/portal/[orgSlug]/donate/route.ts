@@ -8,27 +8,31 @@ export async function POST(
 ) {
   const org = await prisma.organization.findUnique({
     where: { slug: params.orgSlug },
-    select: { id: true, name: true, slug: true, stripeAccountId: true, stripeOnboarded: true },
+    select: { id: true, name: true, slug: true, stripeAccountId: true, stripeOnboarded: true, donationsEnabled: true },
   })
   if (!org) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
-  if (!org.stripeOnboarded || !org.stripeAccountId) {
+  if (!org.donationsEnabled || !org.stripeOnboarded || !org.stripeAccountId) {
     return NextResponse.json(
-      { error: "This shelter hasn't finished setting up donations yet. Please try again later." },
+      { error: "This shelter is not currently accepting donations. Please try again later." },
       { status: 422 }
     )
   }
 
   const body = await req.json()
-  const { amount, frequency, donorName, donorEmail } = body as {
+  const { amount, frequency, donorName, donorEmail, message } = body as {
     amount: number
     frequency?: "once" | "monthly"
     donorName?: string
     donorEmail?: string
+    message?: string
   }
 
-  if (!amount || typeof amount !== "number" || amount < 1) {
-    return NextResponse.json({ error: "Amount must be at least €1" }, { status: 400 })
+  if (!amount || typeof amount !== "number" || amount < 2) {
+    return NextResponse.json({ error: "Amount must be at least €2" }, { status: 400 })
+  }
+  if (amount > 1000) {
+    return NextResponse.json({ error: "Amount cannot exceed €1,000" }, { status: 400 })
   }
 
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000"
@@ -68,6 +72,7 @@ export async function POST(
         type: "donation_monthly",
         donorName: donorName ?? "",
         donorEmail: donorEmail ?? "",
+        donorMessage: message ?? "",
       },
     })
   } else {
@@ -97,6 +102,7 @@ export async function POST(
         type: "donation",
         donorName: donorName ?? "",
         donorEmail: donorEmail ?? "",
+        donorMessage: message ?? "",
       },
       submit_type: "donate",
     })

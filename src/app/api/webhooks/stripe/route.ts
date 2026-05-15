@@ -148,6 +148,7 @@ export async function POST(req: NextRequest) {
           const amountTotal = cs.amount_total ?? 0
           const donorName   = cs.metadata?.donorName ?? null
           const donorEmail  = cs.customer_details?.email ?? cs.metadata?.donorEmail ?? null
+          const message     = cs.metadata?.donorMessage ?? null
 
           await prisma.donation.create({
             data: {
@@ -160,6 +161,7 @@ export async function POST(req: NextRequest) {
               stripeSessionId:  cs.id,
               donorName:        donorName || null,
               donorEmail:       donorEmail || null,
+              message:          message || null,
               source:           "public_portal",
             },
           })
@@ -267,11 +269,31 @@ export async function POST(req: NextRequest) {
 
       case "account.updated": {
         const account = event.data.object as Stripe.Account
-        console.log("[webhook] account.updated", { accountId: account.id, chargesEnabled: account.charges_enabled, payoutsEnabled: account.payouts_enabled })
+        const fullyOnboarded = account.charges_enabled && account.payouts_enabled && account.details_submitted
+
+        console.log("[webhook] account.updated", {
+          accountId:        account.id,
+          chargesEnabled:   account.charges_enabled,
+          payoutsEnabled:   account.payouts_enabled,
+          detailsSubmitted: account.details_submitted,
+          fullyOnboarded,
+        })
+
+        // Only auto-enable donations when the account first becomes fully onboarded.
+        // If already onboarded, leave donationsEnabled as-is (admin controls it).
+        const existing = await prisma.organization.findFirst({
+          where: { stripeAccountId: account.id },
+          select: { stripeOnboarded: true },
+        })
+        const wasOnboarded = existing?.stripeOnboarded ?? false
 
         await prisma.organization.updateMany({
           where: { stripeAccountId: account.id },
-          data: { stripeOnboarded: account.charges_enabled && account.payouts_enabled },
+          data: {
+            stripeOnboarded:  fullyOnboarded,
+            // Auto-enable on first successful onboarding; don't touch if already set
+            ...(fullyOnboarded && !wasOnboarded ? { donationsEnabled: true } : {}),
+          },
         })
         break
       }

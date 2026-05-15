@@ -29,7 +29,7 @@ function generateStory(animal: { name: string; intakeDate: Date | null; descript
 export default async function DonatePage({ params }: { params: { orgSlug: string } }) {
   const org = await prisma.organization.findUnique({
     where: { slug: params.orgSlug },
-    select: { id: true, name: true, logo: true, city: true, county: true, email: true, stripeAccountId: true, stripeOnboarded: true },
+    select: { id: true, name: true, logo: true, city: true, county: true, email: true, stripeAccountId: true, stripeOnboarded: true, donationsEnabled: true },
   })
   if (!org) notFound()
 
@@ -144,7 +144,7 @@ export default async function DonatePage({ params }: { params: { orgSlug: string
 
         {/* ── DONATE PANEL ── */}
         <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5 sm:p-6">
-          {org.stripeOnboarded ? (
+          {org.donationsEnabled && org.stripeOnboarded ? (
             <>
               <p className="text-xs font-semibold tracking-widest uppercase text-stone-400 mb-5 text-center">
                 Choose how you&apos;d like to help

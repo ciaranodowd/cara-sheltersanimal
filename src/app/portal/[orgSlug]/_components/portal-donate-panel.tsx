@@ -25,6 +25,7 @@ export function PortalDonatePanel({ orgSlug, animalName, monthDonationCount }: P
   const [frequency, setFrequency] = useState<"monthly" | "once">("monthly")
   const [selected, setSelected] = useState<number>(10)
   const [custom, setCustom] = useState("")
+  const [message, setMessage] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -39,14 +40,14 @@ export function PortalDonatePanel({ orgSlug, animalName, monthDonationCount }: P
 
   async function handleDonate() {
     const n = Number(effectiveAmount)
-    if (!n || n < 1) { setError("Please enter an amount of at least €1."); return }
+    if (!n || n < 2) { setError("Please enter an amount of at least €2."); return }
     setLoading(true)
     setError("")
     try {
       const res = await fetch(`/api/portal/${orgSlug}/donate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: n, frequency }),
+        body: JSON.stringify({ amount: n, frequency, message: message.trim() || undefined }),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? "Something went wrong"); setLoading(false); return }
@@ -132,6 +133,16 @@ export function PortalDonatePanel({ orgSlug, animalName, monthDonationCount }: P
           className="w-full pl-8 pr-4 py-3 rounded-xl border-2 border-white/15 bg-transparent text-white font-semibold text-sm placeholder:text-white/30 focus:outline-none focus:border-white/40 transition-colors"
         />
       </div>
+
+      {/* Optional message */}
+      <textarea
+        rows={2}
+        maxLength={200}
+        placeholder="Leave a message (optional)"
+        value={message}
+        onChange={e => setMessage(e.target.value)}
+        className="w-full px-4 py-3 rounded-xl border-2 border-white/15 bg-transparent text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-white/40 transition-colors resize-none"
+      />
 
       {error && <p className="text-sm text-red-200 bg-red-900/40 rounded-lg px-4 py-2.5">{error}</p>}
 

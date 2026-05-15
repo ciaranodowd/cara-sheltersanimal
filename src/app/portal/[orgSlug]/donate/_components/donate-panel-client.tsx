@@ -25,6 +25,7 @@ export function DonatePanelClient({ orgSlug, orgName, animalName, monthDonationC
   const [frequency, setFrequency] = useState<"monthly" | "once">("monthly")
   const [selected, setSelected] = useState<number>(10)
   const [custom, setCustom] = useState("")
+  const [message, setMessage] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -53,7 +54,7 @@ export function DonatePanelClient({ orgSlug, orgName, animalName, monthDonationC
       const res = await fetch(`/api/portal/${orgSlug}/donate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: n, frequency }),
+        body: JSON.stringify({ amount: n, frequency, message: message.trim() || undefined }),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? "Something went wrong"); setLoading(false); return }
@@ -134,6 +135,16 @@ export function DonatePanelClient({ orgSlug, orgName, animalName, monthDonationC
           className="w-full pl-8 pr-4 py-3 rounded-xl border-2 border-stone-200 bg-white text-stone-800 font-semibold text-sm placeholder:text-stone-300 focus:outline-none focus:border-[#1a3a2a]/50 transition-colors"
         />
       </div>
+
+      {/* Optional message */}
+      <textarea
+        rows={2}
+        maxLength={200}
+        placeholder="Leave a message (optional)"
+        value={message}
+        onChange={e => setMessage(e.target.value)}
+        className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 bg-white text-stone-800 text-sm placeholder:text-stone-300 focus:outline-none focus:border-[#1a3a2a]/50 transition-colors resize-none"
+      />
 
       {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-4 py-2.5">{error}</p>}
 
