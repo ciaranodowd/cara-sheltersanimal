@@ -57,9 +57,16 @@
       "Bash(Get-ChildItem -Recurse -Path \"C:\\\\Projects\\\\cara\\\\src\\\\app\\\\\\(dashboard\\)\" -Filter \"loading.tsx\")",
       "Bash(Measure-Object)",
       "Bash(Select-Object -ExpandProperty Count)",
-      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\senan\\\\cara-sheltersanimal\" -Recurse -Directory | Select-Object -First 20 | ForEach-Object { $_.FullName })",
-      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\senan\\\\cara-sheltersanimal\" -Recurse -Filter \"package.json\" -File | ForEach-Object { $_.FullName })",
-      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\senan\\\\cara-sheltersanimal\\\\src\\\\app\\\\\\(dashboard\\)\\\\[orgSlug]\\\\adoptions\" -Recurse -File | ForEach-Object { $_.FullName })"
+      "Bash(Get-ChildItem -Path \"C:\\\\Projects\\\\cara\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Projects\\\\cara\\\\src\" -Recurse -File | Where-Object {$_.Extension -in @\\('.ts', '.tsx'\\)} | Measure-Object | Select-Object -ExpandProperty Count)",
+      "PowerShell(git commit -m $msg)",
+      "PowerShell($msg = \"feat: show account setup copy on invite flow instead of password reset copy`n`nInvite links now land on a Set up your account screen rather than the generic Reset your password UI, so new volunteers and team members get appropriate context when creating their password.`n`nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Projects\\\\cara\\\\src\\\\app\\\\\\(dashboard\\)\\\\[orgSlug]\" -Filter \"*.tsx\" -Recurse)",
+      "PowerShell(git add *)",
+      "PowerShell(git reset *)",
+      "PowerShell(git push *)"
     ]
   }
 }

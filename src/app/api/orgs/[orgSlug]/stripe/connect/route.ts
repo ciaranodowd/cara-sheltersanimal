@@ -28,28 +28,33 @@ export async function POST(
 
   let accountId = org.stripeAccountId
 
-  if (!accountId) {
-    const account = await stripe.accounts.create({
-      type: "express",
-      email: org.email ?? undefined,
-      business_profile: {
-        name: org.name,
-      },
-      metadata: { organizationId: org.id },
+  try {
+    if (!accountId) {
+      const account = await stripe.accounts.create({
+        type: "express",
+        country: "IE",
+        email: org.email ?? undefined,
+        business_profile: { name: org.name },
+        metadata: { organizationId: org.id },
+      })
+      accountId = account.id
+      await prisma.organization.update({
+        where: { id: org.id },
+        data: { stripeAccountId: accountId },
+      })
+    }
+
+    const accountLink = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: `${baseUrl}/api/orgs/${params.orgSlug}/stripe/connect/refresh`,
+      return_url: `${baseUrl}/${params.orgSlug}/settings?tab=donations`,
+      type: "account_onboarding",
     })
-    accountId = account.id
-    await prisma.organization.update({
-      where: { id: org.id },
-      data: { stripeAccountId: accountId },
-    })
+
+    return NextResponse.json({ url: accountLink.url })
+  } catch (err: any) {
+    console.error("[stripe-connect] account creation failed:", err?.message, "code:", err?.code)
+    const message = err?.message ?? "Failed to connect Stripe account"
+    return NextResponse.json({ error: message }, { status: 500 })
   }
-
-  const accountLink = await stripe.accountLinks.create({
-    account: accountId,
-    refresh_url: `${baseUrl}/api/orgs/${params.orgSlug}/stripe/connect/refresh`,
-    return_url: `${baseUrl}/${params.orgSlug}/settings?tab=donations`,
-    type: "account_onboarding",
-  })
-
-  return NextResponse.json({ url: accountLink.url })
 }
