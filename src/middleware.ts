@@ -50,6 +50,7 @@ export default withAuth(
           pathname === "/" ||
           pathname.startsWith("/adopt") ||
           pathname.startsWith("/about") ||
+          pathname.startsWith("/privacy") ||
           pathname.startsWith("/portal") ||
           pathname.startsWith("/api/portal") ||
           pathname.startsWith("/api/webhooks") ||
