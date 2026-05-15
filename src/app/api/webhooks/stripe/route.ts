@@ -172,11 +172,27 @@ export async function POST(req: NextRequest) {
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription
 
+        // In Stripe SDK v22 current_period_end lives on SubscriptionItem, not Subscription.
+        // Use it as fallback when cancel_at_period_end=true but cancel_at is not explicitly set.
+        const periodEnd = subscription.items.data[0]?.current_period_end ?? null
+
+        // Derive effective cancel date: explicit cancel_at, or period end when cancel_at_period_end=true
+        const effectiveCancelAt = subscription.cancel_at
+          ? new Date(subscription.cancel_at * 1000)
+          : subscription.cancel_at_period_end && periodEnd
+            ? new Date(periodEnd * 1000)
+            : null
+
         console.log("[webhook] customer.subscription.updated", {
-          subscriptionId:         subscription.id,
-          status:                 subscription.status,
-          customer:               subscription.customer,
-          metadataOrganizationId: subscription.metadata?.organizationId ?? "(missing)",
+          subscriptionId:      subscription.id,
+          status:              subscription.status,
+          customer:            subscription.customer,
+          organizationId:      subscription.metadata?.organizationId ?? "(missing)",
+          cancelAt:            subscription.cancel_at ?? null,
+          cancelAtPeriodEnd:   subscription.cancel_at_period_end,
+          canceledAt:          subscription.canceled_at ?? null,
+          periodEnd,
+          effectiveCancelAt:   effectiveCancelAt?.toISOString() ?? null,
         })
 
         const organizationId = subscription.metadata?.organizationId
@@ -194,13 +210,18 @@ export async function POST(req: NextRequest) {
         const updated = await prisma.organization.update({
           where: { id: organizationId },
           data: {
-            subscriptionStatus: mappedStatus,
-            plan:               mappedPlan,
+            subscriptionStatus:  mappedStatus,
+            plan:                mappedPlan,
             trialEndsAt: subscription.trial_end
               ? new Date(subscription.trial_end * 1000)
               : null,
+            cancelAt:          effectiveCancelAt,
+            cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
+            canceledAt:        subscription.canceled_at
+              ? new Date(subscription.canceled_at * 1000)
+              : null,
           },
-          select: { id: true, plan: true, subscriptionStatus: true },
+          select: { id: true, plan: true, subscriptionStatus: true, cancelAt: true, cancelAtPeriodEnd: true },
         })
 
         console.log("[webhook] organization updated", updated)
@@ -231,6 +252,11 @@ export async function POST(req: NextRequest) {
             subscriptionStatus:   SubscriptionStatus.CANCELLED,
             stripeSubscriptionId: null,
             plan:                 "trial",
+            cancelAt:             null,
+            cancelAtPeriodEnd:    false,
+            canceledAt:           subscription.canceled_at
+              ? new Date(subscription.canceled_at * 1000)
+              : new Date(),
           },
           select: { id: true, plan: true, subscriptionStatus: true },
         })

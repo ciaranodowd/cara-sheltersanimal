@@ -5,15 +5,18 @@ import Link from "next/link"
 
 interface Props {
   plan?: string
+  subscriptionStatus?: string
   trialEndDate: string | null
   orgSlug: string
 }
 
-export function TrialBanner({ plan, trialEndDate, orgSlug }: Props) {
+export function TrialBanner({ plan, subscriptionStatus, trialEndDate, orgSlug }: Props) {
   const [dismissed, setDismissed] = useState(false)
 
-  // Don't show if plan unknown (Prisma client not regenerated yet) or already pro
+  // Suppress if pro, or if subscription is active/trialing (catches plan-field lag)
   if (dismissed || !plan || plan === "pro") return null
+  // Suppress if subscription is active (safety net for plan-field lag after webhook)
+  if (subscriptionStatus === "ACTIVE") return null
 
   const trialDate = trialEndDate ? new Date(trialEndDate) : null
   const trialDaysLeft = trialDate

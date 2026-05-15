@@ -17,13 +17,34 @@ export default async function BillingPage({
   if (!session?.user?.id) redirect("/login")
   if (!cachedOrg) notFound()
 
-  // Billing also needs planStatus — fetch it alongside the cached common fields
-  type OrgRow = { id: string; name: string; slug: string; plan?: string; planStatus?: string; trialEndDate?: Date | null; trialEndsAt?: Date | null }
+  type OrgRow = {
+    id: string
+    name: string
+    slug: string
+    plan?: string | null
+    planStatus?: string | null
+    trialEndDate?: Date | null
+    trialEndsAt?: Date | null
+    subscriptionStatus?: string | null
+    cancelAt?: Date | null
+    cancelAtPeriodEnd?: boolean | null
+  }
   let org: OrgRow | null = null
   try {
     org = await prisma.organization.findUnique({
       where: { slug: params.orgSlug },
-      select: { id: true, name: true, slug: true, plan: true, planStatus: true, trialEndDate: true, trialEndsAt: true },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        plan: true,
+        planStatus: true,
+        trialEndDate: true,
+        trialEndsAt: true,
+        subscriptionStatus: true,
+        cancelAt: true,
+        cancelAtPeriodEnd: true,
+      },
     })
   } catch {
     org = await prisma.organization.findUnique({
@@ -49,6 +70,9 @@ export default async function BillingPage({
         plan={org.plan ?? "trial"}
         planStatus={org.planStatus ?? "active"}
         trialEndDate={effectiveTrialEnd?.toISOString() ?? null}
+        subscriptionStatus={org.subscriptionStatus ?? null}
+        cancelAt={org.cancelAt?.toISOString() ?? null}
+        cancelAtPeriodEnd={org.cancelAtPeriodEnd ?? false}
         isAdmin={membership!.role === "ADMIN"}
       />
     </div>

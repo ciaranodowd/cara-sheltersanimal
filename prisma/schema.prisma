@@ -86,6 +86,9 @@ model Organization {
   trialEndDate         DateTime?
   plan                 String    @default("trial")
   planStatus           String    @default("active")
+  cancelAt             DateTime? // effective date subscription will cancel (cancel_at or period end)
+  cancelAtPeriodEnd    Boolean   @default(false)
+  canceledAt           DateTime? // timestamp when Stripe actually cancelled the subscription
   contractTemplate String?  // Adoption contract template with {{placeholders}}
   vetName          String?  // Emergency vet name shown in foster portal
   vetPhone         String?  // Emergency vet phone shown in foster portal

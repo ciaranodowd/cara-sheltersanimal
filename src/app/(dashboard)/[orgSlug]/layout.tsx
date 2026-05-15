@@ -35,6 +35,7 @@ export default async function OrgLayout({
       <main className="flex-1 min-w-0 pt-14 pb-16 md:pt-0 md:pb-0">
         <TrialBanner
           plan={org.plan ?? undefined}
+          subscriptionStatus={org.subscriptionStatus ?? undefined}
           trialEndDate={effectiveTrialEnd?.toISOString() ?? null}
           orgSlug={org.slug}
         />

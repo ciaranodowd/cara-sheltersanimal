@@ -17,6 +17,9 @@ type OrgBasic = {
   plan?: string | null
   trialEndDate?: Date | null
   trialEndsAt?: Date | null
+  subscriptionStatus?: string | null
+  cancelAt?: Date | null
+  cancelAtPeriodEnd?: boolean | null
 } | null
 
 export const getOrgBySlug = cache(async (slug: string): Promise<OrgBasic> => {
@@ -30,10 +33,12 @@ export const getOrgBySlug = cache(async (slug: string): Promise<OrgBasic> => {
         plan: true,
         trialEndDate: true,
         trialEndsAt: true,
+        subscriptionStatus: true,
+        cancelAt: true,
+        cancelAtPeriodEnd: true,
       },
     })
   } catch {
-    // Fallback for environments where billing columns haven't migrated yet
     return prisma.organization.findUnique({
       where: { slug },
       select: { id: true, name: true, slug: true, trialEndsAt: true },

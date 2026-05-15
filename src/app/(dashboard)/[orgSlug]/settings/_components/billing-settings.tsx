@@ -9,24 +9,44 @@ interface BillingSettingsProps {
   subscriptionStatus: string | null
   stripeCustomerId: string | null
   trialEndsAt: Date | null
+  cancelAt: Date | null
+  cancelAtPeriodEnd: boolean
   isAdmin: boolean
 }
 
-function statusLabel(status: string | null) {
+function formatDate(date: Date) {
+  return date.toLocaleDateString("en-IE", { day: "numeric", month: "long", year: "numeric" })
+}
+
+function statusBadge(status: string | null, isPendingCancel: boolean) {
+  if (isPendingCancel) return { label: "Cancelling", variant: "outline" as const, className: "border-amber-400 text-amber-700" }
   switch (status) {
-    case "ACTIVE":    return { label: "Active",    variant: "default" as const }
-    case "TRIALING":  return { label: "Trial",     variant: "secondary" as const }
-    case "PAST_DUE":  return { label: "Past due",  variant: "destructive" as const }
-    case "CANCELLED": return { label: "Cancelled", variant: "destructive" as const }
-    case "INACTIVE":  return { label: "Inactive",  variant: "destructive" as const }
-    default:          return { label: "Unknown",   variant: "secondary" as const }
+    case "ACTIVE":    return { label: "Active",    variant: "default" as const,      className: "bg-green-600 text-white" }
+    case "TRIALING":  return { label: "Trial",     variant: "secondary" as const,    className: "" }
+    case "PAST_DUE":  return { label: "Past due",  variant: "destructive" as const,  className: "" }
+    case "CANCELLED": return { label: "Cancelled", variant: "destructive" as const,  className: "" }
+    case "INACTIVE":  return { label: "Inactive",  variant: "destructive" as const,  className: "" }
+    default:          return { label: "Unknown",   variant: "secondary" as const,    className: "" }
   }
 }
 
-export function BillingSettings({ orgSlug, subscriptionStatus, stripeCustomerId, trialEndsAt, isAdmin }: BillingSettingsProps) {
+export function BillingSettings({
+  orgSlug,
+  subscriptionStatus,
+  stripeCustomerId,
+  trialEndsAt,
+  cancelAt,
+  cancelAtPeriodEnd,
+  isAdmin,
+}: BillingSettingsProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const { label, variant } = statusLabel(subscriptionStatus)
+
+  const isPendingCancel =
+    subscriptionStatus === "ACTIVE" &&
+    (cancelAtPeriodEnd || (cancelAt !== null && cancelAt > new Date()))
+
+  const { label, variant, className } = statusBadge(subscriptionStatus, isPendingCancel)
 
   async function handleCheckout() {
     setLoading(true)
@@ -64,7 +84,7 @@ export function BillingSettings({ orgSlug, subscriptionStatus, stripeCustomerId,
     }
   }
 
-  const isSubscribed = subscriptionStatus === "ACTIVE" || subscriptionStatus === "PAST_DUE"
+  const isActiveOrPastDue = subscriptionStatus === "ACTIVE" || subscriptionStatus === "PAST_DUE"
 
   return (
     <Card>
@@ -80,29 +100,42 @@ export function BillingSettings({ orgSlug, subscriptionStatus, stripeCustomerId,
         <div className="flex items-center justify-between py-3 border-b">
           <div>
             <p className="text-sm font-medium">Current plan</p>
-            <p className="text-sm text-muted-foreground">Cara — €34.99/month</p>
+            <p className="text-sm text-muted-foreground">Cara Pro — €34.99/month</p>
           </div>
-          <Badge variant={variant}>{label}</Badge>
+          <Badge variant={variant} className={className}>{label}</Badge>
         </div>
 
         {subscriptionStatus === "TRIALING" && trialEndsAt && (
-          <div className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Trial ends on{" "}
-            <span className="font-medium text-foreground">
-              {new Date(trialEndsAt).toLocaleDateString("en-IE", { day: "numeric", month: "long", year: "numeric" })}
-            </span>
-          </div>
+            <span className="font-medium text-foreground">{formatDate(new Date(trialEndsAt))}</span>
+          </p>
+        )}
+
+        {isPendingCancel && cancelAt && (
+          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+            Your subscription is active until{" "}
+            <span className="font-semibold">{formatDate(new Date(cancelAt))}</span>. After that, your account
+            moves to the free plan.
+          </p>
+        )}
+
+        {subscriptionStatus === "CANCELLED" && (
+          <p className="text-sm text-muted-foreground">
+            Your subscription has ended. Subscribe to restore full access.
+          </p>
         )}
 
         {isAdmin && (
-          <div>
-            {isSubscribed && stripeCustomerId ? (
+          <div className="flex flex-wrap gap-2">
+            {isActiveOrPastDue && stripeCustomerId ? (
               <Button onClick={handlePortal} disabled={loading} variant="outline">
                 {loading ? "Loading…" : "Manage subscription"}
               </Button>
-            ) : (
+            ) : null}
+            {(!isActiveOrPastDue || isPendingCancel) && (
               <Button onClick={handleCheckout} disabled={loading}>
-                {loading ? "Loading…" : "Subscribe — €34.99/mo"}
+                {loading ? "Loading…" : isPendingCancel ? "Resubscribe — €34.99/mo" : "Subscribe — €34.99/mo"}
               </Button>
             )}
           </div>

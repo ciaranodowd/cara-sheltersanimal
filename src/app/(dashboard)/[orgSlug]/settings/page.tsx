@@ -92,6 +92,8 @@ export default async function SettingsPage({
             subscriptionStatus={org.subscriptionStatus}
             stripeCustomerId={org.stripeCustomerId ?? null}
             trialEndsAt={org.trialEndsAt ?? null}
+            cancelAt={org.cancelAt ?? null}
+            cancelAtPeriodEnd={org.cancelAtPeriodEnd ?? false}
             isAdmin={membership.role === "ADMIN"}
           />
         </TabsContent>
