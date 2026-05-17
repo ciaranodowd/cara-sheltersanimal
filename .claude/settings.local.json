@@ -71,7 +71,13 @@
       "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\senan\\\\cara-sheltersanimal\" -Recurse -Filter \"package.json\" -File | ForEach-Object { $_.FullName })",
       "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\senan\\\\cara-sheltersanimal\\\\src\\\\app\\\\\\(dashboard\\)\\\\[orgSlug]\\\\adoptions\" -Recurse -File | ForEach-Object { $_.FullName })",
       "Bash(node_modules/.bin/tsc --noEmit)",
-      "Bash(GIT_EDITOR=true git rebase --continue)"
+      "Bash(GIT_EDITOR=true git rebase --continue)",
+      "Bash(curl -s http://localhost:3000/api/auth/session)",
+      "Bash(curl -s -X POST http://localhost:3000/api/portal/cara-organisation/donate -H 'Content-Type: application/json' -d '{\"amount\":10,\"frequency\":\"once\"}')",
+      "Bash(python -m json.tool)",
+      "Bash(curl -s -X POST http://localhost:3000/api/portal/cara-organisation/donate -H 'Content-Type: application/json' -d '{\"amount\":1,\"frequency\":\"once\"}')",
+      "Bash(curl *)",
+      "PowerShell(git *)"
     ]
   }
 }

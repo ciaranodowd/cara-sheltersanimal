@@ -45,16 +45,24 @@ export async function POST(
     }
   } catch (err: any) {
     if (err?.code === "resource_missing") {
-      console.warn(
-        `[billing-portal] Stale Stripe customer ${org.stripeCustomerId} detected — ` +
-        `does not exist in the current Stripe mode (live/test mismatch?). org=${org.id}`
+      console.log(
+        `[billing-portal] stale customer ${org.stripeCustomerId} not found in current Stripe mode — ` +
+        `creating new live customer for org=${org.slug}`
       )
-      return NextResponse.json(
-        { error: "Billing account not available. Please re-subscribe to continue." },
-        { status: 400 }
-      )
+      const newCustomer = await stripe.customers.create({
+        email: org.email ?? undefined,
+        name: org.name,
+        metadata: { organizationId: org.id },
+      })
+      await prisma.organization.update({
+        where: { id: org.id },
+        data: { stripeCustomerId: newCustomer.id },
+      })
+      org.stripeCustomerId = newCustomer.id
+      console.log(`[billing-portal] created new live customer ${newCustomer.id} for org=${org.slug}`)
+    } else {
+      throw err
     }
-    throw err
   }
 
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000"
