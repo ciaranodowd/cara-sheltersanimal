@@ -53,7 +53,14 @@ export async function POST(
 
     return NextResponse.json({ url: accountLink.url })
   } catch (err: any) {
-    console.error("[stripe-connect] account creation failed:", err?.message, "code:", err?.code)
+    console.error("[stripe-connect] account creation failed", {
+      message: err?.message,
+      type: err?.type,
+      code: err?.code,
+      statusCode: err?.statusCode,
+      raw: err?.raw ?? null,
+      stack: err?.stack,
+    })
     const message = err?.message ?? "Failed to connect Stripe account"
     return NextResponse.json({ error: message }, { status: 500 })
   }
