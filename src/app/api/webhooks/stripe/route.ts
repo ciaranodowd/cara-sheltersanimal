@@ -284,6 +284,12 @@ export async function POST(req: NextRequest) {
           break
         }
 
+        const orgUpdated = await prisma.organization.findUnique({ where: { id: organizationId }, select: { id: true } })
+        if (!orgUpdated) {
+          console.warn(`[webhook] customer.subscription.updated: org ${organizationId} not found — subscriptionId=${subscription.id}`)
+          break
+        }
+
         const mappedStatus = mapStripeStatus(subscription.status)
         const mappedPlan   = mapPlan(mappedStatus)
 
@@ -323,6 +329,12 @@ export async function POST(req: NextRequest) {
             `[webhook] customer.subscription.deleted: no organizationId in metadata — ` +
             `subscriptionId=${subscription.id}`
           )
+          break
+        }
+
+        const orgDeleted = await prisma.organization.findUnique({ where: { id: organizationId }, select: { id: true } })
+        if (!orgDeleted) {
+          console.warn(`[webhook] customer.subscription.deleted: org ${organizationId} not found — subscriptionId=${subscription.id}`)
           break
         }
 

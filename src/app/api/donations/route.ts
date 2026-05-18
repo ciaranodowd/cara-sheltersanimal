@@ -16,6 +16,9 @@ export async function POST(req: NextRequest) {
   if (isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
     return NextResponse.json({ error: "Amount must be a positive number" }, { status: 400 })
   }
+  if (donationDate && isNaN(new Date(donationDate).getTime())) {
+    return NextResponse.json({ error: "Invalid donation date" }, { status: 400 })
+  }
 
   const membership = await prisma.userOrganization.findUnique({
     where: { userId_organizationId: { userId: session.user.id, organizationId } },

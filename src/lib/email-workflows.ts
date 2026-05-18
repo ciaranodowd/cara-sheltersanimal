@@ -61,6 +61,10 @@ function formatCurrency(amount: number, currency: string): string {
   }
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;")
+}
+
 // ─────────────────────────────────────────────
 // APPLICATION RECEIVED  (adopt + foster)
 // ─────────────────────────────────────────────
@@ -79,6 +83,9 @@ export async function sendApplicationReceivedEmail({
   orgSlug?: string
   isFoster: boolean
 }) {
+  applicantName = escapeHtml(applicantName)
+  animalName = escapeHtml(animalName)
+  orgName = escapeHtml(orgName)
   const subject = isFoster
     ? `We received your foster application for ${animalName}`
     : `We received your adoption application for ${animalName}`
@@ -140,6 +147,9 @@ export async function sendApplicationApprovedEmail({
   orgSlug: string
   isFoster: boolean
 }) {
+  applicantName = escapeHtml(applicantName)
+  animalName = escapeHtml(animalName)
+  orgName = escapeHtml(orgName)
   const portalUrl = `${baseUrl()}/portal/${orgSlug}`
 
   const subject = isFoster
@@ -206,6 +216,9 @@ export async function sendApplicationRejectedEmail({
   orgSlug: string
   isFoster: boolean
 }) {
+  applicantName = escapeHtml(applicantName)
+  animalName = escapeHtml(animalName)
+  orgName = escapeHtml(orgName)
   const portalUrl = `${baseUrl()}/portal/${orgSlug}`
 
   const subject = isFoster
@@ -279,7 +292,10 @@ export async function sendMeetGreetScheduledEmail({
   orgAddress: string | null
   homeCheckDate: Date | null
 }) {
-  const location = orgAddress ?? "our shelter — your coordinator will confirm the exact address"
+  applicantName = escapeHtml(applicantName)
+  animalName = escapeHtml(animalName)
+  orgName = escapeHtml(orgName)
+  const location = escapeHtml(orgAddress ?? "our shelter — your coordinator will confirm the exact address")
 
   const dateBlock = homeCheckDate
     ? `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:20px 24px;margin-bottom:24px">
@@ -349,9 +365,13 @@ export async function sendAdoptionCompleteEmail({
   orgName: string
   orgEmail: string | null
 }) {
-  const contactLine = orgEmail
+  adopterName = escapeHtml(adopterName)
+  animalName = escapeHtml(animalName)
+  orgName = escapeHtml(orgName)
+  const safeOrgEmail = orgEmail ? escapeHtml(orgEmail) : null
+  const contactLine = safeOrgEmail
     ? `If you ever need support or advice, reach out to ${orgName} at
-       <a href="mailto:${orgEmail}" style="color:#1a3a2a">${orgEmail}</a>.`
+       <a href="mailto:${safeOrgEmail}" style="color:#1a3a2a">${safeOrgEmail}</a>.`
     : `If you ever need support or advice, don't hesitate to reach out to ${orgName}.`
 
   const { error } = await resend.emails.send({
@@ -410,7 +430,8 @@ export async function sendDonationReceiptEmail({
   transactionId: string | null
   donatedAt: Date
 }) {
-  const greeting = donorName ? `Dear ${donorName},` : "Dear donor,"
+  orgName = escapeHtml(orgName)
+  const greeting = donorName ? `Dear ${escapeHtml(donorName)},` : "Dear donor,"
   const formattedAmount = formatCurrency(amount, currency)
   const formattedDate = formatDate(donatedAt)
   const ref = transactionId ?? donationId
@@ -475,8 +496,12 @@ export async function sendAdoptionFollowUpEmail({
   orgEmail: string | null
   followUpType: "3days" | "2weeks" | "3months"
 }) {
-  const contactLine = orgEmail
-    ? `Reach out to us any time at <a href="mailto:${orgEmail}" style="color:#1a3a2a">${orgEmail}</a> — we're always happy to help.`
+  adopterName = escapeHtml(adopterName)
+  animalName = escapeHtml(animalName)
+  orgName = escapeHtml(orgName)
+  const safeOrgEmail = orgEmail ? escapeHtml(orgEmail) : null
+  const contactLine = safeOrgEmail
+    ? `Reach out to us any time at <a href="mailto:${safeOrgEmail}" style="color:#1a3a2a">${safeOrgEmail}</a> — we're always happy to help.`
     : `Reach out to ${orgName} any time — we're always happy to help.`
 
   let subject: string

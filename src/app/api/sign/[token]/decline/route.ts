@@ -22,6 +22,9 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
 
   if (!contract) return NextResponse.json({ error: "Not found" }, { status: 404 })
   if (contract.signedAt) return NextResponse.json({ error: "Contract already signed" }, { status: 409 })
+  if (contract.tokenExpiresAt && contract.tokenExpiresAt < new Date()) {
+    return NextResponse.json({ error: "This signing link has expired." }, { status: 410 })
+  }
 
   const { message } = await req.json()
   if (!message?.trim()) return NextResponse.json({ error: "Message is required" }, { status: 400 })
