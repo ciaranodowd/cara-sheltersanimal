@@ -191,7 +191,7 @@ export default function SignContractPage() {
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center space-y-3">
               <p className="text-sm font-semibold text-slate-800">One last step — pay the Cara platform fee</p>
               <p className="text-xs text-slate-500 leading-relaxed">
-                A small €10 fee helps keep Cara running and free for shelters.
+                A small €5 fee helps keep Cara running and free for shelters.
               </p>
               <a
                 href={platformFeeUrl}
@@ -200,7 +200,7 @@ export default function SignContractPage() {
                 className="inline-flex items-center justify-center w-full gap-2 px-6 py-3 rounded-xl font-semibold text-sm text-white transition-colors"
                 style={{ backgroundColor: "#1a3a2a" }}
               >
-                Pay €10 now
+                Pay €5 now
               </a>
             </div>
           )}
