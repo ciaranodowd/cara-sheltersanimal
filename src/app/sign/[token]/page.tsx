@@ -161,24 +161,49 @@ export default function SignContractPage() {
   }
 
   if (signed || data?.signedAt) {
+    const platformFeeUrl = process.env.NEXT_PUBLIC_CARA_PLATFORM_FEE_URL
+    const justSigned = signed
+
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-10 max-w-md w-full text-center space-y-4">
-          <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto">
-            <CheckCircle className="h-8 w-8 text-green-600" />
+        <div className="max-w-md w-full space-y-4">
+          {/* Success card */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-10 text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+            <h1 className="text-xl font-bold text-slate-900">Contract signed</h1>
+            <p className="text-slate-500 text-sm">
+              {justSigned
+                ? `Thank you, ${typedName}. Your adoption contract for ${data?.animalName} has been signed. A copy has been emailed to you.`
+                : `This contract was already signed on ${new Date(data!.signedAt!).toLocaleDateString("en-IE", { day: "2-digit", month: "long", year: "numeric" })}.`
+              }
+            </p>
+            <div className="pt-2">
+              <span className="inline-block text-xs text-slate-400 bg-slate-50 rounded-full px-3 py-1">
+                Powered by <span style={{ color: "#1a3a2a" }} className="font-semibold">Cara</span>
+              </span>
+            </div>
           </div>
-          <h1 className="text-xl font-bold text-slate-900">Contract signed</h1>
-          <p className="text-slate-500 text-sm">
-            {signed
-              ? `Thank you, ${typedName}. Your adoption contract for ${data?.animalName} has been signed. A copy has been emailed to you.`
-              : `This contract was already signed on ${new Date(data!.signedAt!).toLocaleDateString("en-IE", { day: "2-digit", month: "long", year: "numeric" })}.`
-            }
-          </p>
-          <div className="pt-2">
-            <span className="inline-block text-xs text-slate-400 bg-slate-50 rounded-full px-3 py-1">
-              Powered by <span style={{ color: "#1a3a2a" }} className="font-semibold">Cara</span>
-            </span>
-          </div>
+
+          {/* Platform fee — only shown immediately after signing */}
+          {justSigned && platformFeeUrl && (
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center space-y-3">
+              <p className="text-sm font-semibold text-slate-800">One last step — pay the Cara platform fee</p>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                A small €10 fee helps keep Cara running and free for shelters.
+              </p>
+              <a
+                href={platformFeeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center w-full gap-2 px-6 py-3 rounded-xl font-semibold text-sm text-white transition-colors"
+                style={{ backgroundColor: "#1a3a2a" }}
+              >
+                Pay €10 now
+              </a>
+            </div>
+          )}
         </div>
       </div>
     )
