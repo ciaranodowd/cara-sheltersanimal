@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
@@ -13,6 +14,7 @@ interface DonationsSettingsProps {
   stripeAccountId: string | null
   stripeOnboarded: boolean
   donationsEnabled: boolean
+  donationUrl: string | null
   isAdmin: boolean
 }
 
@@ -43,6 +45,7 @@ export function DonationsSettings({
   stripeAccountId,
   stripeOnboarded,
   donationsEnabled: initialEnabled,
+  donationUrl: initialDonationUrl,
   isAdmin,
 }: DonationsSettingsProps) {
   const searchParams = useSearchParams()
@@ -51,6 +54,10 @@ export function DonationsSettings({
   const [error, setError] = useState("")
   const [enabled, setEnabled] = useState(initialEnabled)
   const [banner, setBanner] = useState<"reconnect" | null>(null)
+  const [donationUrl, setDonationUrl] = useState(initialDonationUrl ?? "")
+  const [urlSaving, setUrlSaving] = useState(false)
+  const [urlSaved, setUrlSaved] = useState(false)
+  const [urlError, setUrlError] = useState("")
 
   // Show a notice if Stripe redirected back with ?reconnect=1 (expired link)
   useEffect(() => {
@@ -114,6 +121,30 @@ export function DonationsSettings({
       setError("Something went wrong")
     } finally {
       setToggleLoading(false)
+    }
+  }
+
+  async function handleSaveDonationUrl() {
+    setUrlSaving(true)
+    setUrlError("")
+    setUrlSaved(false)
+    try {
+      const res = await fetch(`/api/orgs/${orgSlug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ donationUrl: donationUrl.trim() || null }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setUrlSaved(true)
+        setTimeout(() => setUrlSaved(false), 3000)
+      } else {
+        setUrlError(data.error ?? "Failed to save")
+      }
+    } catch {
+      setUrlError("Something went wrong")
+    } finally {
+      setUrlSaving(false)
     }
   }
 
@@ -203,6 +234,40 @@ export function DonationsSettings({
             </Button>
           </div>
         )}
+
+        {/* External donation link */}
+        <div className="pt-2 border-t space-y-3">
+          <div>
+            <Label htmlFor="donation-url" className="text-sm font-medium">Donation Link</Label>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Paste a GoFundMe, iDonate, or PayPal link. Applicants will see a donate button
+              after submitting an adoption application.
+            </p>
+          </div>
+          {urlError && (
+            <p className="text-sm text-destructive">{urlError}</p>
+          )}
+          <div className="flex gap-2">
+            <Input
+              id="donation-url"
+              type="url"
+              placeholder="https://www.gofundme.com/your-page"
+              value={donationUrl}
+              onChange={e => setDonationUrl(e.target.value)}
+              disabled={!isAdmin || urlSaving}
+              className="flex-1"
+            />
+            {isAdmin && (
+              <Button
+                variant="outline"
+                onClick={handleSaveDonationUrl}
+                disabled={urlSaving}
+              >
+                {urlSaving ? "Saving…" : urlSaved ? "Saved ✓" : "Save"}
+              </Button>
+            )}
+          </div>
+        </div>
       </CardContent>
     </Card>
   )

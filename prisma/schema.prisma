@@ -90,6 +90,7 @@ model Organization {
   cancelAtPeriodEnd    Boolean   @default(false)
   canceledAt           DateTime? // timestamp when Stripe actually cancelled the subscription
   donationsEnabled     Boolean   @default(false) // admin toggle — requires stripeOnboarded
+  donationUrl          String?   // External donation link (GoFundMe, iDonate, PayPal, etc.)
   contractTemplate String?  // Adoption contract template with {{placeholders}}
   vetName          String?  // Emergency vet name shown in foster portal
   vetPhone         String?  // Emergency vet phone shown in foster portal

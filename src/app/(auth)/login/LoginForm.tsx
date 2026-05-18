@@ -112,13 +112,18 @@ export function LoginForm() {
           </Button>
         </form>
       </CardContent>
-      <CardFooter className="justify-center">
-        <p className="text-sm text-muted-foreground">
-          No account?{" "}
-          <Link href="/register" className="text-primary font-medium hover:underline">
-            Register your shelter
-          </Link>
-        </p>
+      <CardFooter className="flex-col gap-3">
+        <div className="relative w-full">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-2 text-muted-foreground">New to Cara?</span>
+          </div>
+        </div>
+        <Button asChild variant="outline" className="w-full">
+          <Link href="/register">Register your shelter</Link>
+        </Button>
       </CardFooter>
     </Card>
   )

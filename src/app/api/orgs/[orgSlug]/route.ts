@@ -17,7 +17,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { orgSlug: s
   })
   if (!membership || membership.role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const { name, email, phone, address, city, county, country, website, chyNumber, description, vetName, vetPhone, coordinatorPhone } = await req.json()
+  const { name, email, phone, address, city, county, country, website, chyNumber, description, vetName, vetPhone, coordinatorPhone, donationUrl } = await req.json()
 
   if (name !== undefined) {
     if (typeof name !== "string" || name.trim().length < 1 || name.trim().length > 200) {
@@ -42,6 +42,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { orgSlug: s
       return NextResponse.json({ error: "Website must start with http:// or https://" }, { status: 400 })
     }
   }
+  if (donationUrl !== undefined && donationUrl !== null && donationUrl !== "") {
+    if (typeof donationUrl !== "string" || donationUrl.length > 500) {
+      return NextResponse.json({ error: "Donation URL is too long" }, { status: 400 })
+    }
+    if (!/^https?:\/\//i.test(donationUrl)) {
+      return NextResponse.json({ error: "Donation URL must start with http:// or https://" }, { status: 400 })
+    }
+  }
   if (address !== undefined && address !== null && address !== "") {
     if (typeof address !== "string" || address.length > 500) {
       return NextResponse.json({ error: "Address is too long" }, { status: 400 })
@@ -64,6 +72,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { orgSlug: s
       vetName: vetName !== undefined ? (vetName || null) : org.vetName,
       vetPhone: vetPhone !== undefined ? (vetPhone || null) : org.vetPhone,
       coordinatorPhone: coordinatorPhone !== undefined ? (coordinatorPhone || null) : org.coordinatorPhone,
+      donationUrl: donationUrl !== undefined ? (donationUrl || null) : org.donationUrl,
     },
   })
 

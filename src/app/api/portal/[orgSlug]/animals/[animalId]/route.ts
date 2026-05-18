@@ -7,7 +7,7 @@ export async function GET(
 ) {
   const org = await prisma.organization.findUnique({
     where: { slug: params.orgSlug },
-    select: { id: true, name: true, email: true },
+    select: { id: true, name: true, email: true, donationUrl: true },
   })
   if (!org) return NextResponse.json({ error: "Not found" }, { status: 404 })
 

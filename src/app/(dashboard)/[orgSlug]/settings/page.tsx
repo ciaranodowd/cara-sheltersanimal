@@ -83,6 +83,7 @@ export default async function SettingsPage({
             stripeAccountId={org.stripeAccountId ?? null}
             stripeOnboarded={org.stripeOnboarded}
             donationsEnabled={org.donationsEnabled ?? false}
+            donationUrl={org.donationUrl ?? null}
             isAdmin={membership.role === "ADMIN"}
           />
         </TabsContent>

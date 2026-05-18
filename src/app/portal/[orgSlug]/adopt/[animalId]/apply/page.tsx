@@ -9,8 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import { DonateWidget } from "@/components/portal/donate-widget"
-import { ArrowLeft, Loader2, CheckCircle, Clock, Home, PartyPopper, Mail } from "lucide-react"
+import { ArrowLeft, Loader2, CheckCircle, Clock, Home, PartyPopper, Mail, Heart } from "lucide-react"
 import { PawLoader } from "@/components/ui/paw-loader"
 import { COUNTIES } from "@/lib/constants"
 
@@ -20,7 +19,7 @@ export default function AdoptApplicationPage() {
   const [animal, setAnimal] = useState<{
     name: string; species: string; breed?: string; photos?: { url: string }[]
   } | null>(null)
-  const [org, setOrg] = useState<{ name: string } | null>(null)
+  const [org, setOrg] = useState<{ name: string; donationUrl: string | null } | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -176,41 +175,45 @@ export default function AdoptApplicationPage() {
           </div>
         )}
 
-        {/* Donation ask — the emotional hook */}
-        <div className="max-w-lg mx-auto px-4 pb-10">
-          <div
-            className="rounded-2xl p-6 sm:p-8"
-            style={{ backgroundColor: "#1a3a2a" }}
-          >
-            <div className="text-center mb-7">
+        {/* Donation ask — only shown when the shelter has a donation link set */}
+        {org?.donationUrl && (
+          <div className="max-w-lg mx-auto px-4 pb-4">
+            <div
+              className="rounded-2xl p-6 sm:p-8 text-center"
+              style={{ backgroundColor: "#1a3a2a" }}
+            >
               <p className="text-xs font-semibold tracking-widest uppercase text-[#4ade80]/60 mb-3">
                 While you wait
               </p>
               <h2 className="text-xl sm:text-2xl font-extrabold text-white leading-tight mb-3">
                 Help the animals still waiting
               </h2>
-              <p className="text-sm text-[#a7c4b5] max-w-xs mx-auto leading-relaxed">
+              <p className="text-sm text-[#a7c4b5] max-w-xs mx-auto leading-relaxed mb-6">
                 {animal?.name
-                  ? <>While {org?.name ?? "the shelter"} reviews your application for <strong className="text-white">{animal.name}</strong>, there are more animals still waiting for their forever home.</>
+                  ? <>While {org.name} reviews your application for <strong className="text-white">{animal.name}</strong>, there are more animals still waiting for their forever home.</>
                   : <>There are more animals still waiting for their forever home.</>}
                 {" "}A small donation helps cover food, vet care, and shelter costs.
               </p>
+              <a
+                href={org.donationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm text-[#1a3a2a] bg-[#4ade80] hover:bg-[#22c55e] transition-colors"
+              >
+                <Heart className="h-4 w-4" />
+                Donate to {org.name}
+              </a>
             </div>
-            <DonateWidget
-              orgSlug={params.orgSlug as string}
-              orgName={org?.name ?? "the shelter"}
-              defaultAmount={10}
-            />
           </div>
+        )}
 
-          <div className="text-center mt-5">
-            <Link
-              href={`/portal/${params.orgSlug}`}
-              className="text-sm text-stone-400 hover:text-stone-600 transition-colors underline underline-offset-2"
-            >
-              Skip — take me back to {org?.name ?? "the shelter"}
-            </Link>
-          </div>
+        <div className="max-w-lg mx-auto px-4 pb-10 text-center">
+          <Link
+            href={`/portal/${params.orgSlug}`}
+            className="text-sm text-stone-400 hover:text-stone-600 transition-colors underline underline-offset-2"
+          >
+            {org?.donationUrl ? "Skip — " : ""}Take me back to {org?.name ?? "the shelter"}
+          </Link>
         </div>
       </div>
     )
