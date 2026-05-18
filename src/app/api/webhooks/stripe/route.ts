@@ -3,6 +3,7 @@ import Stripe from "stripe"
 import { getStripe } from "@/lib/stripe"
 import { prisma } from "@/lib/prisma"
 import { SubscriptionStatus } from "@prisma/client"
+import { sendDonationReceiptEmail } from "@/lib/email-workflows"
 
 export const dynamic = "force-dynamic"
 
@@ -74,22 +75,47 @@ export async function POST(req: NextRequest) {
             console.log(`[webhook] monthly donation already recorded for sessionId=${cs.id}, skipping`)
             break
           }
-          await prisma.donation.create({
+          const monthlyDonorEmail = cs.customer_details?.email ?? cs.metadata.donorEmail ?? null
+          const monthlyDonorName = cs.metadata.donorName || null
+          const monthlyAmount = (cs.amount_total ?? 0) / 100
+
+          const createdMonthly = await prisma.donation.create({
             data: {
               organizationId,
-              amount:              (cs.amount_total ?? 0) / 100,
+              amount:              monthlyAmount,
               currency:            (cs.currency ?? "eur").toUpperCase(),
               type:                "RECURRING_MONTHLY",
               status:              "COMPLETED",
               stripeSessionId:     cs.id,
               stripeSubscriptionId: cs.subscription as string | null,
-              donorName:           cs.metadata.donorName || null,
-              donorEmail:          cs.customer_details?.email ?? cs.metadata.donorEmail ?? null,
+              donorName:           monthlyDonorName,
+              donorEmail:          monthlyDonorEmail,
               message:             cs.metadata.donorMessage || null,
               source:              "public_portal",
             },
+            select: { id: true },
           })
-          console.log(`[webhook] monthly donation recorded for org=${organizationId} amount=${(cs.amount_total ?? 0) / 100}`)
+          console.log(`[webhook] monthly donation recorded for org=${organizationId} amount=${monthlyAmount}`)
+
+          // Send donation receipt — fire-and-forget, inside the idempotency guard so it runs once
+          if (monthlyDonorEmail) {
+            const monthlyOrg = await prisma.organization.findUnique({
+              where: { id: organizationId },
+              select: { name: true },
+            })
+            if (monthlyOrg) {
+              sendDonationReceiptEmail({
+                to: monthlyDonorEmail,
+                donorName: monthlyDonorName,
+                amount: monthlyAmount,
+                currency: (cs.currency ?? "eur").toUpperCase(),
+                orgName: monthlyOrg.name,
+                donationId: createdMonthly.id,
+                transactionId: null,
+                donatedAt: new Date(),
+              }).catch(err => console.error("[webhook] monthly donation receipt email failed:", err))
+            }
+          }
           break
         }
 
@@ -181,7 +207,7 @@ export async function POST(req: NextRequest) {
           const donorEmail  = cs.customer_details?.email ?? cs.metadata?.donorEmail ?? null
           const message     = cs.metadata?.donorMessage ?? null
 
-          await prisma.donation.create({
+          const createdDonation = await prisma.donation.create({
             data: {
               organizationId,
               amount:           amountTotal / 100,
@@ -195,8 +221,29 @@ export async function POST(req: NextRequest) {
               message:          message || null,
               source:           "public_portal",
             },
+            select: { id: true },
           })
           console.log(`[webhook] donation created for org=${organizationId} amount=${amountTotal / 100}`)
+
+          // Send donation receipt — fire-and-forget, inside the idempotency guard so it runs once
+          if (donorEmail) {
+            const donationOrg = await prisma.organization.findUnique({
+              where: { id: organizationId },
+              select: { name: true },
+            })
+            if (donationOrg) {
+              sendDonationReceiptEmail({
+                to: donorEmail,
+                donorName: donorName || null,
+                amount: amountTotal / 100,
+                currency: (cs.currency ?? "eur").toUpperCase(),
+                orgName: donationOrg.name,
+                donationId: createdDonation.id,
+                transactionId: cs.payment_intent as string | null,
+                donatedAt: new Date(),
+              }).catch(err => console.error("[webhook] donation receipt email failed:", err))
+            }
+          }
         }
 
         break

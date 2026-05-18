@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createHmac } from "crypto"
 import { prisma } from "@/lib/prisma"
 import { rateLimiters, getIP, checkRateLimit } from "@/lib/ratelimit"
+import { sendApplicationReceivedEmail } from "@/lib/email-workflows"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const VALID_APPLICATION_TYPES = new Set(["ADOPT", "FOSTER"])
@@ -28,7 +29,7 @@ export async function POST(
 
   const org = await prisma.organization.findUnique({
     where: { slug: params.orgSlug },
-    select: { id: true },
+    select: { id: true, name: true, slug: true },
   })
   if (!org) return NextResponse.json({ error: "Organisation not found" }, { status: 404 })
 
@@ -147,6 +148,16 @@ export async function POST(
   const conversationSecret = createHmac("sha256", process.env.NEXTAUTH_SECRET!)
     .update(conversation.id)
     .digest("hex")
+
+  // Fire-and-forget — email failure must not block the applicant's confirmation page
+  sendApplicationReceivedEmail({
+    to: applicantEmail.toLowerCase().trim(),
+    applicantName: applicantName.trim(),
+    animalName: animal.name,
+    orgName: org.name,
+    orgSlug: org.slug,
+    isFoster: resolvedType === "FOSTER",
+  }).catch(err => console.error("[apply] application received email failed:", err))
 
   return NextResponse.json(
     { id: application.id, conversationToken: conversation.id, conversationSecret },

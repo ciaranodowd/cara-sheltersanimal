@@ -418,6 +418,7 @@ model AdoptionApplication {
   homeCheckNotes   String?
   homeCheckPassed  Boolean?
   internalNotes    String?
+  completedAt      DateTime?         // set when status first transitions to COMPLETED
   // Application type
   applicationType  String?           @default("ADOPT") // "ADOPT" | "FOSTER"
   rentOrOwn        String?           // "own" | "rent" | "other"
@@ -570,6 +571,14 @@ model GdprRequest {
   organization Organization @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId])
+  @@schema("public")
+}
+
+model SentEmailLog {
+  id     String   @id @default(cuid())
+  key    String   @unique
+  sentAt DateTime @default(now())
+
   @@schema("public")
 }
 

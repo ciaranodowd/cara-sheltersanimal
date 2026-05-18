@@ -129,7 +129,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
 
       await tx.adoptionApplication.update({
         where: { id: contract.application.id },
-        data: { status: "COMPLETED" },
+        data: { status: "COMPLETED", completedAt: signedAt },
       })
 
       // Remove animal from public portal immediately — signed contract means adopted
