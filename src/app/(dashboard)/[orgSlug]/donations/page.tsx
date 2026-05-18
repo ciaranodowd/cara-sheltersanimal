@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, TrendingUp } from "lucide-react"
 import { formatCurrency, formatDate } from "@/lib/utils"
+import { DonationsSettings } from "../settings/_components/donations-settings"
 
 export const dynamic = 'force-dynamic'
 
@@ -18,7 +19,7 @@ export default async function DonationsPage({ params }: { params: { orgSlug: str
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
   const startOfYear = new Date(now.getFullYear(), 0, 1)
 
-  const [membership, donations, monthTotal, yearTotal, campaigns] = await Promise.all([
+  const [membership, donations, monthTotal, yearTotal, campaigns, orgDetails] = await Promise.all([
     getUserMembership(session.user.id, org.id),
     prisma.donation.findMany({
       where: { organizationId: org.id },
@@ -40,6 +41,7 @@ export default async function DonationsPage({ params }: { params: { orgSlug: str
         donations: { where: { status: "COMPLETED" }, select: { amount: true } } },
       take: 3,
     }),
+    prisma.organization.findUnique({ where: { id: org.id }, select: { donationUrl: true } }),
   ])
   if (!membership) notFound()
 
@@ -117,6 +119,13 @@ export default async function DonationsPage({ params }: { params: { orgSlug: str
           </div>
         </div>
       )}
+
+      {/* Donation link */}
+      <DonationsSettings
+        orgSlug={params.orgSlug}
+        donationUrl={orgDetails?.donationUrl ?? null}
+        isAdmin={membership.role === "ADMIN"}
+      />
 
       {/* Donations table */}
       <Card>
