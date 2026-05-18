@@ -418,6 +418,7 @@ model AdoptionApplication {
   homeCheckNotes   String?
   homeCheckPassed  Boolean?
   internalNotes    String?
+  readAt           DateTime?         // null = unread by shelter staff; set when list page is opened
   completedAt      DateTime?         // set when status first transitions to COMPLETED
   // Application type
   applicationType  String?           @default("ADOPT") // "ADOPT" | "FOSTER"

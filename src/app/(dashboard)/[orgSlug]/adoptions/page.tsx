@@ -4,6 +4,7 @@ import { getSession, getOrgBySlug, getUserMembership } from "@/lib/data-access"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { formatDate } from "@/lib/utils"
+import { MarkApplicationsRead } from "./_components/mark-read"
 
 const PIPELINE_STAGES = [
   {
@@ -77,6 +78,7 @@ export default async function AdoptionsPage({ params }: { params: { orgSlug: str
 
   return (
     <div className="px-4 sm:px-6 py-6 max-w-[1400px] mx-auto space-y-6">
+      <MarkApplicationsRead orgSlug={params.orgSlug} />
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>

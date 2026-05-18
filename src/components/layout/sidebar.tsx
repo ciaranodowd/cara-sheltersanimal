@@ -1,4 +1,5 @@
 "use client"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
@@ -38,6 +39,14 @@ export function Sidebar({ orgSlug, orgName, plan }: SidebarProps) {
   const pathname = usePathname()
   const { data: session } = useSession()
   const navItems = nav(orgSlug, plan)
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  useEffect(() => {
+    fetch(`/api/orgs/${orgSlug}/applications/unread-count`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => setUnreadCount(data?.count ?? 0))
+      .catch(() => {})
+  }, [orgSlug, pathname])
 
   return (
     <aside className="hidden md:flex flex-col w-60 h-screen sticky top-0 shrink-0" style={{ backgroundColor: "#1a3a2a" }}>
@@ -73,6 +82,14 @@ export function Sidebar({ orgSlug, orgName, plan }: SidebarProps) {
               <item.icon className="h-4 w-4 shrink-0" />
               <span className="flex-1">{item.label}</span>
               {item.external && <ExternalLink className="h-3 w-3 opacity-50 shrink-0" />}
+              {item.label === "Adoptions" && unreadCount > 0 && (
+                <span className={cn(
+                  "text-xs font-bold px-1.5 py-0.5 rounded-full leading-none min-w-[18px] text-center tabular-nums shrink-0",
+                  active ? "bg-[#1a3a2a]/25 text-[#1a3a2a]" : "bg-[#4ade80] text-[#1a3a2a]"
+                )}>
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
               {item.badge && (
                 <span
                   className={cn(
