@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, Loader2, MessageSquare, Send } from "lucide-react"
+import { AlertTriangle, ArrowLeft, Loader2, MessageSquare, Send } from "lucide-react"
 
 const STATUS_OPTIONS = [
   { value: "PENDING", label: "Pending" },
@@ -20,6 +20,22 @@ const STATUS_OPTIONS = [
   { value: "REJECTED", label: "Rejected" },
 ]
 
+const STATUS_ORDER = ["PENDING", "UNDER_REVIEW", "HOME_CHECK_SCHEDULED", "APPROVED", "CONTRACT_SENT", "COMPLETED"]
+
+function labelFor(value: string) {
+  return STATUS_OPTIONS.find(s => s.value === value)?.label ?? value.replace(/_/g, " ")
+}
+
+function isBackwardsMove(current: string, next: string) {
+  if (current === next) return false
+  if (current === "REJECTED") return true
+  if (current === "APPROVED") {
+    const nextIdx = STATUS_ORDER.indexOf(next)
+    return nextIdx !== -1 && nextIdx < STATUS_ORDER.indexOf("APPROVED")
+  }
+  return false
+}
+
 export default function ApplicationPage() {
   const params = useParams()
   const router = useRouter()
@@ -30,6 +46,7 @@ export default function ApplicationPage() {
   const [sendResult, setSendResult] = useState<{ ok: boolean; message: string } | null>(null)
   const [notes, setNotes] = useState("")
   const [status, setStatus] = useState("")
+  const [showConfirm, setShowConfirm] = useState(false)
 
   useEffect(() => {
     fetch(`/api/applications/${params.appId}`)
@@ -47,6 +64,7 @@ export default function ApplicationPage() {
   }, [params.appId])
 
   async function saveStatus() {
+    setShowConfirm(false)
     setSaving(true)
     await fetch(`/api/applications/${params.appId}`, {
       method: "PATCH",
@@ -55,6 +73,14 @@ export default function ApplicationPage() {
     })
     setSaving(false)
     router.refresh()
+  }
+
+  function handleSaveClick() {
+    if (app && isBackwardsMove(app.status, status)) {
+      setShowConfirm(true)
+    } else {
+      saveStatus()
+    }
   }
 
   async function sendContract() {
@@ -175,8 +201,8 @@ export default function ApplicationPage() {
                 <Textarea rows={4} value={notes} onChange={e => setNotes(e.target.value)}
                   placeholder="Notes visible to staff only…" />
               </div>
-              <Button className="w-full" onClick={saveStatus} disabled={saving}>
-                {saving ? "Saving…" : "Save changes"}
+              <Button className="w-full" onClick={handleSaveClick} disabled={saving}>
+                {saving ? "Saving…" : "Save & Notify Applicant"}
               </Button>
             </CardContent>
           </Card>
@@ -234,6 +260,28 @@ export default function ApplicationPage() {
             </Card>
         </div>
       </div>
+
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full space-y-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <h3 className="font-semibold text-slate-900 text-sm">Update application status?</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  This applicant was previously marked as <strong>{labelFor(app.status)}</strong> — are you sure you want to update their status to <strong>{labelFor(status)}</strong>? They will receive a new email notification.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end pt-1">
+              <Button variant="outline" size="sm" onClick={() => setShowConfirm(false)}>Cancel</Button>
+              <Button size="sm" onClick={saveStatus} disabled={saving}>
+                {saving ? "Saving…" : "Confirm"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
