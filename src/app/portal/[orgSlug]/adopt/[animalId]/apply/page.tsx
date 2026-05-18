@@ -126,6 +126,38 @@ export default function AdoptApplicationPage() {
           )}
         </div>
 
+        {/* Donation ask — only shown when the shelter has a donation link set */}
+        {org?.donationUrl && (
+          <div className="max-w-lg mx-auto px-4 pt-6 pb-2">
+            <div
+              className="rounded-2xl p-6 sm:p-8 text-center"
+              style={{ backgroundColor: "#1a3a2a" }}
+            >
+              <p className="text-xs font-semibold tracking-widest uppercase text-[#4ade80]/60 mb-3">
+                While you wait
+              </p>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-white leading-tight mb-3">
+                Help the animals still waiting
+              </h2>
+              <p className="text-sm text-[#a7c4b5] max-w-xs mx-auto leading-relaxed mb-6">
+                {animal?.name
+                  ? <>While {org.name} reviews your application for <strong className="text-white">{animal.name}</strong>, there are more animals still waiting for their forever home.</>
+                  : <>There are more animals still waiting for their forever home.</>}
+                {" "}A small donation helps cover food, vet care, and shelter costs.
+              </p>
+              <a
+                href={org.donationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm text-[#1a3a2a] bg-[#4ade80] hover:bg-[#22c55e] transition-colors"
+              >
+                <Heart className="h-4 w-4" />
+                Donate to {org.name}
+              </a>
+            </div>
+          </div>
+        )}
+
         {/* What happens next */}
         <div className="max-w-lg mx-auto px-4 py-6">
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
@@ -171,38 +203,6 @@ export default function AdoptApplicationPage() {
                 <Mail className="h-4 w-4" />
                 Message the shelter
               </Link>
-            </div>
-          </div>
-        )}
-
-        {/* Donation ask — only shown when the shelter has a donation link set */}
-        {org?.donationUrl && (
-          <div className="max-w-lg mx-auto px-4 pb-4">
-            <div
-              className="rounded-2xl p-6 sm:p-8 text-center"
-              style={{ backgroundColor: "#1a3a2a" }}
-            >
-              <p className="text-xs font-semibold tracking-widest uppercase text-[#4ade80]/60 mb-3">
-                While you wait
-              </p>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-white leading-tight mb-3">
-                Help the animals still waiting
-              </h2>
-              <p className="text-sm text-[#a7c4b5] max-w-xs mx-auto leading-relaxed mb-6">
-                {animal?.name
-                  ? <>While {org.name} reviews your application for <strong className="text-white">{animal.name}</strong>, there are more animals still waiting for their forever home.</>
-                  : <>There are more animals still waiting for their forever home.</>}
-                {" "}A small donation helps cover food, vet care, and shelter costs.
-              </p>
-              <a
-                href={org.donationUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm text-[#1a3a2a] bg-[#4ade80] hover:bg-[#22c55e] transition-colors"
-              >
-                <Heart className="h-4 w-4" />
-                Donate to {org.name}
-              </a>
             </div>
           </div>
         )}
