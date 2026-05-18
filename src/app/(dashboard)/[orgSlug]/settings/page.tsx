@@ -80,9 +80,6 @@ export default async function SettingsPage({
         <TabsContent value="donations" className="mt-4">
           <DonationsSettings
             orgSlug={params.orgSlug}
-            stripeAccountId={org.stripeAccountId ?? null}
-            stripeOnboarded={org.stripeOnboarded}
-            donationsEnabled={org.donationsEnabled ?? false}
             donationUrl={org.donationUrl ?? null}
             isAdmin={membership.role === "ADMIN"}
           />
