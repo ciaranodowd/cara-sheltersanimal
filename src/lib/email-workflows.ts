@@ -70,14 +70,13 @@ export async function sendApplicationReceivedEmail({
   applicantName,
   animalName,
   orgName,
-  orgSlug: _orgSlug,
   isFoster,
 }: {
   to: string
   applicantName: string
   animalName: string
   orgName: string
-  orgSlug: string
+  orgSlug?: string
   isFoster: boolean
 }) {
   const subject = isFoster
