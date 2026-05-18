@@ -31,7 +31,7 @@ export default async function PublicAnimalProfilePage({
 }) {
   const org = await prisma.organization.findUnique({
     where: { slug: params.orgSlug },
-    select: { id: true, name: true, email: true, phone: true, logo: true, city: true, county: true },
+    select: { id: true, name: true, email: true, phone: true, logo: true, city: true, county: true, donationUrl: true },
   })
   if (!org) notFound()
 
@@ -270,13 +270,17 @@ export default async function PublicAnimalProfilePage({
               Apply to adopt or foster {animal.name}
             </Link>
 
-            <Link
-              href={`/portal/${params.orgSlug}/donate`}
-              className="flex items-center justify-center gap-2 w-full border border-primary text-primary hover:bg-primary/5 font-semibold py-3 px-6 rounded-xl transition-colors text-sm"
-            >
-              <HandHeart className="h-4 w-4" />
-              Donate to {o.name}
-            </Link>
+            {o.donationUrl && (
+              <a
+                href={o.donationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full border border-primary text-primary hover:bg-primary/5 font-semibold py-3 px-6 rounded-xl transition-colors text-sm"
+              >
+                <HandHeart className="h-4 w-4" />
+                Donate to {o.name}
+              </a>
+            )}
           </div>
         </div>
 
