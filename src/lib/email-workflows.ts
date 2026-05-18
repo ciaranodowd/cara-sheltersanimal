@@ -70,7 +70,7 @@ export async function sendApplicationReceivedEmail({
   applicantName,
   animalName,
   orgName,
-  orgSlug,
+  orgSlug: _orgSlug,
   isFoster,
 }: {
   to: string
