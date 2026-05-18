@@ -566,3 +566,101 @@ export async function sendAdoptionFollowUpEmail({
   })
   if (error) throw new Error(error.message)
 }
+
+// ─────────────────────────────────────────────
+// NEW APPLICATION ALERT  (sent to shelter admin)
+// ─────────────────────────────────────────────
+
+export async function sendNewApplicationAlertEmail({
+  to,
+  orgName,
+  orgSlug,
+  applicantName,
+  applicantEmail,
+  applicantPhone,
+  animalName,
+  applicationType,
+  applicationId,
+  householdType,
+  hasGarden,
+  hasChildren,
+  hasOtherPets,
+  experienceLevel,
+  workingHours,
+  whyAdopt,
+}: {
+  to: string
+  orgName: string
+  orgSlug: string
+  applicantName: string
+  applicantEmail: string
+  applicantPhone: string | null
+  animalName: string
+  applicationType: string
+  applicationId: string
+  householdType: string | null
+  hasGarden: boolean
+  hasChildren: boolean
+  hasOtherPets: boolean
+  experienceLevel: string | null
+  workingHours: string | null
+  whyAdopt: string
+}) {
+  const appUrl = `${baseUrl()}/${orgSlug}/adoptions/${applicationId}`
+  const typeLabel = applicationType === "FOSTER" ? "foster" : "adoption"
+
+  orgName = escapeHtml(orgName)
+  applicantName = escapeHtml(applicantName)
+  applicantEmail = escapeHtml(applicantEmail)
+  animalName = escapeHtml(animalName)
+  const safePhone = applicantPhone ? escapeHtml(applicantPhone) : null
+  const safeHouseholdType = householdType ? escapeHtml(householdType) : null
+  const safeExperienceLevel = experienceLevel ? escapeHtml(experienceLevel) : null
+  const safeWorkingHours = workingHours ? escapeHtml(workingHours) : null
+  const preview = whyAdopt.length > 400 ? whyAdopt.slice(0, 400) + "…" : whyAdopt
+  const safeWhyAdopt = escapeHtml(preview)
+
+  const summaryRows: [string, string][] = [
+    ["Applicant", applicantName],
+    ["Email", applicantEmail],
+    ...(safePhone ? [["Phone", safePhone] as [string, string]] : []),
+    ...(safeHouseholdType ? [["Home type", safeHouseholdType] as [string, string]] : []),
+    ["Has garden", hasGarden ? "Yes" : "No"],
+    ["Has children", hasChildren ? "Yes" : "No"],
+    ["Has other pets", hasOtherPets ? "Yes" : "No"],
+    ...(safeExperienceLevel ? [["Experience", safeExperienceLevel] as [string, string]] : []),
+    ...(safeWorkingHours ? [["Working hours", safeWorkingHours] as [string, string]] : []),
+  ]
+
+  const tableRows = summaryRows.map(([label, value]) =>
+    `<tr>
+      <td style="padding:6px 0;color:#64748b;font-size:14px;font-weight:600;width:130px;vertical-align:top">${label}</td>
+      <td style="padding:6px 0;color:#1a1a1a;font-size:14px">${value}</td>
+    </tr>`
+  ).join("")
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `New ${typeLabel} application — ${applicantName} for ${animalName}`,
+    html: wrap(`
+      <h1 style="font-size:22px;font-weight:700;margin:0 0 16px">New ${typeLabel} application received</h1>
+      <p style="color:#555;margin:0 0 24px">
+        A new ${typeLabel} application has been submitted for <strong>${animalName}</strong>.
+      </p>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:20px 24px;margin-bottom:24px">
+        <p style="font-weight:600;color:#1a1a1a;margin:0 0 12px;font-size:14px">Applicant summary</p>
+        <table style="border-collapse:collapse;width:100%">
+          ${tableRows}
+        </table>
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin-bottom:24px">
+        <p style="font-weight:600;color:#1a1a1a;margin:0 0 8px;font-size:14px">Why they want to ${typeLabel}</p>
+        <p style="color:#374151;font-size:14px;margin:0;line-height:1.6">${safeWhyAdopt}</p>
+      </div>
+      ${ctaButton(appUrl, "View full application")}
+      <p style="color:#888;font-size:13px;margin:0;text-align:center">Log in to Cara to manage this application.</p>
+    `, orgName),
+  })
+  if (error) throw new Error(error.message)
+}

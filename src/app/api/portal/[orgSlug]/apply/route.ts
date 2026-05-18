@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createHmac } from "crypto"
 import { prisma } from "@/lib/prisma"
 import { rateLimiters, getIP, checkRateLimit } from "@/lib/ratelimit"
-import { sendApplicationReceivedEmail } from "@/lib/email-workflows"
+import { sendApplicationReceivedEmail, sendNewApplicationAlertEmail } from "@/lib/email-workflows"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const VALID_APPLICATION_TYPES = new Set(["ADOPT", "FOSTER"])
@@ -29,7 +29,7 @@ export async function POST(
 
   const org = await prisma.organization.findUnique({
     where: { slug: params.orgSlug },
-    select: { id: true, name: true, slug: true },
+    select: { id: true, name: true, slug: true, email: true },
   })
   if (!org) return NextResponse.json({ error: "Organisation not found" }, { status: 404 })
 
@@ -149,7 +149,7 @@ export async function POST(
     .update(conversation.id)
     .digest("hex")
 
-  // Fire-and-forget — email failure must not block the applicant's confirmation page
+  // Fire-and-forget — email failures must not block the applicant's confirmation page
   sendApplicationReceivedEmail({
     to: applicantEmail.toLowerCase().trim(),
     applicantName: applicantName.trim(),
@@ -158,6 +158,27 @@ export async function POST(
     orgSlug: org.slug,
     isFoster: resolvedType === "FOSTER",
   }).catch(err => console.error("[apply] application received email failed:", err))
+
+  if (org.email) {
+    sendNewApplicationAlertEmail({
+      to: org.email,
+      orgName: org.name,
+      orgSlug: org.slug,
+      applicantName: applicantName.trim(),
+      applicantEmail: applicantEmail.toLowerCase().trim(),
+      applicantPhone: applicantPhone?.trim() || null,
+      animalName: animal.name,
+      applicationType: resolvedType,
+      applicationId: application.id,
+      householdType: householdType || null,
+      hasGarden: hasGarden ?? false,
+      hasChildren: hasChildren ?? false,
+      hasOtherPets: hasOtherPets ?? false,
+      experienceLevel: experienceLevel || null,
+      workingHours: workingHours?.trim() || null,
+      whyAdopt: whyAdopt.trim(),
+    }).catch(err => console.error("[apply] shelter alert email failed:", err))
+  }
 
   return NextResponse.json(
     { id: application.id, conversationToken: conversation.id, conversationSecret },
