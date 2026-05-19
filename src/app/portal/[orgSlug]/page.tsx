@@ -42,7 +42,7 @@ export default async function PublicPortalPage({ params }: { params: { orgSlug: 
   const location = [org.city, org.county].filter(Boolean).join(", ")
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#f7f5f0" }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ backgroundColor: "#f7f5f0" }}>
 
       {/* ── HEADER ── */}
       <header className="bg-white/95 backdrop-blur-sm border-b sticky top-0 z-20 shadow-sm">
@@ -95,7 +95,7 @@ export default async function PublicPortalPage({ params }: { params: { orgSlug: 
               {org.description ??
                 `${org.name} rescues and rehomes animals in need. Browse our animals below and find your perfect companion.`}
             </p>
-            <div className="flex items-center gap-5 flex-wrap">
+            <div className="flex items-center gap-3 sm:gap-5 flex-wrap">
               <a
                 href="#animals"
                 className="inline-flex items-center gap-2 bg-[#4ade80] text-[#1a3a2a] font-bold px-7 py-3.5 rounded-xl hover:bg-[#22c55e] transition-colors text-base shadow-lg shadow-black/20"
@@ -150,37 +150,38 @@ export default async function PublicPortalPage({ params }: { params: { orgSlug: 
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
             {animals.map(animal => {
               const photo = animal.photos[0]
               const emoji = SPECIES_EMOJI[animal.species] ?? "🐾"
               const age = ageLabel(animal.dobApprox)
               const sexLabel = animal.sex === "MALE" ? "Male" : animal.sex === "FEMALE" ? "Female" : null
+              const speciesLabel = SPECIES_LABELS[animal.species] ?? animal.species
 
               return (
                 <Link
                   key={animal.id}
                   href={`/portal/${params.orgSlug}/animals/${animal.id}`}
-                  className="group relative rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 bg-white"
+                  className="group relative rounded-2xl overflow-hidden shadow-md hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300 sm:hover:-translate-y-2 bg-white"
                 >
-                  {/* Photo — portrait ratio */}
-                  <div className="aspect-[3/4] relative overflow-hidden bg-gradient-to-br from-stone-100 to-stone-200">
+                  {/* Photo — fixed 160px on mobile, portrait ratio on desktop */}
+                  <div className="h-40 sm:h-auto sm:aspect-[3/4] relative overflow-hidden bg-gradient-to-br from-stone-100 to-stone-200">
                     {photo ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={photo.url}
                         alt={animal.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover sm:group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-7xl">
+                      <div className="w-full h-full flex items-center justify-center text-5xl sm:text-7xl">
                         {emoji}
                       </div>
                     )}
 
                     {/* Available badge */}
-                    <div className="absolute top-3 right-3">
-                      <span className="flex items-center gap-1.5 bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md">
+                    <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
+                      <span className="flex items-center gap-1 sm:gap-1.5 bg-emerald-500 text-white text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full shadow-md">
                         <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                         Available
                       </span>
@@ -188,39 +189,48 @@ export default async function PublicPortalPage({ params }: { params: { orgSlug: 
 
                     {/* Age / sex floating badges */}
                     {(age || sexLabel) && (
-                      <div className="absolute top-3 left-3 flex flex-col gap-1">
+                      <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex flex-col gap-1">
                         {age && (
-                          <span className="bg-black/55 backdrop-blur-sm text-white text-[11px] font-medium px-2.5 py-1 rounded-full">
+                          <span className="bg-black/55 backdrop-blur-sm text-white text-[10px] sm:text-[11px] font-medium px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full">
                             {age}
                           </span>
                         )}
                         {sexLabel && (
-                          <span className="bg-black/55 backdrop-blur-sm text-white text-[11px] font-medium px-2.5 py-1 rounded-full">
+                          <span className="bg-black/55 backdrop-blur-sm text-white text-[10px] sm:text-[11px] font-medium px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full">
                             {sexLabel}
                           </span>
                         )}
                       </div>
                     )}
 
-                    {/* Bottom gradient overlay */}
-                    <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-
-                    {/* Name + breed + CTA on photo */}
-                    <div className="absolute inset-x-0 bottom-0 p-3.5 sm:p-4">
-                      <p className="text-white font-bold text-lg sm:text-xl leading-tight drop-shadow">
-                        {animal.name}
-                      </p>
-                      {(animal.breed || SPECIES_LABELS[animal.species]) && (
-                        <p className="text-white/70 text-xs sm:text-sm mt-0.5">
-                          {animal.breed ?? SPECIES_LABELS[animal.species] ?? animal.species}
+                    {/* Bottom gradient + text overlay — desktop only */}
+                    <div className="hidden sm:block absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+                    <div className="hidden sm:block absolute inset-x-0 bottom-0 p-4">
+                      <p className="text-white font-bold text-xl leading-tight drop-shadow">{animal.name}</p>
+                      {(animal.breed || speciesLabel) && (
+                        <p className="text-white/70 text-sm mt-0.5">
+                          {animal.breed ?? speciesLabel}
                         </p>
                       )}
                       <div className="mt-2.5 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-200">
-                        <span className="text-[#4ade80] text-xs sm:text-sm font-bold">
-                          Give {animal.name} a home
-                        </span>
+                        <span className="text-[#4ade80] text-sm font-bold">Give {animal.name} a home</span>
                         <Heart className="h-3.5 w-3.5 text-[#4ade80] shrink-0" />
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Mobile info panel — hidden on desktop */}
+                  <div className="sm:hidden p-2.5">
+                    <p className="font-bold text-sm text-[#1a3a2a] leading-tight truncate">{animal.name}</p>
+                    <p className="text-xs text-gray-400 mt-0.5 truncate">{animal.breed ?? speciesLabel}</p>
+                    {location && (
+                      <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                        <MapPin className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{location}</span>
+                      </p>
+                    )}
+                    <div className="mt-2 w-full bg-[#1a3a2a] text-white text-xs font-semibold py-1.5 rounded-lg text-center">
+                      Apply to adopt
                     </div>
                   </div>
                 </Link>
@@ -261,20 +271,20 @@ export default async function PublicPortalPage({ params }: { params: { orgSlug: 
       {/* ── FOOTER ── */}
       <footer className="bg-[#1a3a2a] mt-0">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="space-y-1.5">
-              <p className="font-semibold text-sm text-white">{org.name}</p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 min-w-0">
+            <div className="space-y-1.5 min-w-0 max-w-full">
+              <p className="font-semibold text-sm text-white truncate">{org.name}</p>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[#a7c4b5]">
                 {location && (
-                  <span className="flex items-center gap-1.5">
+                  <span className="flex items-center gap-1.5 min-w-0">
                     <MapPin className="h-3.5 w-3.5 shrink-0" />
-                    {location}
+                    <span className="truncate">{location}</span>
                   </span>
                 )}
                 {org.email && (
-                  <a href={`mailto:${org.email}`} className="flex items-center gap-1.5 hover:text-white transition-colors">
+                  <a href={`mailto:${org.email}`} className="flex items-center gap-1.5 hover:text-white transition-colors min-w-0 max-w-full">
                     <Mail className="h-3.5 w-3.5 shrink-0" />
-                    {org.email}
+                    <span className="truncate">{org.email}</span>
                   </a>
                 )}
                 {org.phone && (

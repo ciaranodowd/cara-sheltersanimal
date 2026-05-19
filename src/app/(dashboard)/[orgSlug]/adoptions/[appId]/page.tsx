@@ -112,6 +112,7 @@ export default function ApplicationPage() {
     ["Phone", app.applicantPhone ?? "—"],
     ["Address", app.applicantAddress ?? "—"],
     ["County", app.applicantCounty ?? "—"],
+    ["Household size", app.householdSize ?? "—"],
     ["Home type", app.householdType ?? "—"],
     ["Rent or own", app.rentOrOwn ?? "—"],
     ["Landlord permission", app.rentOrOwn === "rent" ? (app.landlordPermission ? "Yes" : "No / not stated") : "N/A"],
@@ -122,7 +123,20 @@ export default function ApplicationPage() {
     ["Has other pets", app.hasOtherPets ? "Yes" : "No"],
     ["Other pets", app.otherPetsDetails ?? "—"],
     ["Experience level", app.experienceLevel ?? "—"],
+    ["Someone home during day", app.someoneHomeDuringDay ?? "—"],
+    ["Hours alone per day", app.hoursAlonePerDay ?? "—"],
+    ["Dog sleeps", app.dogSleepLocation ?? "—"],
+    ["Dog spends day", app.dogDayLocation ?? "—"],
     ["Working hours", app.workingHours ?? "—"],
+    ["How long considering", app.howLongConsidering ?? "—"],
+    ["Household agreed", app.householdAgreed ?? "—"],
+    ["Pet allergies", app.hasAllergies ?? "—"],
+    ["Primary caregiver", app.primaryCaregiver ?? "—"],
+    ["Vet name", app.vetName ?? "—"],
+    ["Vet address", app.vetAddress ?? "—"],
+    ["Pet insurance", app.petInsurance ?? "—"],
+    ["Dream energy level", app.dreamEnergyLevel ?? "—"],
+    ["Dream traits", app.dreamTraits ?? "—"],
   ]
 
   return (
@@ -179,6 +193,20 @@ export default function ApplicationPage() {
             <Card>
               <CardHeader><CardTitle className="text-base">Previous pets</CardTitle></CardHeader>
               <CardContent><p className="text-sm whitespace-pre-wrap">{app.previousPets}</p></CardContent>
+            </Card>
+          )}
+
+          {app.exercisePlans && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">Exercise plans</CardTitle></CardHeader>
+              <CardContent><p className="text-sm whitespace-pre-wrap">{app.exercisePlans}</p></CardContent>
+            </Card>
+          )}
+
+          {app.trainingPlans && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">Training plans</CardTitle></CardHeader>
+              <CardContent><p className="text-sm whitespace-pre-wrap">{app.trainingPlans}</p></CardContent>
             </Card>
           )}
         </div>

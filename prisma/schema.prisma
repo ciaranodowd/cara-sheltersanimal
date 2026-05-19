@@ -410,6 +410,23 @@ model AdoptionApplication {
   experienceLevel  String?
   whyAdopt         String?
   workingHours     String?
+  // Extended questionnaire
+  householdSize        String?
+  howLongConsidering   String?
+  householdAgreed      String?
+  hasAllergies         String?
+  someoneHomeDuringDay String?
+  hoursAlonePerDay     String?
+  dogSleepLocation     String?
+  dogDayLocation       String?
+  primaryCaregiver     String?
+  exercisePlans        String?
+  trainingPlans        String?
+  vetName              String?
+  vetAddress           String?
+  petInsurance         String?
+  dreamEnergyLevel     String?
+  dreamTraits          String?
   // Status
   status           ApplicationStatus @default(PENDING)
   assignedToId     String?
