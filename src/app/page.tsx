@@ -295,7 +295,7 @@ export default async function HomePage() {
             <div className="mt-8 flex flex-wrap justify-center gap-6">
               {[
                 { value: "8 hrs", label: "saved/week" },
-                { value: "€35", label: "per month" },
+                { value: "€34.99", label: "per month" },
                 { value: "Free", label: "to try" },
               ].map(stat => (
                 <div key={stat.label} className="flex flex-col items-center">
@@ -473,54 +473,22 @@ export default async function HomePage() {
             <p className="text-gray-600">No setup fees. No hidden costs. Cancel any time.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Starter */}
-            <div className="border border-gray-200 rounded-2xl p-8 flex flex-col">
-              <div>
-                <h3 className="font-bold text-lg text-[#1a3a2a] mb-1">Starter</h3>
-                <p className="text-gray-500 text-sm mb-6">For small shelters just getting started</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-[#1a3a2a]">Free</span>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  {[
-                    "Up to 10 animals",
-                    "Public adoption portal",
-                    "Online applications",
-                    "Photo uploads",
-                  ].map((f) => (
-                    <li key={f} className="flex items-center gap-2.5 text-sm text-gray-600">
-                      <CheckCircle className="w-4 h-4 text-[#1a3a2a] flex-shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="mt-auto">
-                <Link
-                  href="/register"
-                  className="block w-full text-center py-2.5 border border-[#1a3a2a] text-[#1a3a2a] rounded-lg font-medium hover:bg-[#1a3a2a] hover:text-white transition-colors text-sm"
-                >
-                  Get started free
-                </Link>
-              </div>
-            </div>
-
-            {/* Pro — featured */}
-            <div className="bg-[#1a3a2a] rounded-2xl p-8 relative shadow-2xl flex flex-col">
+          <div className="max-w-lg mx-auto">
+            {/* Pro */}
+            <div className="bg-[#1a3a2a] rounded-2xl p-10 relative shadow-2xl flex flex-col">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                 <span className="bg-[#4ade80] text-[#1a3a2a] text-xs font-bold px-4 py-1.5 rounded-full whitespace-nowrap">
-                  Most popular
+                  Everything included
                 </span>
               </div>
               <div>
-                <h3 className="font-bold text-lg text-white mb-1">Pro</h3>
-                <p className="text-[#a7c4b5] text-sm mb-6">For active shelters ready to scale</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-white">€35</span>
-                  <span className="text-[#a7c4b5] text-sm ml-1">/month</span>
+                <h3 className="font-bold text-2xl text-white mb-1">Pro</h3>
+                <p className="text-[#a7c4b5] text-sm mb-8">Everything your shelter needs, from day one</p>
+                <div className="mb-8">
+                  <span className="text-5xl font-bold text-white">€34.99</span>
+                  <span className="text-[#a7c4b5] text-base ml-2">/month</span>
                 </div>
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-4 mb-10">
                   {[
                     "Unlimited animals",
                     "E-sign contracts",
@@ -528,8 +496,8 @@ export default async function HomePage() {
                     "Social sharing",
                     "Priority support",
                   ].map((f) => (
-                    <li key={f} className="flex items-center gap-2.5 text-sm text-white">
-                      <CheckCircle className="w-4 h-4 text-[#4ade80] flex-shrink-0" />
+                    <li key={f} className="flex items-center gap-3 text-base text-white">
+                      <CheckCircle className="w-5 h-5 text-[#4ade80] flex-shrink-0" />
                       {f}
                     </li>
                   ))}
@@ -538,42 +506,9 @@ export default async function HomePage() {
               <div className="mt-auto">
                 <Link
                   href="/register"
-                  className="block w-full text-center py-2.5 bg-[#4ade80] text-[#1a3a2a] rounded-lg font-semibold hover:bg-[#22c55e] transition-colors text-sm"
+                  className="block w-full text-center py-3.5 bg-[#4ade80] text-[#1a3a2a] rounded-xl font-bold hover:bg-[#22c55e] transition-colors text-base"
                 >
                   Start free trial
-                </Link>
-              </div>
-            </div>
-
-            {/* Network */}
-            <div className="border border-gray-200 rounded-2xl p-8 flex flex-col">
-              <div>
-                <h3 className="font-bold text-lg text-[#1a3a2a] mb-1">Network</h3>
-                <p className="text-gray-500 text-sm mb-6">For organisations with multiple locations</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-[#1a3a2a]">€99</span>
-                  <span className="text-gray-500 text-sm ml-1">/month</span>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  {[
-                    "Multiple locations",
-                    "Custom domain",
-                    "Staff accounts",
-                    "Analytics dashboard",
-                  ].map((f) => (
-                    <li key={f} className="flex items-center gap-2.5 text-sm text-gray-600">
-                      <CheckCircle className="w-4 h-4 text-[#1a3a2a] flex-shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="mt-auto">
-                <Link
-                  href="/register"
-                  className="block w-full text-center py-2.5 border border-[#1a3a2a] text-[#1a3a2a] rounded-lg font-medium hover:bg-[#1a3a2a] hover:text-white transition-colors text-sm"
-                >
-                  Contact us
                 </Link>
               </div>
             </div>
