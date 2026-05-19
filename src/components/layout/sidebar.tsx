@@ -53,7 +53,9 @@ export function Sidebar({ orgSlug, orgName, plan }: SidebarProps) {
       {/* Logo */}
       <div className="p-5 border-b border-white/10">
         <Link href={`/${orgSlug}`} className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0" style={{ backgroundColor: "#4ade80", color: "#1a3a2a" }}>C</div>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: "#4ade80" }}>
+              <PawPrint className="w-4 h-4" style={{ color: "#1a3a2a" }} />
+            </div>
           <div className="min-w-0">
             <p className="font-bold text-white text-base leading-tight">Cara</p>
             <p className="text-xs text-white/50 truncate">{orgName}</p>
