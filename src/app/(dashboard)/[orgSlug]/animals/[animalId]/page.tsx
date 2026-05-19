@@ -12,6 +12,7 @@ import { formatDate } from "@/lib/utils"
 import { PhotoUpload } from "@/components/photo-upload"
 import { ShareAnimalButton } from "@/components/share-animal-button"
 import { MicrochipDisplay } from "@/components/microchip-lookup"
+import { DeleteAnimalButton } from "./_components/delete-animal-button"
 
 export const dynamic = 'force-dynamic'
 
@@ -104,11 +105,20 @@ export default async function AnimalPage({
                 {animal.colour ? ` · ${animal.colour}` : ""}
               </p>
             </div>
-            <Link href={`/${params.orgSlug}/animals/${animal.id}/edit`}>
-              <Button variant="outline" size="sm">
-                <Edit className="h-4 w-4 mr-1.5" /> Edit
-              </Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              {membership.role === "ADMIN" && (
+                <DeleteAnimalButton
+                  animalId={animal.id}
+                  animalName={animal.name}
+                  orgSlug={params.orgSlug}
+                />
+              )}
+              <Link href={`/${params.orgSlug}/animals/${animal.id}/edit`}>
+                <Button variant="outline" size="sm">
+                  <Edit className="h-4 w-4 mr-1.5" /> Edit
+                </Button>
+              </Link>
+            </div>
           </div>
 
           <span className={`inline-block text-sm px-2.5 py-1 rounded-full font-medium ${statusColors[animal.status] ?? "bg-slate-100 text-slate-600"}`}>
