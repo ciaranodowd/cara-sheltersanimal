@@ -41,7 +41,7 @@ export default async function OrgLayout({
         />
         {children}
       </main>
-      <MobileNav orgSlug={org.slug} isAdmin={isAdmin} />
+      <MobileNav orgSlug={org.slug} isAdmin={isAdmin} plan={org.plan ?? undefined} />
     </div>
   )
 }
