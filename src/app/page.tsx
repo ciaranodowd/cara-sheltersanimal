@@ -597,15 +597,15 @@ export default async function HomePage() {
               © {new Date().getFullYear()} Cara. All rights reserved.
             </p>
             <div className="flex items-center gap-6 flex-wrap justify-center">
-              <a href="/legal/cara-privacy-policy.docx" download className="text-[#a7c4b5] text-sm hover:text-white transition-colors">
+              <Link href="/privacy" className="text-[#a7c4b5] text-sm hover:text-white transition-colors">
                 Privacy Policy
-              </a>
-              <a href="/legal/cara-terms-of-service.docx" download className="text-[#a7c4b5] text-sm hover:text-white transition-colors">
+              </Link>
+              <Link href="/terms" className="text-[#a7c4b5] text-sm hover:text-white transition-colors">
                 Terms of Service
-              </a>
-              <a href="/legal/cara-data-processing-agreement.docx" download className="text-[#a7c4b5] text-sm hover:text-white transition-colors">
+              </Link>
+              <Link href="/dpa" className="text-[#a7c4b5] text-sm hover:text-white transition-colors">
                 DPA
-              </a>
+              </Link>
               <a href="mailto:hello@carashelters.ie" className="text-[#a7c4b5] text-sm hover:text-white transition-colors">
                 Contact
               </a>
